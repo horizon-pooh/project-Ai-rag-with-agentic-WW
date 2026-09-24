@@ -1,1 +1,0 @@
-console.log("Search System is running.");
