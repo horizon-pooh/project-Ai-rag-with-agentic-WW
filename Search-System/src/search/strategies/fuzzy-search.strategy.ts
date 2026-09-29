@@ -3,6 +3,10 @@ import {
 } from "../../config/search-fields.config.js";
 
 import {
+  SEARCH_CONFIG,
+} from "../../config/search.config.js";
+
+import {
   normalizeQuery,
   tokenizeQuery,
 } from "../processing/index.js";
@@ -11,6 +15,10 @@ import {
   getSearchableFields,
 } from "./search-fields.js";
 
+import {
+  stringSimilarity,
+} from "./string-similarity.js";
+
 import type { Product } from "../../types/product.types.js";
 
 import type {
@@ -18,7 +26,7 @@ import type {
   StrategyResult,
 } from "./search-strategy.types.js";
 
-export class KeywordSearchStrategy
+export class FuzzySearchStrategy
   implements SearchStrategy
 {
   search(
@@ -48,40 +56,56 @@ export class KeywordSearchStrategy
 
       let totalScore = 0;
 
-      for (const token of queryTokens) {
+      for (const queryToken of queryTokens) {
         let bestTokenScore = 0;
 
         for (const field of fields) {
-          const matched =
-            field.values.some(
-              (value) => {
-                const normalizedValue =
-                  normalizeQuery(value);
+          for (const value of field.values) {
+            const valueTokens =
+              tokenizeQuery(
+                normalizeQuery(value)
+              );
 
-                return normalizedValue
-                  .split(" ")
-                  .includes(token);
+            for (
+              const valueToken of valueTokens
+            ) {
+              const similarity =
+                stringSimilarity(
+                  queryToken,
+                  valueToken
+                );
+
+              if (
+                similarity <
+                SEARCH_CONFIG
+                  .fuzzyMinSimilarity
+              ) {
+                continue;
               }
-            );
 
-          if (!matched) {
-            continue;
+              const weightedScore =
+                similarity *
+                SEARCH_FIELD_WEIGHTS[
+                  field.field
+                ];
+
+              if (
+                weightedScore >
+                bestTokenScore
+              ) {
+                bestTokenScore =
+                  weightedScore;
+              }
+
+              matchedFields.add(
+                field.field
+              );
+
+              matchedTerms.add(
+                queryToken
+              );
+            }
           }
-
-          matchedFields.add(
-            field.field
-          );
-
-          matchedTerms.add(
-            token
-          );
-
-          bestTokenScore = Math.max(
-            bestTokenScore,
-            SEARCH_FIELD_WEIGHTS[
-              field.field
-            ]
-          );
         }
 
         totalScore += bestTokenScore;
@@ -94,13 +118,10 @@ export class KeywordSearchStrategy
       if (score > 0) {
         results.push({
           productId: product.id,
-
           score,
-
           matchedFields: [
             ...matchedFields,
           ],
-
           matchedTerms: [
             ...matchedTerms,
           ],
@@ -109,8 +130,7 @@ export class KeywordSearchStrategy
     }
 
     return results.sort(
-      (a, b) =>
-        b.score - a.score
+      (a, b) => b.score - a.score
     );
   }
 }
