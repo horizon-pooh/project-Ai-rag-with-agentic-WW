@@ -21,6 +21,7 @@ export interface SearchResult {
   ranking?: RankingScore;
 
   matchedFields?: string[];
+  matchedTerms?: string[];
 }
 
 export interface SearchMeta {
