@@ -7,7 +7,8 @@
     "dev": "tsx watch src/server.ts",
     "build": "tsc",
     "start": "node dist/server.js",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit && tsc --project tsconfig.test.json",
+    "test" : "node --import tsx --test tests/*.test.ts"
   },
   "keywords": [
     "search-engine"
@@ -21,6 +22,7 @@
     "typescript": "^7.0.2"
   },
   "dependencies": {
+    "ajv": "8.20.0",
     "dotenv": "^18.0.3",
     "fastify": "^5.12.5"
   }

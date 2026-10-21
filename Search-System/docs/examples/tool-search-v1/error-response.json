@@ -1,0 +1,12 @@
+{
+  "version": "1",
+  "request_id": "example-3",
+  "status": "invalid_request",
+  "issues": [
+    {
+      "path": "/filters/price",
+      "code": "invalid_range",
+      "message": "ราคาต่ำสุดต้องไม่เกินราคาสูงสุด"
+    }
+  ]
+}

@@ -1,0 +1,21 @@
+{
+  "version": "1",
+  "request_id": "example-2",
+  "status": "needs_clarification",
+  "clarifications": [
+    {
+      "path": "/filters/category_query",
+      "reason": "ชื่อประเภทกำกวม ต้องเลือกประเภทก่อนค้น",
+      "candidates": [
+        {
+          "id": "TV0100",
+          "label": "โทรทัศน์"
+        },
+        {
+          "id": "TV0000",
+          "label": "ทีวีและเครื่องเสียง"
+        }
+      ]
+    }
+  ]
+}

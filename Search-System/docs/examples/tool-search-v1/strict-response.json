@@ -1,0 +1,81 @@
+{
+  "version": "1",
+  "request_id": "example-1",
+  "status": "ok",
+  "query": "ทีวี",
+  "semantic_available": false,
+  "resolved_categories": [
+    "TV0108"
+  ],
+  "applied_filters": [
+    {
+      "category_id": "TV0108",
+      "path": "/filters/category_query",
+      "resolved_id": "TV0108",
+      "op": "eq",
+      "value": "TV0108",
+      "unit": null
+    },
+    {
+      "category_id": "TV0108",
+      "path": "/filters/price/max",
+      "resolved_id": null,
+      "op": "lte",
+      "value": 25000,
+      "unit": "THB"
+    },
+    {
+      "category_id": "TV0108",
+      "path": "/filters/specs/0",
+      "resolved_id": "AT0048",
+      "op": "eq",
+      "value": 55,
+      "unit": "inch"
+    }
+  ],
+  "unapplied_filters": [],
+  "warnings": [
+    {
+      "code": "semantic_unavailable",
+      "message": "ค้นด้วยคำและตัวกรอง; ยังไม่มี semantic search"
+    }
+  ],
+  "meta": {
+    "page": 1,
+    "limit": 5,
+    "returned_count": 1,
+    "total_matches": 1,
+    "total_alternatives": 0,
+    "has_more": false,
+    "all_requested_filters_applied": true
+  },
+  "results": [
+    {
+      "product": {
+        "article_id": 100000,
+        "name_th": "ทีวีตัวอย่างสำหรับทดสอบ",
+        "model": "TEST-100000",
+        "brand_id": "BR0001",
+        "brand_name": "TEST",
+        "category_id": "TV0108",
+        "category_name": "ทีวี OLED",
+        "price": 24900,
+        "currency": "THB",
+        "is_mock": true,
+        "mock_notice": "ข้อมูลจำลองสำหรับทดสอบสัญญา API",
+        "specifications": [
+          {
+            "attribute_id": "AT0048",
+            "name": "ขนาดหน้าจอ",
+            "value": 55,
+            "unit": "inch"
+          }
+        ],
+        "features": []
+      },
+      "match_type": "matches_applied_filters",
+      "unmet_filters": [],
+      "unknown_filters": []
+    }
+  ]
+}

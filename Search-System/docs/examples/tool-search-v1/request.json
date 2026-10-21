@@ -1,0 +1,26 @@
+{
+  "version": "1",
+  "query": "ทีวี",
+  "semantic_query": "ทีวีสำหรับดูหนัง",
+  "filters": {
+    "category_query": "ทีวี OLED",
+    "brand_queries": [],
+    "price": {
+      "min": null,
+      "max": 25000,
+      "currency": "THB"
+    },
+    "specs": [
+      {
+        "attribute_query": "ขนาดหน้าจอ",
+        "op": "eq",
+        "value": 55,
+        "unit": "นิ้ว"
+      }
+    ],
+    "feature_queries_all": []
+  },
+  "page": 1,
+  "limit": 5,
+  "sort": "relevance"
+}
