@@ -1,0 +1,36 @@
+# โครงเท่านั้น ยังไม่มีโค้ด — ดู docs/Line_ai_bot.md หัวข้อ Stack และ หลักการเขียนโปรแกรม
+[project]
+name = "line-prod"
+version = "0.0.0"
+description = "LINE OA chatbot ตอบคำถามสินค้าและส่งต่อพนักงาน"
+requires-python = ">=3.12"
+# เช็คเวอร์ชันล่าสุดก่อนติดตั้ง (Line_ai_bot.md หัวข้อ Stack)
+dependencies = [
+    "fastapi",
+    "uvicorn",
+    "arq",                 # เช็คสถานะการดูแลของ arq ก่อนใช้
+    "psycopg[binary]",     # หรือ asyncpg — ยังไม่ตัดสิน
+    "pydantic",
+    "pydantic-settings",
+    "httpx",
+    "line-bot-sdk",
+    "minio",
+    "structlog",
+    "sentry-sdk",
+]
+
+[dependency-groups]
+dev = [
+    "pytest",
+    "pytest-asyncio",
+    "respx",
+    "ruff",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
