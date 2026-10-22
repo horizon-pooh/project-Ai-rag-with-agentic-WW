@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>02 Code Layers</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500;600&family=Noto+Sans+Thai:wght@400;500;600&family=Noto+Serif+Thai:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --paper: #f5f5f5; --paper-2: #ececec; --ink: #1a1a1a; --muted: #6b6b6b; --soft: #80868c;
+  --rule: rgba(26,26,26,0.12); --accent: #e30613; --accent-tint: rgba(227,6,19,0.06); --link: #0066b3;
+  --font-sans: 'Geist', 'Noto Sans Thai', system-ui, sans-serif;
+  --font-serif: 'Instrument Serif', 'Noto Serif Thai', serif;
+  --font-mono: 'Geist Mono', ui-monospace, monospace;
+}
+body { font-family: var(--font-sans); background: var(--paper); color: var(--ink); padding: 2.5rem 16px 3rem; line-height: 1.6; }
+.frame { max-width: 1320px; margin: 0 auto; }
+nav.crumbs { font-family: var(--font-mono); font-size: 0.72rem; letter-spacing: 0.04em; color: var(--muted); margin-bottom: 1.75rem; display: flex; gap: 1.25rem; flex-wrap: wrap; }
+nav.crumbs a { color: var(--link); text-decoration: none; }
+nav.crumbs a:hover { text-decoration: underline; }
+.eyebrow { font-family: var(--font-mono); font-size: 0.66rem; font-weight: 500; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); margin-bottom: 0.5rem; }
+h1 { font-family: var(--font-serif); font-size: clamp(1.6rem, 2.4vw + 0.8rem, 2.2rem); font-weight: 400; letter-spacing: -0.01em; line-height: 1.2; margin-bottom: 0.75rem; }
+.lede { max-width: 72ch; color: var(--muted); font-size: 0.95rem; margin-bottom: 1.75rem; }
+code { font-family: var(--font-mono); font-size: 0.82em; color: var(--ink); background: rgba(26,26,26,0.05); padding: 0 0.3em; border-radius: 3px; }
+.diagram-container { width: 100%; overflow-x: auto; margin-bottom: 2rem; }
+.diagram-container svg { width: 100%; display: block; }
+.cards { display: grid; grid-template-columns: 1.15fr 1fr 0.85fr; gap: 1rem; }
+.cards.two { grid-template-columns: 1.2fr 0.8fr; }
+.card { background: #ffffff; border: 1px solid var(--rule); border-radius: 6px; padding: 1.25rem; min-width: 0; }
+.card h3 { font-size: 0.95rem; font-weight: 600; display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.6rem; }
+.card h3 a { color: var(--ink); text-decoration: none; }
+.card h3 a:hover { color: var(--link); }
+.card ul { padding-left: 1.1rem; font-size: 0.86rem; }
+.card li { margin-bottom: 0.3rem; }
+.card p { font-size: 0.86rem; color: var(--muted); }
+.dot { width: 7px; height: 7px; border-radius: 50%; display: inline-block; flex: none; }
+.dot.ink { background: var(--ink); } .dot.accent { background: var(--accent); } .dot.link { background: var(--link); } .dot.soft { background: var(--soft); }
+footer { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid var(--rule); font-family: var(--font-mono); font-size: 0.68rem; color: var(--muted); letter-spacing: 0.04em; }
+@media (max-width: 860px) { .cards, .cards.two { grid-template-columns: 1fr; } }
+@media print { .diagram-container { overflow-x: visible; } .diagram-container svg { min-width: 0 !important; } }
+</style>
+</head>
+<body>
+<div class="frame">
+<nav class="crumbs"><a href="index.html">← สารบัญ</a> <a href="01-system.html">‹ ก่อนหน้า</a> <a href="03-escalation-race.html">ถัดไป ›</a></nav>
+<p class="eyebrow">02 · LAYER STACK · SRC/</p>
+<h1>โครงสร้างโค้ด 6 ชั้น</h1>
+<p class="lede">โฟลเดอร์ใน <code>src/</code> เรียงเป็นชั้นตามทางที่ข้อความเดินผ่าน ตั้งแต่รับ webhook ลงไปถึงที่เก็บข้อมูล ชั้นที่ 05 (ขาออก) คือชั้นที่ผิดพลาดไม่ได้ เพราะเป็นจุดเดียวที่ตัดสินว่าข้อความถึงลูกค้าหรือไม่</p>
+<div class="diagram-container">
+<svg viewBox="0 0 1000 560" style="min-width:1000px" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="layers-title layers-desc">
+<title id="layers-title">line_prod — code layers</title>
+<desc id="layers-desc">Six layers of the line_prod source tree from HTTP entry down to storage, with the outbound layer (sendGuard and notify) as the focal layer.</desc>
+<defs>
+  <marker id="arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#6b6b6b"/></marker>
+  <marker id="arrow-accent" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#e30613"/></marker>
+  <marker id="arrow-link" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#0066b3"/></marker>
+  <marker id="arrow-open" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polyline points="0 0, 8 3, 0 6" fill="none" stroke="#6b6b6b" stroke-width="1.2"/></marker>
+</defs>
+<rect width="100%" height="100%" fill="#f5f5f5"/>
+<line x1="72" y1="80" x2="72" y2="448" stroke="#6b6b6b" stroke-width="1.2" marker-end="url(#arrow)"/>
+<text x="60" y="264" fill="#6b6b6b" font-size="9" font-family="'Geist', 'Noto Sans Thai', sans-serif" text-anchor="end">ข้อความ</text>
+<text x="60" y="276" fill="#6b6b6b" font-size="9" font-family="'Geist', 'Noto Sans Thai', sans-serif" text-anchor="end">ไหลลง ↓</text>
+<rect x="120" y="72" width="840" height="64" fill="#f5f5f5" stroke="rgba(26,26,26,0.12)" stroke-width="1"/>
+<text x="136" y="108" fill="#6b6b6b" font-size="8" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="start" letter-spacing="0.12em">01 · ENTRY</text>
+<text x="292" y="102" fill="#1a1a1a" font-size="14" font-family="'Geist', 'Noto Sans Thai', sans-serif" text-anchor="start" font-weight="600">ทางเข้า</text>
+<text x="292" y="120" fill="#6b6b6b" font-size="10" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="start">routes/ · middleware/</text>
+<text x="944" y="110" fill="#6b6b6b" font-size="10" font-family="'Geist', 'Noto Sans Thai', sans-serif" text-anchor="end">ตอบ 200 ทันที · ตรวจ signature</text>
+<rect x="120" y="136" width="840" height="64" fill="#ececec" stroke="rgba(26,26,26,0.12)" stroke-width="1"/>
+<text x="136" y="172" fill="#6b6b6b" font-size="8" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="start" letter-spacing="0.12em">02 · PIPELINE</text>
+<text x="292" y="166" fill="#1a1a1a" font-size="14" font-family="'Geist', 'Noto Sans Thai', sans-serif" text-anchor="start" font-weight="600">ด่านกรอง</text>
+<text x="292" y="184" fill="#6b6b6b" font-size="10" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="start">pipeline/</text>
+<text x="944" y="174" fill="#6b6b6b" font-size="10" font-family="'Geist', 'Noto Sans Thai', sans-serif" text-anchor="end">ตัดซ้ำ · คิวต่อคน · FAQ ไม่ใช้ AI</text>
+<rect x="120" y="200" width="840" height="64" fill="#f5f5f5" stroke="rgba(26,26,26,0.12)" stroke-width="1"/>
+<text x="136" y="236" fill="#6b6b6b" font-size="8" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="start" letter-spacing="0.12em">03 · DECIDE</text>
+<text x="292" y="230" fill="#1a1a1a" font-size="14" font-family="'Geist', 'Noto Sans Thai', sans-serif" text-anchor="start" font-weight="600">ตัดสินใจ</text>
+<text x="292" y="248" fill="#6b6b6b" font-size="10" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="start">conversation/</text>
+<text x="944" y="238" fill="#6b6b6b" font-size="10" font-family="'Geist', 'Noto Sans Thai', sans-serif" text-anchor="end">state machine · ส่งต่อคน · ยกเลิกงานค้าง</text>
+<rect x="120" y="264" width="840" height="64" fill="#ececec" stroke="rgba(26,26,26,0.12)" stroke-width="1"/>
+<text x="136" y="300" fill="#6b6b6b" font-size="8" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="start" letter-spacing="0.12em">04 · WORK</text>
+<text x="292" y="294" fill="#1a1a1a" font-size="14" font-family="'Geist', 'Noto Sans Thai', sans-serif" text-anchor="start" font-weight="600">งานที่ใช้เวลานาน</text>
+<text x="292" y="312" fill="#6b6b6b" font-size="10" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="start">jobs/ · ai/ · catalog/ (อนาคต)</text>
+<text x="944" y="302" fill="#6b6b6b" font-size="10" font-family="'Geist', 'Noto Sans Thai', sans-serif" text-anchor="end">คิว Softnix จำกัดความยาว · ยกเลิกได้ · ไม่หายตอน restart</text>
+<rect x="120" y="328" width="840" height="64" fill="rgba(227,6,19,0.06)" stroke="rgba(26,26,26,0.12)" stroke-width="1"/>
+<text x="136" y="364" fill="#e30613" font-size="8" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="start" letter-spacing="0.12em">05 · OUTBOUND</text>
+<text x="292" y="358" fill="#1a1a1a" font-size="14" font-family="'Geist', 'Noto Sans Thai', sans-serif" text-anchor="start" font-weight="600">ขาออก</text>
+<text x="292" y="376" fill="#6b6b6b" font-size="10" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="start">line/sendGuard · line/messages · notify/</text>
+<text x="944" y="366" fill="#6b6b6b" font-size="10" font-family="'Geist', 'Noto Sans Thai', sans-serif" text-anchor="end">เช็ค state ล่าสุดก่อนส่งทุกครั้ง · แจ้ง call center</text>
+<rect x="120" y="392" width="840" height="64" fill="#ececec" stroke="rgba(26,26,26,0.12)" stroke-width="1"/>
+<text x="136" y="428" fill="#6b6b6b" font-size="8" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="start" letter-spacing="0.12em">06 · FOUNDATION</text>
+<text x="292" y="422" fill="#1a1a1a" font-size="14" font-family="'Geist', 'Noto Sans Thai', sans-serif" text-anchor="start" font-weight="600">พื้นฐาน</text>
+<text x="292" y="440" fill="#6b6b6b" font-size="10" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="start">store/ · config/ · ops/ · observability/</text>
+<text x="944" y="430" fill="#6b6b6b" font-size="10" font-family="'Geist', 'Noto Sans Thai', sans-serif" text-anchor="end">Redis · kill switch · log ซ่อนข้อมูลส่วนตัว</text>
+<rect x="120" y="72" width="840" height="384" fill="none" stroke="#6b6b6b" stroke-width="1"/>
+<rect x="120" y="328" width="840" height="64" fill="none" stroke="#e30613" stroke-width="1.2"/>
+<text x="120" y="488" fill="#6b6b6b" font-size="11" font-family="'Instrument Serif', 'Noto Serif Thai', serif" text-anchor="start" font-style="italic">ชั้นบนเรียกชั้นล่างได้ ชั้นล่างไม่เรียกชั้นบน · ทุกชั้นใช้ 06 ได้</text>
+<line x1="40" y1="492" x2="960" y2="492" stroke="rgba(26,26,26,0.10)" stroke-width="0.8"/>
+<text x="40" y="518" fill="#6b6b6b" font-size="8" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="start" letter-spacing="0.18em">LEGEND</text>
+<rect x="112" y="510" width="16" height="10" rx="2" fill="rgba(227,6,19,0.06)" stroke="#e30613" stroke-width="1"/>
+<text x="134" y="518" fill="#6b6b6b" font-size="9" font-family="'Geist', 'Noto Sans Thai', sans-serif" text-anchor="start">ชั้นที่ต้องระวังที่สุด</text>
+<rect x="298.8" y="510" width="16" height="10" rx="2" fill="#ffffff" stroke="#1a1a1a" stroke-width="1"/>
+<text x="320.8" y="518" fill="#6b6b6b" font-size="9" font-family="'Geist', 'Noto Sans Thai', sans-serif" text-anchor="start">ชั้นโค้ด</text>
+</svg>
+</div>
+<div class="cards"><div class="card"><p class="eyebrow">LAYER 05</p><h3><span class="dot accent"></span>ทำไมขาออกสำคัญที่สุด</h3><ul><li>ทุกข้อความไปหาลูกค้าต้องเรียก <code>sendGuard</code> ห้ามเรียก <code>lineApi</code> ตรง</li><li>กันคำตอบ Softnix ที่มาช้า ไม่ให้แทรกตอนเจ้าหน้าที่ดูแลอยู่ (ดูภาพ 03)</li><li>เทสต์ชั้นนี้ก่อนชั้นอื่น: <code>test/unit/sendGuard.test.js</code></li></ul></div><div class="card"><p class="eyebrow">LAYER 04</p><h3><span class="dot ink"></span>ทำไมแยกงานนานออกมา</h3><ul><li>Softnix ใช้ 100–230 วินาที ถ้ารอใน request จะค้าง</li><li>คิวอยู่ใน Redis restart แล้วงานไม่หาย</li><li><code>catalog/</code> ว่างไว้ ถ้าตัวเลขจริงบอกว่า Softnix ไม่ไหว</li></ul></div><div class="card"><p class="eyebrow">FILES</p><h3><span class="dot soft"></span>ดูต่อที่</h3><ul><li><code>README.md</code> ในแต่ละโฟลเดอร์</li><li><code>docs/migration-map.md</code> — ย้ายจาก line_ ไฟล์ไหน</li></ul></div></div>
+<footer>line_prod · โครงสร้างเท่านั้น ยังไม่มีโค้ด · 2026-10-21</footer>
+</div>
+</body>
+</html>

@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>03 Escalation Race</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500;600&family=Noto+Sans+Thai:wght@400;500;600&family=Noto+Serif+Thai:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --paper: #f5f5f5; --paper-2: #ececec; --ink: #1a1a1a; --muted: #6b6b6b; --soft: #80868c;
+  --rule: rgba(26,26,26,0.12); --accent: #e30613; --accent-tint: rgba(227,6,19,0.06); --link: #0066b3;
+  --font-sans: 'Geist', 'Noto Sans Thai', system-ui, sans-serif;
+  --font-serif: 'Instrument Serif', 'Noto Serif Thai', serif;
+  --font-mono: 'Geist Mono', ui-monospace, monospace;
+}
+body { font-family: var(--font-sans); background: var(--paper); color: var(--ink); padding: 2.5rem 16px 3rem; line-height: 1.6; }
+.frame { max-width: 1320px; margin: 0 auto; }
+nav.crumbs { font-family: var(--font-mono); font-size: 0.72rem; letter-spacing: 0.04em; color: var(--muted); margin-bottom: 1.75rem; display: flex; gap: 1.25rem; flex-wrap: wrap; }
+nav.crumbs a { color: var(--link); text-decoration: none; }
+nav.crumbs a:hover { text-decoration: underline; }
+.eyebrow { font-family: var(--font-mono); font-size: 0.66rem; font-weight: 500; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); margin-bottom: 0.5rem; }
+h1 { font-family: var(--font-serif); font-size: clamp(1.6rem, 2.4vw + 0.8rem, 2.2rem); font-weight: 400; letter-spacing: -0.01em; line-height: 1.2; margin-bottom: 0.75rem; }
+.lede { max-width: 72ch; color: var(--muted); font-size: 0.95rem; margin-bottom: 1.75rem; }
+code { font-family: var(--font-mono); font-size: 0.82em; color: var(--ink); background: rgba(26,26,26,0.05); padding: 0 0.3em; border-radius: 3px; }
+.diagram-container { width: 100%; overflow-x: auto; margin-bottom: 2rem; }
+.diagram-container svg { width: 100%; display: block; }
+.cards { display: grid; grid-template-columns: 1.15fr 1fr 0.85fr; gap: 1rem; }
+.cards.two { grid-template-columns: 1.2fr 0.8fr; }
+.card { background: #ffffff; border: 1px solid var(--rule); border-radius: 6px; padding: 1.25rem; min-width: 0; }
+.card h3 { font-size: 0.95rem; font-weight: 600; display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.6rem; }
+.card h3 a { color: var(--ink); text-decoration: none; }
+.card h3 a:hover { color: var(--link); }
+.card ul { padding-left: 1.1rem; font-size: 0.86rem; }
+.card li { margin-bottom: 0.3rem; }
+.card p { font-size: 0.86rem; color: var(--muted); }
+.dot { width: 7px; height: 7px; border-radius: 50%; display: inline-block; flex: none; }
+.dot.ink { background: var(--ink); } .dot.accent { background: var(--accent); } .dot.link { background: var(--link); } .dot.soft { background: var(--soft); }
+footer { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid var(--rule); font-family: var(--font-mono); font-size: 0.68rem; color: var(--muted); letter-spacing: 0.04em; }
+@media (max-width: 860px) { .cards, .cards.two { grid-template-columns: 1fr; } }
+@media print { .diagram-container { overflow-x: visible; } .diagram-container svg { min-width: 0 !important; } }
+</style>
+</head>
+<body>
+<div class="frame">
+<nav class="crumbs"><a href="index.html">← สารบัญ</a> <a href="02-code-layers.html">‹ ก่อนหน้า</a> <a href="04-customer-wait.html">ถัดไป ›</a></nav>
+<p class="eyebrow">03 · SEQUENCE · ESCALATION RACE</p>
+<h1>คำตอบที่มาช้า ต้องไม่แทรกเจ้าหน้าที่</h1>
+<p class="lede">เคสที่เกิดได้จริงทุกวัน: ลูกค้าถามสินค้า ระหว่างรอ Softnix (100–230 วินาที) ลูกค้าเปลี่ยนใจขอคุยกับพนักงาน พอ Softnix ตอบกลับมา ลูกค้าอยู่กับเจ้าหน้าที่แล้ว ภาพนี้แสดงว่าระบบกันไม่ให้คำตอบนั้นถึงลูกค้าอย่างไร (ระยะห่างแนวตั้งไม่ได้วาดตามสเกลเวลา)</p>
+<div class="diagram-container">
+<svg viewBox="0 0 1280 760" style="min-width:1280px" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="race-title race-desc">
+<title id="race-title">Late Softnix answer after escalation</title>
+<desc id="race-desc">A customer asks about a product, then asks for a human while Softnix is still working; the middleware cancels the job and notifies the call center, and when the late answer arrives sendGuard drops it.</desc>
+<defs>
+  <marker id="arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#6b6b6b"/></marker>
+  <marker id="arrow-accent" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#e30613"/></marker>
+  <marker id="arrow-link" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#0066b3"/></marker>
+  <marker id="arrow-open" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polyline points="0 0, 8 3, 0 6" fill="none" stroke="#6b6b6b" stroke-width="1.2"/></marker>
+</defs>
+<rect width="100%" height="100%" fill="#f5f5f5"/>
+<line x1="160" y1="128" x2="160" y2="700" stroke="rgba(26,26,26,0.20)" stroke-width="1" stroke-dasharray="3,3"/>
+<line x1="420" y1="128" x2="420" y2="700" stroke="rgba(26,26,26,0.20)" stroke-width="1" stroke-dasharray="3,3"/>
+<line x1="680" y1="128" x2="680" y2="700" stroke="rgba(26,26,26,0.20)" stroke-width="1" stroke-dasharray="3,3"/>
+<line x1="940" y1="128" x2="940" y2="700" stroke="rgba(26,26,26,0.20)" stroke-width="1" stroke-dasharray="3,3"/>
+<line x1="1160" y1="128" x2="1160" y2="700" stroke="rgba(26,26,26,0.20)" stroke-width="1" stroke-dasharray="3,3"/>
+<text x="40" y="171" fill="#80868c" font-size="8" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="start">t ≈ 0s</text>
+<text x="40" y="331" fill="#80868c" font-size="8" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="start">t ≈ 90s</text>
+<text x="40" y="523" fill="#80868c" font-size="8" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="start">t ≈ 200s</text>
+<rect x="936" y="264" width="8" height="256" fill="rgba(26,26,26,0.06)" stroke="#6b6b6b" stroke-width="0.8"/>
+<text x="956" y="472" fill="#80868c" font-size="9" font-family="'Geist', 'Noto Sans Thai', sans-serif" text-anchor="start">กำลังค้น ~110 วินาที</text>
+<path d="M 164,168 H 416" fill="none" stroke="#0066b3" stroke-width="1.2" marker-end="url(#arrow-link)"/>
+<rect x="203.4" y="151" width="173.2" height="12" rx="2" fill="#f5f5f5"/>
+<text x="290.0" y="160" fill="#6b6b6b" font-size="9" font-family="'Geist', 'Noto Sans Thai', sans-serif" text-anchor="middle">ถามสินค้า: ตู้เย็น 2 ประตู</text>
+<path d="M 424,200 H 676" fill="none" stroke="#6b6b6b" stroke-width="1.2" marker-end="url(#arrow)"/>
+<rect x="504.8" y="183" width="90.4" height="12" rx="2" fill="#f5f5f5"/>
+<text x="550.0" y="192" fill="#6b6b6b" font-size="8" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle" letter-spacing="0.08em">ENQUEUE JOB #1</text>
+<path d="M 416,232 H 164" fill="none" stroke="#6b6b6b" stroke-width="1.2" stroke-dasharray="5,4" marker-end="url(#arrow-open)"/>
+<rect x="187.9" y="215" width="204.2" height="12" rx="2" fill="#f5f5f5"/>
+<text x="290.0" y="224" fill="#6b6b6b" font-size="9" font-family="'Geist', 'Noto Sans Thai', sans-serif" text-anchor="middle">กำลังค้นหา · คิวที่ 1 · ~3 นาที</text>
+<path d="M 684,264 H 936" fill="none" stroke="#0066b3" stroke-width="1.2" marker-end="url(#arrow-link)"/>
+<rect x="773.2" y="247" width="73.6" height="12" rx="2" fill="#f5f5f5"/>
+<text x="810.0" y="256" fill="#6b6b6b" font-size="8" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle" letter-spacing="0.08em">WORKER CALL</text>
+<path d="M 164,328 H 416" fill="none" stroke="#0066b3" stroke-width="1.2" marker-end="url(#arrow-link)"/>
+<rect x="237.5" y="311" width="105.0" height="12" rx="2" fill="#f5f5f5"/>
+<text x="290.0" y="320" fill="#6b6b6b" font-size="9" font-family="'Geist', 'Noto Sans Thai', sans-serif" text-anchor="middle">ขอคุยกับพนักงาน</text>
+<path d="M 424,360 H 676" fill="none" stroke="#6b6b6b" stroke-width="1.2" marker-end="url(#arrow)"/>
+<rect x="496.4" y="343" width="107.2" height="12" rx="2" fill="#f5f5f5"/>
+<text x="550.0" y="352" fill="#6b6b6b" font-size="8" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle" letter-spacing="0.08em">CANCEL JOBS(USER)</text>
+<path d="M 424,392 H 1156" fill="none" stroke="#6b6b6b" stroke-width="1.2" stroke-dasharray="5,4" marker-end="url(#arrow-open)"/>
+<rect x="684.8" y="375" width="210.4" height="12" rx="2" fill="#f5f5f5"/>
+<text x="790.0" y="384" fill="#6b6b6b" font-size="9" font-family="'Geist', 'Noto Sans Thai', sans-serif" text-anchor="middle">แจ้ง: สรุปบทสนทนา + ลิงก์ /close</text>
+<path d="M 416,424 H 164" fill="none" stroke="#6b6b6b" stroke-width="1.2" stroke-dasharray="5,4" marker-end="url(#arrow-open)"/>
+<rect x="215.8" y="407" width="148.4" height="12" rx="2" fill="#f5f5f5"/>
+<text x="290.0" y="416" fill="#6b6b6b" font-size="9" font-family="'Geist', 'Noto Sans Thai', sans-serif" text-anchor="middle">กำลังโอนให้เจ้าหน้าที่</text>
+<path d="M 936,520 H 684" fill="none" stroke="#6b6b6b" stroke-width="1.2" stroke-dasharray="5,4" marker-end="url(#arrow)"/>
+<rect x="720.3" y="503" width="179.4" height="12" rx="2" fill="#f5f5f5"/>
+<text x="810.0" y="512" fill="#6b6b6b" font-size="9" font-family="'Geist', 'Noto Sans Thai', sans-serif" text-anchor="middle">คำตอบ + การ์ดสินค้า (มาช้า)</text>
+<path d="M 676,552 H 424" fill="none" stroke="#6b6b6b" stroke-width="1.2" marker-end="url(#arrow)"/>
+<rect x="507.6" y="535" width="84.8" height="12" rx="2" fill="#f5f5f5"/>
+<text x="550.0" y="544" fill="#6b6b6b" font-size="8" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle" letter-spacing="0.08em">RESULT JOB #1</text>
+<rect x="292" y="576" width="352" height="104" rx="4" fill="rgba(26,26,26,0.02)" stroke="rgba(26,26,26,0.22)" stroke-width="1"/>
+<rect x="292" y="576" width="40" height="16" rx="2" fill="#f5f5f5" stroke="rgba(26,26,26,0.22)" stroke-width="1"/>
+<text x="312" y="588" fill="#6b6b6b" font-size="8" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle" letter-spacing="0.12em">OPT</text>
+<text x="340" y="588" fill="#6b6b6b" font-size="9" font-family="'Geist', 'Noto Sans Thai', sans-serif" text-anchor="start">[state = ESCALATED หรือ job ถูกยกเลิก]</text>
+<path d="M 424,616 H 464 Q 472,616 472,624 V 640 Q 472,648 464,648 H 424" fill="none" stroke="#e30613" stroke-width="1.2" marker-end="url(#arrow-accent)"/>
+<text x="480" y="628" fill="#e30613" font-size="10" font-family="'Geist', 'Noto Sans Thai', sans-serif" text-anchor="start" font-weight="600">sendGuard: ทิ้ง ไม่ส่ง</text>
+<text x="480" y="642" fill="#6b6b6b" font-size="8" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="start">log: dropped · reason=escalated</text>
+<text x="304" y="668" fill="#6b6b6b" font-size="9" font-family="'Geist', 'Noto Sans Thai', sans-serif" text-anchor="start">ลูกค้าไม่ได้การ์ดสินค้า · เจ้าหน้าที่คุยต่อได้</text>
+<rect x="64" y="72" width="192" height="56" rx="6" fill="#f5f5f5"/>
+<rect x="64" y="72" width="192" height="56" rx="6" fill="rgba(107,107,107,0.10)" stroke="#80868c" stroke-width="1"/>
+<rect x="72" y="78" width="32" height="12" rx="2" fill="none" stroke="#80868c" stroke-opacity="0.45" stroke-width="0.8"/>
+<text x="88.0" y="87" fill="#80868c" font-size="7" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle" letter-spacing="0.08em">USER</text>
+<text x="160.0" y="106" fill="#1a1a1a" font-size="12" font-family="'Geist', 'Noto Sans Thai', sans-serif" text-anchor="middle" font-weight="600">ลูกค้า</text>
+<text x="160.0" y="120" fill="#6b6b6b" font-size="10" font-family="'Geist', 'Noto Sans Thai', sans-serif" text-anchor="middle">LINE app</text>
+<rect x="324" y="72" width="192" height="56" rx="6" fill="#f5f5f5"/>
+<rect x="324" y="72" width="192" height="56" rx="6" fill="#ffffff" stroke="#1a1a1a" stroke-width="1"/>
+<rect x="332" y="78" width="27" height="12" rx="2" fill="none" stroke="#80868c" stroke-opacity="0.45" stroke-width="0.8"/>
+<text x="345.5" y="87" fill="#80868c" font-size="7" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle" letter-spacing="0.08em">APP</text>
+<text x="420.0" y="106" fill="#1a1a1a" font-size="12" font-family="'Geist', 'Noto Sans Thai', sans-serif" text-anchor="middle" font-weight="600">ระบบเรา</text>
+<text x="420.0" y="120" fill="#6b6b6b" font-size="10" font-family="'Geist', 'Noto Sans Thai', sans-serif" text-anchor="middle">conversation + sendGuard</text>
+<rect x="584" y="72" width="192" height="56" rx="6" fill="#f5f5f5"/>
+<rect x="584" y="72" width="192" height="56" rx="6" fill="rgba(26,26,26,0.05)" stroke="#6b6b6b" stroke-width="1"/>
+<rect x="592" y="78" width="37" height="12" rx="2" fill="none" stroke="#80868c" stroke-opacity="0.45" stroke-width="0.8"/>
+<text x="610.5" y="87" fill="#80868c" font-size="7" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle" letter-spacing="0.08em">STORE</text>
+<text x="680.0" y="106" fill="#1a1a1a" font-size="12" font-family="'Geist', 'Noto Sans Thai', sans-serif" text-anchor="middle" font-weight="600">คิว + worker</text>
+<text x="680.0" y="120" fill="#6b6b6b" font-size="10" font-family="'Geist', 'Noto Sans Thai', sans-serif" text-anchor="middle">Redis</text>
+<rect x="844" y="72" width="192" height="56" rx="6" fill="#f5f5f5"/>
+<rect x="844" y="72" width="192" height="56" rx="6" fill="rgba(26,26,26,0.03)" stroke="rgba(26,26,26,0.30)" stroke-width="1"/>
+<rect x="852" y="78" width="27" height="12" rx="2" fill="none" stroke="#80868c" stroke-opacity="0.45" stroke-width="0.8"/>
+<text x="865.5" y="87" fill="#80868c" font-size="7" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle" letter-spacing="0.08em">EXT</text>
+<text x="940.0" y="106" fill="#1a1a1a" font-size="12" font-family="'Geist', 'Noto Sans Thai', sans-serif" text-anchor="middle" font-weight="600">Softnix</text>
+<text x="940.0" y="120" fill="#6b6b6b" font-size="9" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle">/chat/completions</text>
+<rect x="1064" y="72" width="192" height="56" rx="6" fill="#f5f5f5"/>
+<rect x="1064" y="72" width="192" height="56" rx="6" fill="rgba(107,107,107,0.10)" stroke="#80868c" stroke-width="1"/>
+<rect x="1072" y="78" width="37" height="12" rx="2" fill="none" stroke="#80868c" stroke-opacity="0.45" stroke-width="0.8"/>
+<text x="1090.5" y="87" fill="#80868c" font-size="7" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle" letter-spacing="0.08em">HUMAN</text>
+<text x="1160.0" y="106" fill="#1a1a1a" font-size="12" font-family="'Geist', 'Noto Sans Thai', sans-serif" text-anchor="middle" font-weight="600">Call center</text>
+<text x="1160.0" y="120" fill="#6b6b6b" font-size="10" font-family="'Geist', 'Noto Sans Thai', sans-serif" text-anchor="middle">เจ้าหน้าที่</text>
+<line x1="40" y1="704" x2="1240" y2="704" stroke="rgba(26,26,26,0.10)" stroke-width="0.8"/>
+<text x="40" y="730" fill="#6b6b6b" font-size="8" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="start" letter-spacing="0.18em">LEGEND</text>
+<line x1="112" y1="727" x2="138" y2="727" stroke="#0066b3" stroke-width="1.2" marker-end="url(#arrow-link)"/>
+<text x="146" y="730" fill="#6b6b6b" font-size="9" font-family="'Geist', 'Noto Sans Thai', sans-serif" text-anchor="start">ข้อความ / HTTP</text>
+<line x1="259.6" y1="727" x2="285.6" y2="727" stroke="#6b6b6b" stroke-width="1.2" marker-end="url(#arrow)"/>
+<text x="293.6" y="730" fill="#6b6b6b" font-size="9" font-family="'Geist', 'Noto Sans Thai', sans-serif" text-anchor="start">เรียกภายใน</text>
+<line x1="381.6" y1="727" x2="407.6" y2="727" stroke="#6b6b6b" stroke-width="1.2" stroke-dasharray="5,4" marker-end="url(#arrow-open)"/>
+<text x="415.6" y="730" fill="#6b6b6b" font-size="9" font-family="'Geist', 'Noto Sans Thai', sans-serif" text-anchor="start">ส่งแล้วไม่รอ (push / แจ้ง)</text>
+<line x1="606.0" y1="727" x2="632.0" y2="727" stroke="#6b6b6b" stroke-width="1.2" stroke-dasharray="5,4" marker-end="url(#arrow)"/>
+<text x="640.0" y="730" fill="#6b6b6b" font-size="9" font-family="'Geist', 'Noto Sans Thai', sans-serif" text-anchor="start">คำตอบกลับ</text>
+<line x1="721.6" y1="727" x2="747.6" y2="727" stroke="#e30613" stroke-width="1.2" marker-end="url(#arrow-accent)"/>
+<text x="755.6" y="730" fill="#6b6b6b" font-size="9" font-family="'Geist', 'Noto Sans Thai', sans-serif" text-anchor="start">จุดที่กันพลาด</text>
+</svg>
+</div>
+<div class="cards"><div class="card"><p class="eyebrow">TWO GUARDS</p><h3><span class="dot accent"></span>ยกเลิกงาน + sendGuard</h3><ul><li><b>ยกเลิกงาน</b> (ตอน t≈90): งานที่ยังไม่เริ่มจะไม่ถูกส่งไป Softnix เลย</li><li>แต่งานที่ Softnix <b>กำลังทำอยู่</b> หยุดกลางทางไม่ได้ คำตอบยังกลับมา</li><li><b>sendGuard</b> คือด่านสุดท้าย: อ่าน state ล่าสุดตอนจะส่ง แล้วทิ้ง</li></ul></div><div class="card"><p class="eyebrow">IF SOFTNIX SENT</p><h3><span class="dot soft"></span>เคสนี้จะพัง</h3><ul><li>การ์ดสินค้าจะถึงลูกค้าที่ t≈200 ทั้งที่อยู่กับเจ้าหน้าที่แล้ว</li><li>ระบบเราหยุดไม่ได้เพราะไม่ได้เป็นคนส่ง — นี่คือเหตุผลหลักของ D-003</li></ul></div><div class="card"><p class="eyebrow">TESTS</p><h3><span class="dot ink"></span>ต้องมีก่อนขึ้นระบบ</h3><ul><li><code>test/scenarios/escalationRace.test.js</code></li><li><code>test/unit/sendGuard.test.js</code></li></ul></div></div>
+<footer>line_prod · โครงสร้างเท่านั้น ยังไม่มีโค้ด · 2026-10-21</footer>
+</div>
+</body>
+</html>

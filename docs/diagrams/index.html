@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>line_prod Diagrams</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500;600&family=Noto+Sans+Thai:wght@400;500;600&family=Noto+Serif+Thai:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --paper: #f5f5f5; --paper-2: #ececec; --ink: #1a1a1a; --muted: #6b6b6b; --soft: #80868c;
+  --rule: rgba(26,26,26,0.12); --accent: #e30613; --accent-tint: rgba(227,6,19,0.06); --link: #0066b3;
+  --font-sans: 'Geist', 'Noto Sans Thai', system-ui, sans-serif;
+  --font-serif: 'Instrument Serif', 'Noto Serif Thai', serif;
+  --font-mono: 'Geist Mono', ui-monospace, monospace;
+}
+body { font-family: var(--font-sans); background: var(--paper); color: var(--ink); padding: 2.5rem 16px 3rem; line-height: 1.6; }
+.frame { max-width: 1320px; margin: 0 auto; }
+nav.crumbs { font-family: var(--font-mono); font-size: 0.72rem; letter-spacing: 0.04em; color: var(--muted); margin-bottom: 1.75rem; display: flex; gap: 1.25rem; flex-wrap: wrap; }
+nav.crumbs a { color: var(--link); text-decoration: none; }
+nav.crumbs a:hover { text-decoration: underline; }
+.eyebrow { font-family: var(--font-mono); font-size: 0.66rem; font-weight: 500; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); margin-bottom: 0.5rem; }
+h1 { font-family: var(--font-serif); font-size: clamp(1.6rem, 2.4vw + 0.8rem, 2.2rem); font-weight: 400; letter-spacing: -0.01em; line-height: 1.2; margin-bottom: 0.75rem; }
+.lede { max-width: 72ch; color: var(--muted); font-size: 0.95rem; margin-bottom: 1.75rem; }
+code { font-family: var(--font-mono); font-size: 0.82em; color: var(--ink); background: rgba(26,26,26,0.05); padding: 0 0.3em; border-radius: 3px; }
+.diagram-container { width: 100%; overflow-x: auto; margin-bottom: 2rem; }
+.diagram-container svg { width: 100%; display: block; }
+.cards { display: grid; grid-template-columns: 1.15fr 1fr 0.85fr; gap: 1rem; }
+.cards.two { grid-template-columns: 1.2fr 0.8fr; }
+.card { background: #ffffff; border: 1px solid var(--rule); border-radius: 6px; padding: 1.25rem; min-width: 0; }
+.card h3 { font-size: 0.95rem; font-weight: 600; display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.6rem; }
+.card h3 a { color: var(--ink); text-decoration: none; }
+.card h3 a:hover { color: var(--link); }
+.card ul { padding-left: 1.1rem; font-size: 0.86rem; }
+.card li { margin-bottom: 0.3rem; }
+.card p { font-size: 0.86rem; color: var(--muted); }
+.dot { width: 7px; height: 7px; border-radius: 50%; display: inline-block; flex: none; }
+.dot.ink { background: var(--ink); } .dot.accent { background: var(--accent); } .dot.link { background: var(--link); } .dot.soft { background: var(--soft); }
+footer { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid var(--rule); font-family: var(--font-mono); font-size: 0.68rem; color: var(--muted); letter-spacing: 0.04em; }
+@media (max-width: 860px) { .cards, .cards.two { grid-template-columns: 1fr; } }
+@media print { .diagram-container { overflow-x: visible; } .diagram-container svg { min-width: 0 !important; } }
+</style>
+</head>
+<body>
+<div class="frame">
+<p class="eyebrow">LINE_PROD · DIAGRAMS</p>
+<h1>ภาพใหญ่ของเวอร์ชัน production</h1>
+<p class="lede">ไดอะแกรม 4 ภาพของโครงสร้างใหม่ใน <code>line_prod</code> (ยังไม่มีโค้ด) สร้างตามข้อสรุปของสภาที่ปรึกษา 5 มุมมอง การตัดสินใจและเหตุผลอยู่ใน <code>docs/decisions.md</code> · state machine ยังเหมือน MVP ดูได้ที่ <code>line_/docs/diagrams/04-state-session.html</code></p>
+<div class="cards two" style="grid-template-columns: 1fr 1fr;"><div class="card"><p class="eyebrow">01 · ARCHITECTURE</p><h3><span class="dot ink"></span><a href="01-system.html">ภาพรวมระบบบน server บริษัท</a></h3><p>LINE ↔ ระบบเรา ↔ Softnix, sendGuard, Redis, call center และทางหลบ</p></div><div class="card"><p class="eyebrow">02 · LAYER STACK</p><h3><span class="dot ink"></span><a href="02-code-layers.html">โครงสร้างโค้ด 6 ชั้น</a></h3><p>โฟลเดอร์ใน src/ เรียงตามทางที่ข้อความเดินผ่าน</p></div><div class="card"><p class="eyebrow">03 · SEQUENCE</p><h3><span class="dot ink"></span><a href="03-escalation-race.html">คำตอบที่มาช้า ต้องไม่แทรกเจ้าหน้าที่</a></h3><p>ยกเลิกงาน + sendGuard กันคำตอบ Softnix ที่มาหลังส่งต่อคน</p></div><div class="card"><p class="eyebrow">04 · TIMELINE</p><h3><span class="dot ink"></span><a href="04-customer-wait.html">ลูกค้าเห็นอะไรระหว่างรอ</a></h3><p>0 วิ / 60 วิ / ได้คำตอบ / ครบ 5 นาที</p></div></div>
+<footer>line_prod · โครงสร้างเท่านั้น ยังไม่มีโค้ด · 2026-10-21</footer>
+</div>
+</body>
+</html>

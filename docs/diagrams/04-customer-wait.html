@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>04 Customer Wait</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500;600&family=Noto+Sans+Thai:wght@400;500;600&family=Noto+Serif+Thai:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --paper: #f5f5f5; --paper-2: #ececec; --ink: #1a1a1a; --muted: #6b6b6b; --soft: #80868c;
+  --rule: rgba(26,26,26,0.12); --accent: #e30613; --accent-tint: rgba(227,6,19,0.06); --link: #0066b3;
+  --font-sans: 'Geist', 'Noto Sans Thai', system-ui, sans-serif;
+  --font-serif: 'Instrument Serif', 'Noto Serif Thai', serif;
+  --font-mono: 'Geist Mono', ui-monospace, monospace;
+}
+body { font-family: var(--font-sans); background: var(--paper); color: var(--ink); padding: 2.5rem 16px 3rem; line-height: 1.6; }
+.frame { max-width: 1320px; margin: 0 auto; }
+nav.crumbs { font-family: var(--font-mono); font-size: 0.72rem; letter-spacing: 0.04em; color: var(--muted); margin-bottom: 1.75rem; display: flex; gap: 1.25rem; flex-wrap: wrap; }
+nav.crumbs a { color: var(--link); text-decoration: none; }
+nav.crumbs a:hover { text-decoration: underline; }
+.eyebrow { font-family: var(--font-mono); font-size: 0.66rem; font-weight: 500; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); margin-bottom: 0.5rem; }
+h1 { font-family: var(--font-serif); font-size: clamp(1.6rem, 2.4vw + 0.8rem, 2.2rem); font-weight: 400; letter-spacing: -0.01em; line-height: 1.2; margin-bottom: 0.75rem; }
+.lede { max-width: 72ch; color: var(--muted); font-size: 0.95rem; margin-bottom: 1.75rem; }
+code { font-family: var(--font-mono); font-size: 0.82em; color: var(--ink); background: rgba(26,26,26,0.05); padding: 0 0.3em; border-radius: 3px; }
+.diagram-container { width: 100%; overflow-x: auto; margin-bottom: 2rem; }
+.diagram-container svg { width: 100%; display: block; }
+.cards { display: grid; grid-template-columns: 1.15fr 1fr 0.85fr; gap: 1rem; }
+.cards.two { grid-template-columns: 1.2fr 0.8fr; }
+.card { background: #ffffff; border: 1px solid var(--rule); border-radius: 6px; padding: 1.25rem; min-width: 0; }
+.card h3 { font-size: 0.95rem; font-weight: 600; display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.6rem; }
+.card h3 a { color: var(--ink); text-decoration: none; }
+.card h3 a:hover { color: var(--link); }
+.card ul { padding-left: 1.1rem; font-size: 0.86rem; }
+.card li { margin-bottom: 0.3rem; }
+.card p { font-size: 0.86rem; color: var(--muted); }
+.dot { width: 7px; height: 7px; border-radius: 50%; display: inline-block; flex: none; }
+.dot.ink { background: var(--ink); } .dot.accent { background: var(--accent); } .dot.link { background: var(--link); } .dot.soft { background: var(--soft); }
+footer { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid var(--rule); font-family: var(--font-mono); font-size: 0.68rem; color: var(--muted); letter-spacing: 0.04em; }
+@media (max-width: 860px) { .cards, .cards.two { grid-template-columns: 1fr; } }
+@media print { .diagram-container { overflow-x: visible; } .diagram-container svg { min-width: 0 !important; } }
+</style>
+</head>
+<body>
+<div class="frame">
+<nav class="crumbs"><a href="index.html">← สารบัญ</a> <a href="03-escalation-race.html">‹ ก่อนหน้า</a></nav>
+<p class="eyebrow">04 · TIMELINE · CUSTOMER WAIT</p>
+<h1>ลูกค้าเห็นอะไรระหว่างรอ Softnix</h1>
+<p class="lede">เวลาจริงตามสเกล 0–6 นาที สำหรับลูกค้าคนแรกในคิว เป้าหมายคือลูกค้าต้องไม่เจอแชทเงียบโดยไม่รู้ว่าเกิดอะไรขึ้น และต้องมีเวลาสูงสุดที่ระบบเลิกรอแล้วส่งให้คนดูแล</p>
+<div class="diagram-container">
+<svg viewBox="0 0 1280 400" style="min-width:1280px" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="wait-title wait-desc">
+<title id="wait-title">What the customer sees while waiting</title>
+<desc id="wait-desc">A linear six-minute timeline for the first customer in the Softnix queue: immediate acknowledgement and queue message, loading refresh at sixty seconds, the measured 100 to 230 second answer window, and the proposed five-minute hard limit that hands the customer to a person.</desc>
+<defs>
+  <marker id="arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#6b6b6b"/></marker>
+  <marker id="arrow-accent" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#e30613"/></marker>
+  <marker id="arrow-link" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#0066b3"/></marker>
+  <marker id="arrow-open" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polyline points="0 0, 8 3, 0 6" fill="none" stroke="#6b6b6b" stroke-width="1.2"/></marker>
+</defs>
+<rect width="100%" height="100%" fill="#f5f5f5"/>
+<rect x="408.9" y="142" width="375.5" height="20" fill="rgba(0,102,179,0.08)" stroke="rgba(0,102,179,0.35)" stroke-width="0.8"/>
+<line x1="120" y1="152" x2="1160" y2="152" stroke="#1a1a1a" stroke-width="1"/>
+<line x1="120.0" y1="148" x2="120.0" y2="156" stroke="#1a1a1a" stroke-width="1"/>
+<text x="116.0" y="170" fill="#6b6b6b" font-size="9" font-family="'Geist', 'Noto Sans Thai', sans-serif" text-anchor="end">0</text>
+<line x1="293.3" y1="148" x2="293.3" y2="156" stroke="#1a1a1a" stroke-width="1"/>
+<text x="289.3" y="170" fill="#6b6b6b" font-size="9" font-family="'Geist', 'Noto Sans Thai', sans-serif" text-anchor="end">1 นาที</text>
+<line x1="466.7" y1="148" x2="466.7" y2="156" stroke="#1a1a1a" stroke-width="1"/>
+<text x="462.7" y="170" fill="#6b6b6b" font-size="9" font-family="'Geist', 'Noto Sans Thai', sans-serif" text-anchor="end">2 นาที</text>
+<line x1="640.0" y1="148" x2="640.0" y2="156" stroke="#1a1a1a" stroke-width="1"/>
+<text x="636.0" y="170" fill="#6b6b6b" font-size="9" font-family="'Geist', 'Noto Sans Thai', sans-serif" text-anchor="end">3 นาที</text>
+<line x1="813.3" y1="148" x2="813.3" y2="156" stroke="#1a1a1a" stroke-width="1"/>
+<text x="809.3" y="170" fill="#6b6b6b" font-size="9" font-family="'Geist', 'Noto Sans Thai', sans-serif" text-anchor="end">4 นาที</text>
+<line x1="986.7" y1="148" x2="986.7" y2="156" stroke="#1a1a1a" stroke-width="1"/>
+<text x="982.7" y="170" fill="#6b6b6b" font-size="9" font-family="'Geist', 'Noto Sans Thai', sans-serif" text-anchor="end">5 นาที</text>
+<line x1="1160.0" y1="148" x2="1160.0" y2="156" stroke="#1a1a1a" stroke-width="1"/>
+<text x="1156.0" y="170" fill="#6b6b6b" font-size="9" font-family="'Geist', 'Noto Sans Thai', sans-serif" text-anchor="end">6 นาที</text>
+<line x1="120.0" y1="152" x2="120.0" y2="100" stroke="rgba(26,26,26,0.35)" stroke-width="1"/>
+<circle cx="120.0" cy="152" r="4" fill="#1a1a1a"/>
+<text x="116.0" y="88" fill="#1a1a1a" font-size="12" font-family="'Geist', 'Noto Sans Thai', sans-serif" text-anchor="start" font-weight="600">ตอบ 200 + เปิด loading</text>
+<text x="116.0" y="103" fill="#6b6b6b" font-size="10" font-family="'Geist', 'Noto Sans Thai', sans-serif" text-anchor="start">ส่งข้อความ: กำลังค้นหา · คิวที่ N · ~X นาที</text>
+<line x1="293.3" y1="152" x2="293.3" y2="200" stroke="rgba(26,26,26,0.35)" stroke-width="1"/>
+<circle cx="293.3" cy="152" r="4" fill="#1a1a1a"/>
+<text x="293.3" y="216" fill="#1a1a1a" font-size="12" font-family="'Geist', 'Noto Sans Thai', sans-serif" text-anchor="middle" font-weight="600">loading หมดอายุ (LINE ตั้งได้ ≤ 60 วิ)</text>
+<text x="293.3" y="231" fill="#6b6b6b" font-size="10" font-family="'Geist', 'Noto Sans Thai', sans-serif" text-anchor="middle">ต่ออายุทุก ~55 วิ จนได้คำตอบ</text>
+<line x1="596.7" y1="152" x2="596.7" y2="100" stroke="rgba(26,26,26,0.35)" stroke-width="1"/>
+<circle cx="596.7" cy="152" r="4" fill="#1a1a1a"/>
+<text x="596.7" y="88" fill="#1a1a1a" font-size="12" font-family="'Geist', 'Noto Sans Thai', sans-serif" text-anchor="middle" font-weight="600">ได้คำตอบ → sendGuard ตรวจ → ส่งการ์ดสินค้า</text>
+<text x="596.7" y="103" fill="#6b6b6b" font-size="10" font-family="'Geist', 'Noto Sans Thai', sans-serif" text-anchor="middle">ส่งแบบ push (reply token หมดไปแล้ว)</text>
+<line x1="986.7" y1="152" x2="986.7" y2="200" stroke="rgba(26,26,26,0.35)" stroke-width="1"/>
+<circle cx="986.7" cy="152" r="6" fill="#e30613"/>
+<text x="986.7" y="216" fill="#e30613" font-size="12" font-family="'Geist', 'Noto Sans Thai', sans-serif" text-anchor="middle" font-weight="600">ครบ 5 นาที → เลิกรอ ส่งต่อเจ้าหน้าที่</text>
+<text x="986.7" y="231" fill="#6b6b6b" font-size="10" font-family="'Geist', 'Noto Sans Thai', sans-serif" text-anchor="middle">นอกเวลาทำการ: บอกตามจริง ให้ทิ้งข้อความไว้</text>
+<text x="596.7" y="192" fill="#0066b3" font-size="9" font-family="'Geist', 'Noto Sans Thai', sans-serif" text-anchor="middle">ช่วงที่ Softnix ตอบจริง (วัดได้ 100–230 วินาที)</text>
+<text x="120" y="316" fill="#6b6b6b" font-size="11" font-family="'Instrument Serif', 'Noto Serif Thai', serif" text-anchor="start" font-style="italic">ภาพนี้คือลูกค้าคนแรกในคิว · คนที่ N รอเพิ่มประมาณ (N − 1) × 150 วิ · คิวยาวเกิน SOFTNIX_MAX_QUEUE → ไม่รับเพิ่ม เสนอเจ้าหน้าที่ทันที</text>
+<line x1="40" y1="340" x2="1240" y2="340" stroke="rgba(26,26,26,0.10)" stroke-width="0.8"/>
+<text x="40" y="366" fill="#6b6b6b" font-size="8" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="start" letter-spacing="0.18em">LEGEND</text>
+<rect x="112" y="358" width="16" height="10" rx="2" fill="#ffffff" stroke="#1a1a1a" stroke-width="1"/>
+<text x="134" y="366" fill="#6b6b6b" font-size="9" font-family="'Geist', 'Noto Sans Thai', sans-serif" text-anchor="start">เหตุการณ์</text>
+<rect x="215.6" y="358" width="16" height="10" rx="2" fill="rgba(227,6,19,0.06)" stroke="#e30613" stroke-width="1"/>
+<text x="237.6" y="366" fill="#6b6b6b" font-size="9" font-family="'Geist', 'Noto Sans Thai', sans-serif" text-anchor="start">จุดตัดสินใจหลัก (ค่าเสนอ)</text>
+</svg>
+</div>
+<div class="cards"><div class="card"><p class="eyebrow">NUMBERS</p><h3><span class="dot accent"></span>ค่าที่ยังเป็นข้อเสนอ</h3><ul><li><code>SOFTNIX_HARD_LIMIT_MS</code> = 5 นาที</li><li><code>SOFTNIX_MAX_QUEUE</code> = 5 คน</li><li>ยืนยันหลังได้คำตอบจาก Softnix และนับคำถามจริง 1 สัปดาห์</li></ul></div><div class="card"><p class="eyebrow">HONEST WAIT</p><h3><span class="dot ink"></span>ลูกค้าเห็นอะไร</h3><ul><li>loading ของ LINE อยู่ได้แค่ 60 วิ หลังจากนั้นแชทจะเงียบ</li><li>ข้อความ "คิวที่ N ประมาณ X นาที" ทำให้ลูกค้าไม่คิดว่าระบบค้าง</li><li>Softnix ทำทีละคิว — คนที่ 5 อาจรอ ~10 นาที</li></ul></div><div class="card"><p class="eyebrow">COST</p><h3><span class="dot soft"></span>push มีค่าใช้จ่าย</h3><ul><li>ตอบเกิน 60 วิ = ใช้ push แทน reply ทุกครั้ง</li><li>ต้องเช็คโควตาของ LINE OA (<code>open-questions.md</code> ข้อ 6)</li></ul></div></div>
+<footer>line_prod · โครงสร้างเท่านั้น ยังไม่มีโค้ด · 2026-10-21</footer>
+</div>
+</body>
+</html>
