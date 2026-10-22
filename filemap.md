@@ -6,6 +6,7 @@
 - `.env.example` — รายชื่อ env ที่ต้องตั้ง / แตะเมื่อเพิ่ม config
 - `pyproject.toml` — dependency และเครื่องมือ Python / แตะเมื่อเพิ่ม package
 - `docker-compose.yml` — โครง service ตาม Stack (ยังไม่ทดสอบ) / แตะเมื่อเพิ่ม service
+- `Caddyfile` — HTTPS หน้า api เปิดเฉพาะ /webhook /health /close (โดเมนรอคำตอบ) / แตะเมื่อเพิ่ม route สาธารณะ
 
 ## docs/
 - `docs/Line_ai_bot.md` — แบบหลัก: สถาปัตยกรรม, flow, หลักการ, Stack / อ่านก่อนทำงานทุกครั้ง

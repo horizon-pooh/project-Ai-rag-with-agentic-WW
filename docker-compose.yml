@@ -5,16 +5,28 @@ services:
   caddy:
     # HTTPS สำหรับ webhook (หรือใช้ Cloudflare Tunnel แทน — ยังไม่ตัดสิน)
     image: caddy:2
+    restart: unless-stopped
     ports:
       - "80:80"
       - "443:443"
-    # volumes: Caddyfile + caddy_data (ยังไม่มี Caddyfile)
+      - "443:443/udp" # HTTP/3
+    # ไม่ใช้ env_file .env: caddy ไม่ต้องเห็น secret ของ app ส่งเฉพาะ DOMAIN
+    environment:
+      - DOMAIN=${DOMAIN}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      # ใบรับรอง ต้องเก็บไว้ ไม่งั้นขอใหม่ทุกครั้งแล้วโดน Let's Encrypt จำกัดจำนวน
+      - caddy_data:/data
+      - caddy_config:/config
     depends_on:
       - api
 
   api:
     build: .
     # command: uvicorn app.main:create_app --factory --host 0.0.0.0 --port 8000
+    # ภายในเท่านั้น ไม่เปิดพอร์ตออก host (ข้างนอกเข้าผ่าน caddy)
+    expose:
+      - "8000"
     env_file: .env
     depends_on:
       - postgres
@@ -49,3 +61,5 @@ services:
 volumes:
   postgres_data:
   minio_data:
+  caddy_data:
+  caddy_config:
