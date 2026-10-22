@@ -1,5 +1,9 @@
 # ไฟล์ใน line_ (MVP) ย้ายไปไหน
 
+> **สถานะ (22 ต.ค. 2026): แบบเก่า — แบบหลักอยู่ที่ `docs/Line_ai_bot.md` (หัวข้อ Stack)**
+> ยังใช้ได้: ใช้ดูว่าแนวคิดเดิมมาจากไฟล์ไหนของ MVP
+> ล้าสมัย: แผนย้าย JS→JS ทั้งตาราง — แนวคิดจากแต่ละไฟล์ใน `src/` ไปอยู่ไฟล์ไหนใน `app/` ดูจาก docstring ของ stub และ `filemap.md`
+
 | ไฟล์ใน `line_` | ไปที่ `line_prod` | หมายเหตุ |
 |---|---|---|
 | `server.js` (1,263 บรรทัด) | `src/server.js`, `src/app.js`, `src/routes/*`, `src/middleware/lineSignature.js`, `src/conversation/*`, `src/jobs/softnixWorker.js` | แตกเป็นหลายไฟล์ตามหน้าที่ |
