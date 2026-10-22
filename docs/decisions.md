@@ -91,3 +91,28 @@
   - state 4 แบบ → `bot`/`human`; หมดเวลาส่งต่อ 3 ชม. → 6 ชม. นับจากตอนส่งต่อ
   - `src/`, `dev/`, `test/`, `deploy/ecosystem.config.js` ปล่อยไว้เป็นต้นฉบับแนวคิด ไม่ลบ ไม่แก้
   - เรื่องที่ขึ้นกับตัว API (Softnix หรือไม่, JSON/markdown, คืน state ไหม, รับรูป/บอกส่งต่อได้ไหม) **รอคำตอบ** — ดู `open-questions.md`, `softnix-questions.md`
+
+## D-009 รายละเอียดการลงมือ (Python)
+
+- **สถานะ:** เสนอ — รอยืนยัน (2026-10-22)
+- ที่มา: ตาราง "ข้อตัดสินของ orchestrator" ใน `docs/PLAN.md` + ข้อที่ตัดสินระหว่างลงมือ
+
+| เรื่อง | ตัดสิน | จะเปลี่ยนใจเมื่อ |
+|---|---|---|
+| Python / DB | 3.12, psycopg 3 async + psycopg_pool | — |
+| LINE | httpx เอง ตรวจ signature ด้วย hmac ไม่ใช้ line-bot-sdk | ต้องใช้ฟีเจอร์ที่ SDK ทำให้มาก |
+| schema | migration ร่างจากแบบหลัก | ได้ `line_chat_schema_v2.sql` จริง |
+| kill switch | ตาราง `ops_flags` OR env `KILL_SWITCH`; อ่านค่าไม่ได้ → ถือว่าเปิด | — |
+| replyToken | Redis TTL `REPLY_TOKEN_TTL_S`, GETDEL; ไม่มี/หมดอายุ → push | — |
+| ล็อกต่อ user | Redis `SET NX PX` + ต่ออายุ + compare-and-delete; ไม่ใช้ advisory lock เพราะถือ connection ค้างระหว่างรอ AI | — |
+| claim event | `UPDATE ... WHERE process_status='pending' RETURNING` ใช้ทั้ง worker และ fast path | — |
+| ตัวนับ | `conversation_state.counters` (jsonb ไม่ส่ง AI) | — |
+| เกณฑ์ส่งต่อ | `CLARIFY_MAX=2`, cannot_answer / validate ติดกันครั้งที่ 2, `RATE_LIMIT_PER_MIN=10` | ได้ข้อมูลแชทจริง |
+| การจับคำ | resume_ai / faq ตรงทั้งข้อความ, escalate substring (หลัง normalize) | จับพลาดในแชทจริง |
+| แจ้ง call center | `LogNotifier` หลัง interface `Notifier` | รู้ช่องทางจริง |
+| AI API | สัญญาเสนอ JSON (`AiRequest`/`AiResult`), Markdown = stub, ยังไม่ส่งรูป — รอคำตอบ | ได้สเปก API |
+| dedupe_key ขาออก | `out:<raw_event_id>:<ลำดับการส่งในรอบ>` ไม่ผูก purpose เพราะ retry อาจได้เส้นทางอื่น | — |
+| /close | GET แสดงหน้ายืนยัน ปิดจริงด้วย POST (กัน link preview ใช้ token) | — |
+| arq | `keep_result=0` ให้ cron ใส่คิวซ้ำด้วย job id เดิมได้ | — |
+| ไฟล์กฎ | ตัด "แอดมิน", "สินค้าเสีย", "ของเสีย", "ดีค่ะ/ดีครับ" เพราะจับผิด (ดูหัวไฟล์ใน `prompts/rules/`) | มีวิธีจับที่ไม่พลาด + เคสทดสอบ |
+| redact | ที่อยู่ไม่ redact (ยังไม่มีรูปแบบที่เชื่อถือได้) | มีรูปแบบที่ทดสอบได้ |

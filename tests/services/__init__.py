@@ -3,5 +3,5 @@
 เทสต์ของ app/services (จำลอง HTTP ด้วย respx)
 
 แนวคิดจาก: ใหม่ (ไม่มีในแบบเก่า)
-สถานะ: ยังไม่มีโค้ด (โครงสร้างเท่านั้น)
+สถานะ: มีโค้ดแล้ว (เทสต์ของ ai_client, ai_parsers, line_client, kill_switch, notify, storage)
 """

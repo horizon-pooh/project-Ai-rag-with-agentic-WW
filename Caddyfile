@@ -16,6 +16,19 @@
 		reverse_proxy api:8000
 	}
 
+	# ฟอร์มยืนยันปิดเคส (GET /close แสดงหน้ายืนยันเท่านั้น ปิดจริงด้วย POST)
+	@close_post {
+		method POST
+		path /close
+	}
+	handle @close_post {
+		# ฟอร์มมีแค่ token
+		request_body {
+			max_size 4KB
+		}
+		reverse_proxy api:8000
+	}
+
 	@public {
 		method GET HEAD
 		path /health /close

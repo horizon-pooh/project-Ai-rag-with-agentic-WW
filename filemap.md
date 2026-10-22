@@ -6,10 +6,15 @@
 - `.env.example` — รายชื่อ env ที่ต้องตั้ง / แตะเมื่อเพิ่ม config
 - `pyproject.toml` — dependency และเครื่องมือ Python / แตะเมื่อเพิ่ม package
 - `docker-compose.yml` — โครง service ตาม Stack (ยังไม่ทดสอบ) / แตะเมื่อเพิ่ม service
+- `Dockerfile` — image เดียวของ api และ worker (uv sync ตาม uv.lock) / แตะเมื่อเปลี่ยนวิธี build
+- `.dockerignore` — ไฟล์ที่ไม่ใส่ใน image / แตะเมื่อเพิ่มโฟลเดอร์ใหญ่
+- `.python-version` — pin Python 3.12 ให้ uv / แตะเมื่อเปลี่ยนเวอร์ชัน
+- `uv.lock` — lock dependency (สร้างด้วย `uv lock`) / ไม่แก้มือ
 - `Caddyfile` — HTTPS หน้า api เปิดเฉพาะ /webhook /health /close (โดเมนรอคำตอบ) / แตะเมื่อเพิ่ม route สาธารณะ
 
 ## docs/
 - `docs/Line_ai_bot.md` — แบบหลัก: สถาปัตยกรรม, flow, หลักการ, Stack / อ่านก่อนทำงานทุกครั้ง
+- `docs/PLAN.md` — แผนงานรอบแรก + สัญญาระหว่างโมดูล + เรื่องค้าง / อ่านก่อนแก้โค้ด
 - `docs/decisions.md` — บันทึกการตัดสินใจและเหตุผล / แตะเมื่อตัดสินใจใหม่
 - `docs/conversation.md` — แบบเก่า: การคุยแชทต่อเนื่อง
 - `docs/data-model.md` — แบบเก่า: รูปแบบการเก็บข้อมูล
@@ -33,10 +38,14 @@
 - `app/worker/tasks.py` — process_event(raw_event_id): งานหลักต่อ event
 - `app/worker/locks.py` — ล็อกต่อ user ให้ทำทีละข้อความ
 - `app/worker/cron.py` — งานเบื้องหลังตามเวลา
+- `app/worker/deps.py` — ประกอบ Deps จาก Settings ครั้งเดียว (ใช้ร่วม worker และ api)
 - `app/pipeline/` — ลำดับขั้นตัดสินใจ (ไม่เรียก LINE ไม่เขียน SQL)
 - `app/pipeline/orchestrator.py` — เรียก step ตามลำดับ บันทึก ai_steps
 - `app/pipeline/schemas.py` — ชนิดข้อมูล Pydantic v2 ของ step
 - `app/pipeline/handoff.py` — start/end_handoff: จุดเดียวเปลี่ยนสถานะ bot <-> human
+- `app/pipeline/ports.py` — Protocol ของ repositories/services ที่ pipeline รู้จัก + Deps / แตะเมื่อเพิ่มเมธอดที่ pipeline ใช้
+- `app/pipeline/text.py` — normalize ข้อความ + อ่านไฟล์กฎ prompts/rules/
+- `app/pipeline/replies.py` — ข้อความถึงลูกค้าทั้งหมด (ที่เดียว) + ตัวช่วย quick reply / แตะเมื่อแก้ถ้อยคำ
 - `app/pipeline/steps/` — แต่ละขั้นของ pipeline
 - `app/pipeline/steps/prepare.py` — ขั้น 3: เตรียมข้อมูล
 - `app/pipeline/steps/handoff_check.py` — ขั้น 4: คำสั่งคืน AI / ขอพนักงาน -> HandoffResult
@@ -49,6 +58,10 @@
 - `app/privacy/` — ข้อมูลส่วนบุคคล
 - `app/privacy/redact.py` — ปิด PII ก่อนส่ง AI และก่อนลง log
 - `app/repositories/` — ที่เดียวที่เขียน SQL (หนึ่งไฟล์ต่อกลุ่มตาราง)
+- `app/repositories/db.py` — เปิด/ปิด pool Postgres (psycopg 3 async) fail fast
+- `app/repositories/flags.py` — ops_flags (เช่น kill_switch)
+- `app/repositories/lookups.py` — ค้นเล็กๆ นอกพอร์ต (line_user_id ของบทสนทนา ให้ cron / /close)
+- `app/repositories/health.py` — ตรวจต่อ Postgres ได้ (/health/ready)
 - `app/repositories/raw_events.py` — line_raw_events
 - `app/repositories/users.py` — line_users, line_consents
 - `app/repositories/conversations.py` — conversations
@@ -64,12 +77,20 @@
 - `app/services/kill_switch.py` — ปิดบอทให้ call center รับทั้งหมด ไม่ต้อง deploy
 - `app/services/notify.py` — แจ้ง call center เมื่อส่งต่อ/คืน AI, เวลาทำการ
 - `app/services/storage.py` — เก็บ/ลบรูปใน MinIO
+- `app/services/redis_store.py` — replyToken ใน Redis (TTL, GETDEL)
 
 ## tests/
 - `tests/` — เทสต์แบบใหม่ (Python) / ต่างจาก `test/` แบบเก่า
-- `tests/pipeline/test_handoff_check.py` — เคสของ handoff_check (ยังไม่มีฟังก์ชัน)
-- `tests/services/test_ai_client.py` — เคสของ ai_client/ai_parsers ด้วย respx (ยังไม่มีฟังก์ชัน)
-- `tests/scenarios/` — regression 30 บทสนทนา (ยังไม่มีข้อมูล)
+- `tests/fakes.py` — fake ในหน่วยความจำของทุกพอร์ตใน ports.py / แตะเมื่อเพิ่มเมธอดในพอร์ต
+- `tests/infra_fakes.py` — fake Redis, arq pool, run_turn, user lookup (api / worker / services)
+- `tests/test_config.py`, `tests/test_fakes.py`, `tests/test_smoke.py` — config, ความถูกของ fake, smoke
+- `tests/pipeline/` — ทีละ step + orchestrator + handoff + ไฟล์กฎ (`test_rule_files.py`)
+- `tests/services/` — client ภายนอกด้วย respx / fake Redis (`_helpers.py` ตัวช่วยร่วม)
+- `tests/api/` — webhook, /close, /health ผ่าน create_app + fake (`_app.py`)
+- `tests/worker/` — tasks, locks, cron, settings/deps
+- `tests/privacy/` — รูปแบบ redact
+- `tests/repositories/` — SQL: ตรวจแบบ static เสมอ + integration ข้ามถ้าไม่ตั้ง `TEST_DATABASE_URL`
+- `tests/scenarios/` — ตัวรัน regression + `cases/*.toml` (สังเคราะห์ 3 เคส, แชทจริงยังไม่มี)
 
 ## prompts/
 - `prompts/system.md` — system prompt (รอรูปแบบ AI API)
@@ -79,7 +100,8 @@
 - `prompts/rules/resume_ai.txt` — คำสั่ง "คุยกับ AI" ตรงทั้งข้อความ (handoff_check.py)
 
 ## migrations/
-- `migrations/` — schema Postgres 16 เป็น .sql รันด้วย dbmate (ยังไม่มีไฟล์)
+- `migrations/` — schema Postgres 16 เป็น .sql รันด้วย dbmate
+- `migrations/20261022000000_init.sql` — schema แรก (ร่าง ต้องเทียบ line_chat_schema_v2.sql) / แตะเมื่อเปลี่ยนตาราง (เพิ่มไฟล์ใหม่ ไม่แก้ไฟล์ที่รันแล้ว)
 
 ## แบบเก่า (Node — ห้ามแก้ ห้ามลบ ห้ามย้าย)
 - `src/` — แบบเก่า: โค้ด Node (stub) / อ้างอิงเท่านั้น

@@ -3,5 +3,7 @@
 #   NFC, ลบ zero-width, ลบช่องว่างทั้งหมด, casefold
 # เขียนรายการในรูปที่ normalize แล้ว หนึ่งบรรทัดหนึ่งรายการ
 # "คุยกับ AI หน่อย หาตู้เย็น" ไม่นับเป็นคำสั่ง (ตั้งใจ)
-# ทุกรายการต้องมีเคสทดสอบภาษาไทยจริงใน tests/pipeline/test_handoff_check.py
+# ทุกรายการต้องมีเคสทดสอบภาษาไทยจริงใน tests/pipeline/test_rule_files.py (และ test_handoff_check.py)
 คุยกับai
+กลับไปคุยกับai
+คุยกับบอท

@@ -1,7 +1,7 @@
 # CLAUDE.md
 
 Stack (ยังเป็นข้อเสนอ): Python 3.12, FastAPI, arq+Redis (เป็นคิวอย่างเดียว), Postgres, MinIO, Docker Compose
-สถานะ: ยังไม่มีโค้ด — ทุก `.py` ใน `app/` และ `.js` ใน `src/` เป็น stub (docstring/comment เท่านั้น)
+สถานะ: มีโค้ดรอบแรก (ยังไม่ทดสอบกับ Postgres/LINE/AI จริง) — ดู docs/PLAN.md
 
 ## คำสั่ง (เมื่อมีโค้ด)
 - `uv sync` — ติดตั้ง dependency
@@ -22,5 +22,6 @@ Stack (ยังเป็นข้อเสนอ): Python 3.12, FastAPI, arq+Re
 
 ## อ่านต่อ
 - `docs/Line_ai_bot.md` — สถาปัตยกรรม, flow, หลักการเขียนโปรแกรม, Stack
+- `docs/PLAN.md` — แผนงาน, สัญญาระหว่างโมดูล, เรื่องค้าง
 - `filemap.md` — ไฟล์ไหนทำอะไร
 - `docs/decisions.md` — การตัดสินใจและเหตุผล

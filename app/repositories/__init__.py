@@ -8,5 +8,65 @@
  - transaction สั้น ไม่ถือค้างระหว่างรอ AI
 
 แนวคิดจาก: src/store/ (แบบเก่า ใช้ Redis เก็บทุกอย่าง ล้าสมัย)
-สถานะ: ยังไม่มีโค้ด (โครงสร้างเท่านั้น)
+สถานะ: มีโค้ดแล้ว (งาน 7) — psycopg 3 async + psycopg_pool; Repos/make_repos รวม repository ทุกตัวบน pool เดียว
 """
+
+from __future__ import annotations
+
+from dataclasses import dataclass
+
+from psycopg_pool import AsyncConnectionPool
+
+from app.repositories.ai_runs import PgAiRunsRepo
+from app.repositories.conversations import PgConversationsRepo
+from app.repositories.db import close_pool, open_pool
+from app.repositories.feedback import PgFeedbackRepo
+from app.repositories.flags import PgFlagsRepo
+from app.repositories.messages import PgMessagesRepo
+from app.repositories.raw_events import PgRawEventsRepo
+from app.repositories.state import PgStateRepo
+from app.repositories.users import PgUsersRepo
+
+
+@dataclass(frozen=True, kw_only=True)
+class Repos:
+    """repository ทุกตัว (ชื่อฟิลด์ตรงกับฟิลด์ของ Deps ใน app/pipeline/ports.py)"""
+
+    raw_events: PgRawEventsRepo
+    users: PgUsersRepo
+    conversations: PgConversationsRepo
+    state: PgStateRepo
+    messages: PgMessagesRepo
+    ai_runs: PgAiRunsRepo
+    feedback: PgFeedbackRepo
+    flags: PgFlagsRepo
+
+
+def make_repos(pool: AsyncConnectionPool) -> Repos:
+    """สร้าง repository ทุกตัวบน pool เดียวกัน (pool เปิดด้วย open_pool แล้ว)"""
+    return Repos(
+        raw_events=PgRawEventsRepo(pool),
+        users=PgUsersRepo(pool),
+        conversations=PgConversationsRepo(pool),
+        state=PgStateRepo(pool),
+        messages=PgMessagesRepo(pool),
+        ai_runs=PgAiRunsRepo(pool),
+        feedback=PgFeedbackRepo(pool),
+        flags=PgFlagsRepo(pool),
+    )
+
+
+__all__ = [
+    "PgAiRunsRepo",
+    "PgConversationsRepo",
+    "PgFeedbackRepo",
+    "PgFlagsRepo",
+    "PgMessagesRepo",
+    "PgRawEventsRepo",
+    "PgStateRepo",
+    "PgUsersRepo",
+    "Repos",
+    "close_pool",
+    "make_repos",
+    "open_pool",
+]

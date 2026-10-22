@@ -23,7 +23,7 @@ services:
 
   api:
     build: .
-    # command: uvicorn app.main:create_app --factory --host 0.0.0.0 --port 8000
+    command: uvicorn app.main:create_app --factory --host 0.0.0.0 --port 8000
     # ภายในเท่านั้น ไม่เปิดพอร์ตออก host (ข้างนอกเข้าผ่าน caddy)
     expose:
       - "8000"
@@ -34,7 +34,7 @@ services:
 
   worker:
     build: .
-    # command: arq app.worker.settings.WorkerSettings
+    command: arq app.worker.settings.WorkerSettings
     env_file: .env
     depends_on:
       - postgres

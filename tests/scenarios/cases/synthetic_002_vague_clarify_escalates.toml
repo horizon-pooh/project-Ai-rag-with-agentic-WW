@@ -1,0 +1,35 @@
+# ตัวอย่างสังเคราะห์ ไม่ใช่แชทจริง
+# คำถามกว้าง AI ถามกลับซ้ำ เกิน CLARIFY_MAX (2) -> รอบที่ 3 ส่งต่อพนักงาน
+id = "synthetic-002"
+source = "synthetic"
+description = "คำถามกว้าง -> ถามกลับ -> ถามกลับ -> ถามกลับครั้งที่ 3 ส่งต่อ"
+expected_path = "handoff"
+
+[[turns]]
+text = "อยากได้ของสักอย่าง"
+route = "ai_clarify"
+expect_status = "bot"
+expect_sent = ["sent"]
+[turns.ai]
+kind = "clarify"
+clarify_question = "ต้องการสินค้าประเภทไหนคะ"
+
+[[turns]]
+text = "ของใช้ในบ้าน"
+advance_minutes = 1
+route = "ai_clarify"
+expect_status = "bot"
+expect_sent = ["sent"]
+[turns.ai]
+kind = "clarify"
+clarify_question = "ใช้ในห้องไหนคะ เช่น ห้องครัว ห้องนอน"
+
+[[turns]]
+text = "ไม่รู้สิ"
+advance_minutes = 1
+route = "ai_escalate"
+expect_status = "human"
+expect_sent = ["sent"]
+[turns.ai]
+kind = "clarify"
+clarify_question = "ช่วยบอกงบประมาณได้ไหมคะ"

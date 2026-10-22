@@ -1,22 +1,22 @@
-# โครงเท่านั้น ยังไม่มีโค้ด — ดู docs/Line_ai_bot.md หัวข้อ Stack และ หลักการเขียนโปรแกรม
+# config จริงของแบบใหม่ (Python) — ดู docs/Line_ai_bot.md หัวข้อ Stack และ docs/PLAN.md
 [project]
 name = "line-prod"
 version = "0.0.0"
 description = "LINE OA chatbot ตอบคำถามสินค้าและส่งต่อพนักงาน"
 requires-python = ">=3.12"
-# เช็คเวอร์ชันล่าสุดก่อนติดตั้ง (Line_ai_bot.md หัวข้อ Stack)
+# ไม่ใช้ line-bot-sdk: เรียก LINE ด้วย httpx ดู docs/PLAN.md
 dependencies = [
     "fastapi",
-    "uvicorn",
-    "arq",                 # เช็คสถานะการดูแลของ arq ก่อนใช้
-    "psycopg[binary]",     # หรือ asyncpg — ยังไม่ตัดสิน
+    "uvicorn[standard]",
+    "arq",                     # เช็คสถานะการดูแลของ arq ก่อนใช้
+    "psycopg[binary,pool]",    # ตัดสินแล้วใน docs/PLAN.md
     "pydantic",
     "pydantic-settings",
     "httpx",
-    "line-bot-sdk",
     "minio",
     "structlog",
     "sentry-sdk",
+    "pillow",                  # ย่อรูป
 ]
 
 [dependency-groups]
@@ -27,10 +27,20 @@ dev = [
     "ruff",
 ]
 
+[tool.uv]
+package = false
+
 [tool.ruff]
 line-length = 100
 target-version = "py312"
+extend-exclude = ["src", "dev", "test", "deploy"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "ASYNC"]
+# docstring/ข้อความไทยยาว: ความกว้างไทยนับไม่ตรง ให้ ruff format คุมความยาวโค้ดแทน
+ignore = ["E501"]
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 testpaths = ["tests"]
+pythonpath = ["."]

@@ -2,7 +2,7 @@
 
 schema ของ Postgres 16 เป็นไฟล์ `.sql` รันด้วย dbmate เก็บเวอร์ชันไว้กับโค้ด
 
-สถานะ: ยังไม่มีไฟล์ migration
+สถานะ: มี `20261022000000_init.sql` (ร่าง ยังไม่เคยรันกับ Postgres จริง)
 
 - คำสั่ง: `dbmate up` / `dbmate rollback` (อ่าน `DATABASE_URL`)
 - ไฟล์: `YYYYMMDDHHMMSS_ชื่อ.sql` มีส่วน `-- migrate:up` และ `-- migrate:down`
@@ -10,7 +10,7 @@ schema ของ Postgres 16 เป็นไฟล์ `.sql` รันด้ว�
 
 ## ต้นทาง
 
-`docs/Line_ai_bot.md` หัวข้อ ฐานข้อมูล อ้างถึง `line_chat_schema_v2.sql` (ตาราง `line_raw_events`, `line_users`, `line_consents`, `conversations`, `conversation_state`, `messages`, `attachments`, `ai_runs`, `ai_steps`, `feedback`) — **ไฟล์นี้ยังไม่อยู่ใน repo** ต้องขอมาก่อนเขียน migration แรก
+`docs/Line_ai_bot.md` หัวข้อ ฐานข้อมูล อ้างถึง `line_chat_schema_v2.sql` (ตาราง `line_raw_events`, `line_users`, `line_consents`, `conversations`, `conversation_state`, `messages`, `attachments`, `ai_runs`, `ai_steps`, `feedback`) — **ไฟล์นี้ยังไม่อยู่ใน repo** — migration แรกจึงเป็นร่างจากแบบหลัก ต้องเทียบเมื่อได้ไฟล์จริง
 
 ## คอลัมน์ที่ต้องเพิ่มจากฉบับในไฟล์ (ตาราง `conversations`)
 

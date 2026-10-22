@@ -9,6 +9,64 @@
  - ห้ามมี dev routes ใน production
  - รันด้วย uvicorn (คำสั่งอยู่ใน docker-compose.yml)
 
+ข้อตัดสินในงาน 8:
+ - api/fast_path ไม่มี route ของตัวเอง (webhook เรียกเป็น BackgroundTask)
+ - ปิด /docs /redoc /openapi.json (ไม่มี dev routes)
+ - lifespan: logging + Sentry -> PipelineConfig (ไฟล์กฎ) -> build_deps (Postgres, Redis ผ่าน arq.create_pool, httpx, MinIO)
+   ArqRedis ตัวเดียวใช้ทั้งใส่คิว (app.state.arq) และ replyToken
+ - app.state: settings, deps, resources, arq, pipeline_cfg, user_lookup, ready_check (เทสต์ตั้งเองได้โดยไม่รัน lifespan)
+
 แนวคิดจาก: src/app.js, src/server.js (แบบเก่า)
-สถานะ: ยังไม่มีโค้ด (โครงสร้างเท่านั้น)
+สถานะ: มีโค้ดแล้ว (งาน 8)
 """
+
+from __future__ import annotations
+
+from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
+from functools import partial
+
+from fastapi import FastAPI
+
+from app.api import close, health, webhook
+from app.config import Settings, get_settings
+from app.pipeline import orchestrator
+from app.worker.deps import build_deps, check_ready, close_resources, init_observability
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI) -> AsyncIterator[None]:
+    settings: Settings = app.state.settings
+    init_observability(settings)
+    # ไฟล์กฎผิด = หยุดก่อนเปิด connection
+    cfg = orchestrator.load_pipeline_config(settings)
+    deps, res = await build_deps(settings)
+    try:
+        app.state.pipeline_cfg = cfg
+        app.state.deps = deps
+        app.state.resources = res
+        app.state.arq = res.redis
+        app.state.user_lookup = res.user_lookup
+        app.state.ready_check = partial(check_ready, res)
+        yield
+    finally:
+        await close_resources(res)
+
+
+def create_app(settings: Settings | None = None) -> FastAPI:
+    """app factory (uvicorn --factory เรียกโดยไม่ส่งอะไร -> อ่าน env ผ่าน get_settings)"""
+    app = FastAPI(
+        title="line-prod",
+        lifespan=lifespan,
+        docs_url=None,
+        redoc_url=None,
+        openapi_url=None,
+    )
+    app.state.settings = settings if settings is not None else get_settings()
+    app.include_router(webhook.router)
+    app.include_router(health.router)
+    app.include_router(close.router)
+    return app
+
+
+__all__ = ["create_app", "lifespan"]

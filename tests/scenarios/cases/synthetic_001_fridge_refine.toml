@@ -1,0 +1,49 @@
+# ตัวอย่างสังเคราะห์ ไม่ใช่แชทจริง
+# ลูกค้าหาตู้เย็น แล้วค่อยๆ แคบลง (สีเขียว -> 2 ประตู) AI ตอบเป็นสินค้าทุกรอบ -> บอทตอบเอง
+id = "synthetic-001"
+source = "synthetic"
+description = "ตู้เย็น -> เขียว -> 2 ประตู ตอบด้วยสินค้าทุกรอบ"
+expected_path = "self_answer"
+
+[[turns]]
+text = "หาตู้เย็นค่ะ"
+route = "ai_answer"
+expect_status = "bot"
+expect_sent = ["sent"]
+[turns.ai]
+kind = "products"
+intro = "แนะนำตู้เย็นค่ะ"
+state_out = { category = "ตู้เย็น" }
+products = [
+  { sku = "RF-100", name = "ตู้เย็น 2 ประตู สีเงิน", price = "12990", url = "https://shop.example/p/rf-100" },
+  { sku = "RF-200", name = "ตู้เย็น 1 ประตู สีเขียว", price = "6990", url = "https://shop.example/p/rf-200" },
+]
+
+[[turns]]
+text = "สีเขียว"
+advance_minutes = 1
+route = "ai_answer"
+expect_status = "bot"
+expect_sent = ["sent"]
+[turns.ai]
+kind = "products"
+intro = "ตู้เย็นสีเขียวค่ะ"
+state_out = { category = "ตู้เย็น", color = "เขียว" }
+products = [
+  { sku = "RF-200", name = "ตู้เย็น 1 ประตู สีเขียว", price = "6990", url = "https://shop.example/p/rf-200" },
+  { sku = "RF-300", name = "ตู้เย็น 2 ประตู สีเขียว", price = "14990", url = "https://shop.example/p/rf-300" },
+]
+
+[[turns]]
+text = "เอาแบบ 2 ประตู"
+advance_minutes = 1
+route = "ai_answer"
+expect_status = "bot"
+expect_sent = ["sent"]
+[turns.ai]
+kind = "products"
+intro = "ตู้เย็น 2 ประตู สีเขียวค่ะ"
+state_out = { category = "ตู้เย็น", color = "เขียว", doors = 2 }
+products = [
+  { sku = "RF-300", name = "ตู้เย็น 2 ประตู สีเขียว", price = "14990", url = "https://shop.example/p/rf-300" },
+]
