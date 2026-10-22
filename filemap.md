@@ -16,7 +16,7 @@
 - `docs/open-questions.md` — แบบเก่า: เรื่องที่ยังไม่รู้
 - `docs/runbook.md` — แบบเก่า: คู่มือเมื่อระบบมีปัญหา (โครง)
 - `docs/softnix-questions.md` — แบบเก่า: คำถามที่ต้องส่ง Softnix
-- `docs/diagrams/` — แผนภาพ HTML (ระบบ, ชั้นโค้ด, race ส่งต่อ, ลูกค้ารอ) / ดูภาพรวม
+- `docs/diagrams/` — แผนภาพ HTML 6 ภาพของฉบับ 3 (ระบบ, flow, สถานะ, call_ai, ทางด่วน, ชั้นโค้ด) / เปิด index.html
 
 ## app/
 - `app/main.py` — FastAPI app factory ต่อ router / ไม่มี business logic
