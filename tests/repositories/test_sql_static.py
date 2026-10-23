@@ -36,7 +36,7 @@ from app.repositories.conversations import CONVERSATION_COLUMNS
 from app.repositories.raw_events import RAW_EVENT_COLUMNS
 from app.repositories.state import STATE_COLUMNS
 from app.repositories.users import USER_COLUMNS
-from tests.repositories.conftest import MIGRATION, TABLES, migrate_up_sql
+from tests.repositories.conftest import MIGRATIONS, TABLES, migrate_up_sql
 
 REPO_DIR = Path(__file__).resolve().parents[2] / "app" / "repositories"
 
@@ -62,8 +62,8 @@ def _protocol_methods(proto: type) -> list[str]:
 
 
 def _migration_tables() -> dict[str, set[str]]:
-    """{ตาราง: {คอลัมน์}} จาก CREATE TABLE ในส่วน migrate:up"""
-    up = migrate_up_sql(MIGRATION.read_text(encoding="utf-8"))
+    """{ตาราง: {คอลัมน์}} จาก CREATE TABLE ในส่วน migrate:up ของทุกไฟล์ migration"""
+    up = "\n".join(migrate_up_sql(p.read_text(encoding="utf-8")) for p in MIGRATIONS)
     tables: dict[str, set[str]] = {}
     for name, body in re.findall(r"CREATE TABLE (\w+) \((.*?)\n\);", up, flags=re.S):
         cols = set()

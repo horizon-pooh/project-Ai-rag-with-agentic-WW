@@ -114,7 +114,7 @@ repositories และ services ต้อง implement ตามนี้ เท
 | เรื่อง | รายละเอียด |
 |---|---|
 | schema | ร่าง ต้องเทียบ `line_chat_schema_v2.sql` เมื่อได้ไฟล์ |
-| repositories | ยังไม่เคยรันกับ Postgres จริง — ตั้ง `TEST_DATABASE_URL` แล้วรัน `tests/repositories` |
+| repositories | รันกับ Postgres 16.2 จริงแล้ว (2026-10-23, pgserver บนเครื่อง dev) ผ่านทั้งหมด — ยังไม่ได้ลองกับข้อมูลปริมาณจริง (แผนของ index retention ยืนยันแค่บนตารางว่าง) |
 | docker compose | ยังไม่ได้ลอง (เครื่องนี้ไม่มี docker) |
 | scenarios | ข้อมูลแชทจริง 30 บทสนทนา ยังไม่มี |
 | AI API | สัญญารอคำตอบ ทั้ง 4 ข้อ (Softnix ไหม, JSON/markdown, คืน state ไหม, รับรูป/บอกส่งต่อได้ไหม) |

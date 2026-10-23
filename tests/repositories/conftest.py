@@ -5,7 +5,7 @@ fixture ของ integration test ที่ต่อ Postgres จริง (app
 รายละเอียด:
  - ข้ามทุกเทสต์ที่ใช้ DB ถ้าไม่ได้ตั้ง env TEST_DATABASE_URL (เช่น postgresql://user:pass@localhost:5432/test)
    test_sql_static.py ไม่ใช้ DB จึงรันเสมอ
- - ต่อหนึ่ง session: CREATE SCHEMA ชื่อสุ่ม -> รันส่วน `-- migrate:up` ของ migration ใน schema นั้น
+ - ต่อหนึ่ง session: CREATE SCHEMA ชื่อสุ่ม -> รันส่วน `-- migrate:up` ของ migration ทุกไฟล์ (เรียงตามชื่อ) ใน schema นั้น
    -> ทุก connection ของ pool ตั้ง search_path ไปที่ schema นั้น -> จบ session DROP SCHEMA ... CASCADE
  - ต่อหนึ่งเทสต์: pool ใหม่ + TRUNCATE ทุกตาราง (RESTART IDENTITY) ให้เริ่มจากว่าง
  - Windows: psycopg async ใช้ ProactorEventLoop ไม่ได้ -> ใช้ SelectorEventLoop เฉพาะเทสต์ในโฟลเดอร์นี้
@@ -36,7 +36,9 @@ from psycopg_pool import AsyncConnectionPool
 from app.repositories import Repos, make_repos
 from app.repositories.db import close_pool, open_pool
 
-MIGRATION = Path(__file__).resolve().parents[2] / "migrations" / "20261022000000_init.sql"
+MIGRATIONS_DIR = Path(__file__).resolve().parents[2] / "migrations"
+# ทุกไฟล์ migration เรียงตามชื่อ (= ลำดับเวลาของ dbmate)
+MIGRATIONS = sorted(MIGRATIONS_DIR.glob("*.sql"))
 
 # ทุกตารางใน migration (TRUNCATE ก่อนทุกเทสต์)
 TABLES = (
@@ -82,7 +84,8 @@ def db_conninfo() -> Iterator[str]:
         with psycopg.connect(url, autocommit=True) as conn:
             conn.execute(sql.SQL("SET search_path TO {}").format(ident))
             # ไม่มีพารามิเตอร์ -> simple query protocol รันหลายคำสั่งในครั้งเดียวได้
-            conn.execute(migrate_up_sql(MIGRATION.read_text(encoding="utf-8")))  # type: ignore[arg-type]
+            for path in MIGRATIONS:
+                conn.execute(migrate_up_sql(path.read_text(encoding="utf-8")))  # type: ignore[arg-type]
         yield make_conninfo(url, options=f"-c search_path={schema}")
     finally:
         with psycopg.connect(url, autocommit=True) as conn:

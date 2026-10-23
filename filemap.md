@@ -103,6 +103,7 @@
 ## migrations/
 - `migrations/` — schema Postgres 16 เป็น .sql รันด้วย dbmate
 - `migrations/20261022000000_init.sql` — schema แรก (ร่าง ต้องเทียบ line_chat_schema_v2.sql) / แตะเมื่อเปลี่ยนตาราง (เพิ่มไฟล์ใหม่ ไม่แก้ไฟล์ที่รันแล้ว)
+- `migrations/20261023000000_retention_indexes.sql` — partial index ของคิวรี retention/anonymize (messages, ai_steps, attachments) / แตะเมื่อแก้ WHERE ของคิวรีเหล่านั้น
 
 ## แบบเก่า (Node — ห้ามแก้ ห้ามลบ ห้ามย้าย)
 - `src/` — แบบเก่า: โค้ด Node (stub) / อ้างอิงเท่านั้น
