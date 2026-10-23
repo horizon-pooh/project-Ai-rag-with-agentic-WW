@@ -50,11 +50,11 @@ repositories และ services ต้อง implement ตามนี้ เท
 
 พอร์ต (ชื่อเมธอดเป็นแนวทาง งาน 2 ปรับได้):
 - `RawEventsRepo`: insert (กันซ้ำ คืน None ถ้าซ้ำ), get, claim (pending→processing แบบมีเงื่อนไข), mark_done(status), mark_failed, list_pending_ids_for_user, list_stale (ให้ cron)
-- `UsersRepo`: get_or_create, has_consent
+- `UsersRepo`: get_or_create, has_consent, get_line_user_id(user_id), delete_user(line_user_id) → storage keys | None (PDPA, R2-A)
 - `ConversationsRepo`: get, get_or_open (bot เงียบเกิน STATE_TTL → ปิดแล้วเปิดใหม่; human ห้ามเปิดใหม่), touch_user_message, start_handoff (WHERE status='bot'), end_handoff (WHERE status='human' AND handoff_started_at=$3), list_handoff_timed_out, create_close_token, consume_close_token (ใช้ครั้งเดียว เก็บแค่ hash)
 - `StateRepo`: get (คืนแถวพร้อม expires_at ให้ prepare ตัดสินว่าหมดอายุ), save(state, counters, expires_at), clear
-- `MessagesRepo`: add_inbound, recent_texts_redacted, count_inbound_since, reserve_outbound(dedupe_key) → (message_id, already_sent), mark_outbound(status, reason), add_attachment
-- `AiRunsRepo`: create_run, add_step, finish_run(route, reason, confidence)
+- `MessagesRepo`: add_inbound, recent_texts_redacted, count_inbound_since, reserve_outbound(dedupe_key) → (message_id, already_sent), mark_outbound(status, reason), add_attachment, list_expired_attachments, mark_attachment_deleted, anonymize_older_than (retention, R2-A)
+- `AiRunsRepo`: create_run, add_step, finish_run(route, reason, confidence), anonymize_steps_older_than (retention, R2-A)
 - `FlagsRepo`: get_flag / set_flag (kill switch)
 - `AiClient.call(req, deadline_s) -> AiResult` (ยก AiUnavailable / AiBadResponse)
 - `LineClient`: reply, push, start_loading, get_content
@@ -119,9 +119,6 @@ repositories และ services ต้อง implement ตามนี้ เท
 | scenarios | ข้อมูลแชทจริง 30 บทสนทนา ยังไม่มี |
 | AI API | สัญญารอคำตอบ ทั้ง 4 ข้อ (Softnix ไหม, JSON/markdown, คืน state ไหม, รับรูป/บอกส่งต่อได้ไหม) |
 | validate | intro ของ AI ส่งตรง ไม่ตรวจราคา/ลิงก์ในข้อความ |
-| ports | `PgLineUserLookup` ควรย้ายเข้า `UsersRepo` ใน ports |
-| PDPA | ไม่มีเมธอดลบ user (รวม `line_raw_events` ที่ไม่มี FK) |
-| retention | 12 เดือน / ลบรูป MinIO ยังเป็น TODO |
 | Caddy | `/health/ready` ไม่เปิดผ่าน Caddy |
 | dependency | redis เป็น dependency ทางอ้อมผ่าน arq |
 | cron | cron ของ arq ใช้เวลาของ container |

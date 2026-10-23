@@ -70,7 +70,6 @@ def test_lifespan_builds_and_closes(monkeypatch: pytest.MonkeyPatch) -> None:
 
     class Res:
         redis = object()
-        user_lookup = object()
 
     async def build(s: Any) -> tuple[Any, Any]:
         calls.append("build")

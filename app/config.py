@@ -88,6 +88,12 @@ class Settings(BaseSettings):
     # ใช้สร้างลิงก์ /close เช่น https://bot.example.com (ไม่มี / ท้าย)
     public_base_url: str | None = None
 
+    # --- retention (docs/Line_ai_bot.md หัวข้อ 8) — raw 90 วันอยู่ใน worker/cron.py ---
+    # (เสนอ) รูปเก็บสั้นกว่าข้อความ
+    image_retention_days: int = Field(default=30, ge=1)
+    # ข้อความและ trace เกินนี้ -> anonymize
+    trace_retention_months: int = Field(default=12, ge=1)
+
     # --- แจ้ง call center (ช่องทางยังไม่ได้เลือก) ---
     callcenter_notify_channel: str | None = None
     callcenter_notify_target: str | None = None
@@ -150,6 +156,10 @@ class Settings(BaseSettings):
     @property
     def close_token_ttl(self) -> timedelta:
         return timedelta(hours=self.close_token_ttl_hours)
+
+    @property
+    def image_retention(self) -> timedelta:
+        return timedelta(days=self.image_retention_days)
 
     @property
     def tz(self) -> ZoneInfo:

@@ -14,7 +14,7 @@
  - ปิด /docs /redoc /openapi.json (ไม่มี dev routes)
  - lifespan: logging + Sentry -> PipelineConfig (ไฟล์กฎ) -> build_deps (Postgres, Redis ผ่าน arq.create_pool, httpx, MinIO)
    ArqRedis ตัวเดียวใช้ทั้งใส่คิว (app.state.arq) และ replyToken
- - app.state: settings, deps, resources, arq, pipeline_cfg, user_lookup, ready_check (เทสต์ตั้งเองได้โดยไม่รัน lifespan)
+ - app.state: settings, deps, resources, arq, pipeline_cfg, ready_check (เทสต์ตั้งเองได้โดยไม่รัน lifespan)
 
 แนวคิดจาก: src/app.js, src/server.js (แบบเก่า)
 สถานะ: มีโค้ดแล้ว (งาน 8)
@@ -46,7 +46,6 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         app.state.deps = deps
         app.state.resources = res
         app.state.arq = res.redis
-        app.state.user_lookup = res.user_lookup
         app.state.ready_check = partial(check_ready, res)
         yield
     finally:

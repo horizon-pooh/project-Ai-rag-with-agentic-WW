@@ -70,7 +70,6 @@ def make_worker_settings(settings: Settings) -> type:
         ctx["deps"] = deps
         ctx["resources"] = res
         ctx["user_lock"] = UserLock(res.redis)
-        ctx["user_lookup"] = res.user_lookup
         ctx["raw_retention"] = res.repos.raw_events
         log.info("worker_started", max_jobs=max_jobs_for(settings))
 

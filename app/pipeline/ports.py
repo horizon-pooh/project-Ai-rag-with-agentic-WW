@@ -27,6 +27,7 @@ from app.pipeline.schemas import (
     AiRequest,
     AiResult,
     AiStepRecord,
+    AttachmentRef,
     ChatTurn,
     CloseToken,
     Conversation,
@@ -122,6 +123,24 @@ class UsersRepo(Protocol):
 
     async def has_consent(self, user_id: int, consent_type: str) -> bool:
         """แถวล่าสุด (created_at) ของ consent_type นี้ granted=True หรือไม่; ไม่มีแถว -> False"""
+        ...
+
+    async def get_line_user_id(self, user_id: int) -> str | None:
+        """line_user_id ของ user (Conversation มีแค่ user_id — cron handoff_timeout / /close ใช้ push หาลูกค้า)
+
+        ไม่มีแถว หรือ deleted_at ไม่เป็น NULL -> None (ผู้เรียกไม่ส่งข้อความ)
+        """
+        ...
+
+    async def delete_user(self, line_user_id: str) -> list[str] | None:
+        """ลบตาม PDPA ที่จุดเดียว — transaction เดียว:
+        1) เก็บ storage_key ของ attachments ของ user นี้ที่ยังไม่ลบ (deleted_at IS NULL)
+        2) DELETE FROM line_raw_events WHERE line_user_id=$1 (ไม่มี FK ไป line_users ต้องลบแยก — ทำเสมอแม้ไม่มี user)
+        3) DELETE FROM line_users WHERE line_user_id=$1 (ON DELETE CASCADE ลบที่เหลือทั้งหมด)
+
+        คืน storage_key ให้ผู้เรียกลบไฟล์ใน Storage ต่อ (DB เป็นความจริง ลบไฟล์ไม่ได้ไม่ย้อน DB)
+        None = ไม่มี user นี้ใน line_users
+        """
         ...
 
 
@@ -277,6 +296,21 @@ class MessagesRepo(Protocol):
         """บันทึกไฟล์ที่เก็บใน Storage แล้ว คืน attachment id; storage_key ซ้ำ (retry) -> คืน id แถวเดิม"""
         ...
 
+    async def list_expired_attachments(self, before: datetime, limit: int = 500) -> list[AttachmentRef]:
+        """attachments ที่ created_at < before และ deleted_at IS NULL เรียงเก่าสุดก่อน ไม่เกิน limit (retention รูป)"""
+        ...
+
+    async def mark_attachment_deleted(self, attachment_id: int) -> None:
+        """ตั้ง deleted_at=now() (WHERE deleted_at IS NULL) — เรียกหลังลบไฟล์ใน Storage สำเร็จเท่านั้น"""
+        ...
+
+    async def anonymize_older_than(self, before: datetime, limit: int = 5000) -> int:
+        """SET text_redacted=NULL, payload=NULL ของ messages ที่ created_at < before ไม่เกิน limit แถว คืนจำนวนแถว
+
+        idempotent: แตะเฉพาะแถวที่ยังมีค่าอย่างน้อยหนึ่งช่อง (ผู้เรียกวนจนได้ < limit)
+        """
+        ...
+
 
 @runtime_checkable
 class AiRunsRepo(Protocol):
@@ -299,6 +333,11 @@ class AiRunsRepo(Protocol):
         confidence: Decimal | None = None,
     ) -> None:
         """ตั้ง finished_at=now(), route (เช่น ai_answer / rule_escalate / silent), reason, confidence"""
+        ...
+
+    async def anonymize_steps_older_than(self, before: datetime, limit: int = 5000) -> int:
+        """SET input/output/state_before/state_after=NULL ของ ai_steps ที่ created_at < before ไม่เกิน limit แถว
+        คืนจำนวนแถว — idempotent: แตะเฉพาะแถวที่ยังมีค่าอย่างน้อยหนึ่งช่อง (ผู้เรียกวนจนได้ < limit)"""
         ...
 
 

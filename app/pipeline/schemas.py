@@ -194,6 +194,13 @@ class OutboundReservation(_Frozen):
     already_sent: bool
 
 
+class AttachmentRef(_Frozen):
+    """แถว attachments ที่ต้องลบไฟล์ใน Storage (retention รูป) — storage_key ไม่มีข้อมูลส่วนบุคคล"""
+
+    id: int
+    storage_key: str
+
+
 class MediaContent(_Frozen):
     """เนื้อหารูป/ไฟล์ที่ดึงจาก LINE"""
 

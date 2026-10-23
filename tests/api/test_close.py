@@ -20,7 +20,6 @@ async def _human_case(app: Any, deps: Any, line_user_id: str = "U1") -> tuple[An
     token = await deps.conversations.create_close_token(
         conv.id, conv.handoff_started_at, deps.settings.close_token_ttl
     )
-    app.state.user_lookup.mapping[conv.id] = line_user_id
     return conv, token
 
 
@@ -142,11 +141,10 @@ async def test_send_failure_still_reports_closed() -> None:
     app, deps = make_test_app()
     conv, token = await _human_case(app, deps)
 
-    class Broken:
-        async def line_user_id_for_conversation(self, conversation_id: int) -> str | None:
-            raise RuntimeError("db hiccup")
+    async def broken(user_id: int) -> str | None:
+        raise RuntimeError("db hiccup")
 
-    app.state.user_lookup = Broken()
+    deps.users.get_line_user_id = broken
     resp = _post(TestClient(app), token)
     assert MSG_CLOSED in resp.text
     assert (await deps.conversations.get(conv.id)).status is ConversationStatus.BOT

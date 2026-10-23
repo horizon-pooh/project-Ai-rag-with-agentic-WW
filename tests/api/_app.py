@@ -12,7 +12,7 @@ from fastapi import FastAPI
 
 from app.main import create_app
 from tests.fakes import make_deps, make_settings
-from tests.infra_fakes import FakeArqPool, FakeUserLookup
+from tests.infra_fakes import FakeArqPool
 
 SECRET = "test-channel-secret"
 
@@ -24,7 +24,6 @@ def make_test_app(**deps_overrides: Any) -> tuple[FastAPI, Any]:
     app.state.deps = deps
     app.state.arq = FakeArqPool()
     app.state.pipeline_cfg = object()
-    app.state.user_lookup = FakeUserLookup()
     return app, deps
 
 

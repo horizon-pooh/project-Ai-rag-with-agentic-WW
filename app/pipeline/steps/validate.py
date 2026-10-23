@@ -15,7 +15,9 @@
 
 from __future__ import annotations
 
+import re
 from collections.abc import Sequence
+from decimal import Decimal, InvalidOperation
 from urllib.parse import urlsplit
 
 from app.pipeline import replies
@@ -45,6 +47,32 @@ LINE_MAX_POSTBACK_DATA_CHARS = 300
 PURPOSE_ANSWER = "ai_answer"
 PURPOSE_CLARIFY = "ai_clarify"
 PURPOSE_CANNOT_ANSWER = "ai_cannot_answer"
+
+# คำเตือน (อยู่ใน ValidationResult.errors แต่ ok=True — ไม่ทำให้ validate ไม่ผ่าน ลง ai_steps ให้ดูย้อนหลัง)
+WARN_INTRO_PRICE_MISMATCH = "intro_price_mismatch"
+WARN_INTRO_URL_REMOVED = "intro_url_removed"
+WARN_CLARIFY_URL_REMOVED = "clarify_question_url_removed"
+
+# --- ตรวจข้อความอิสระของ AI (intro / clarify_question) — Line_ai_bot.md §10 ห้ามเชื่อราคา/ลิงก์ที่ AI เขียน ---
+# ภาษาไทยไม่เว้นวรรค ("ดูได้ที่https://x.example/aคะ") จึงให้ URL มีได้แค่อักขระ ASCII ของ URL
+# (RFC 3986 + %) — ตัวอักษรไทยที่ติดท้ายไม่นับเป็นส่วนของ URL
+_URL_CHARS = r"[A-Za-z0-9\-._~:/?#\[\]@!$&'()*+,;=%]"
+_URL_RE = re.compile(
+    rf"(?:https?://|www\.){_URL_CHARS}+"
+    # โดเมนเปล่า เช่น shop.example.com/xxx: label สุดท้ายต้องเป็นตัวอักษร ≥2 ตัว
+    # กันตัวเลขอย่าง "9.1 คิว" / "1.5" และไม่มีจุดก็ไม่นับ (รุ่นสินค้า RT38K5032S8)
+    rf"|(?<![A-Za-z0-9@.\-])(?:[A-Za-z0-9-]+\.)+[A-Za-z]{{2,}}(?![A-Za-z0-9-])(?:/{_URL_CHARS}*)?",
+    re.IGNORECASE,
+)
+# เครื่องหมายท้ายประโยคที่ติดมากับ URL ไม่นับเป็นส่วนของ URL
+_URL_TRAILING_PUNCT = ".,;:!?)]}'\""
+
+# ตัวเลขราคา: 1,234 / 1234 / 1,234.50 — ต้องไม่ติดตัวเลข/ตัวอักษรอังกฤษด้านหน้า (กันรุ่นสินค้า)
+_NUM = r"(?<![\d,.A-Za-z])(?:\d{1,3}(?:,\d{3})+|\d+)(?:\.\d+)?(?!\d|,\d)"
+# รูปแบบราคา: ฿1,234 / ราคา 12990 / ราคา฿12,990 / 1,234 บาท / 1234บาท / 1,234.-
+# ตัวเลขที่ไม่มีคำบอกราคา (ขนาด "9.1 คิว", "2 ประตู", ปี) ไม่นับ
+# ข้อจำกัด: "ลด 500 บาท" / "ค่าส่ง 100 บาท" ก็นับเป็นราคา (ไม่ตรงสินค้า -> ตัด intro ทั้งข้อความ)
+_PRICE_RE = re.compile(rf"(?:ราคา\s*(?:฿\s*)?|฿\s*)(?P<a>{_NUM})|(?P<b>{_NUM})\s*(?:บาท|\.-)")
 
 
 def _https_error(value: str, max_chars: int) -> str | None:
@@ -98,6 +126,48 @@ def _text_error(name: str, text: str) -> str | None:
     return None
 
 
+def _strip_unknown_urls(text: str, products: Sequence[Product]) -> tuple[str, bool]:
+    """ลบ URL ที่ไม่ตรงกับ product.url ตัวไหนเลย (ตรงทุกตัวอักษร หลังตัดเครื่องหมายท้าย) -> (ข้อความ, ลบไหม)
+
+    ลิงก์ที่ AI แต่งเอง (หรือถูกหลอกให้ใส่) อาจพาลูกค้าไปเว็บอื่น — ลบทิ้งแต่ไม่ทำให้ validate ไม่ผ่าน
+    """
+    allowed = {p.url for p in products}
+    removed = False
+    pieces: list[str] = []
+    last = 0
+    for m in _URL_RE.finditer(text):
+        url = m.group(0).rstrip(_URL_TRAILING_PUNCT)
+        if not url or url in allowed:
+            continue
+        pieces.append(text[last : m.start()])
+        last = m.start() + len(url)  # เครื่องหมายท้ายยังอยู่ในข้อความ
+        removed = True
+    if not removed:
+        return text, False
+    pieces.append(text[last:])
+    out = "".join(pieces)
+    out = re.sub(r"[^\S\n]{2,}", " ", out)  # ช่องว่างที่เหลือจากการลบ (ไม่ยุบบรรทัด)
+    out = re.sub(r"[^\S\n]+\n", "\n", out)
+    return out.strip(), True
+
+
+def _text_prices(text: str) -> list[Decimal]:
+    prices: list[Decimal] = []
+    for m in _PRICE_RE.finditer(text):
+        raw = (m.group("a") or m.group("b")).replace(",", "")
+        try:
+            prices.append(Decimal(raw))
+        except InvalidOperation:  # pragma: no cover - regex รับแต่ตัวเลข
+            continue
+    return prices
+
+
+def _prices_match(text: str, products: Sequence[Product]) -> bool:
+    """ทุกราคาในข้อความต้องเท่ากับราคาของสินค้าสักตัว (เทียบ Decimal: 12,990 == 12990.00)"""
+    known = {p.price for p in products if p.price is not None}
+    return all(price in known for price in _text_prices(text))
+
+
 def _fail(errors: list[str]) -> ValidationResult:
     return ValidationResult(ok=False, errors=errors)
 
@@ -116,13 +186,22 @@ def validate(
     - ESCALATE: ไม่ผ่าน validate (orchestrator ส่งต่อเลย) -> ValueError
     รวมไม่เกิน LINE_MAX_MESSAGES ข้อความ; ไม่ผ่าน -> ok=False + errors (orchestrator ใช้ on_validate_fail)
 
-    การ์ดสร้างจาก result.products เท่านั้น — ไม่อ่านราคา/ลิงก์/SKU จากข้อความอิสระของ AI (intro)
-    intro ส่งตามที่ AI เขียน ตรวจแค่ความยาว (ข้อเสนอ: ตรวจลิงก์/ราคาใน intro ด้วย — ยังไม่ได้ตัดสิน)
+    การ์ดสร้างจาก result.products เท่านั้น — ไม่อ่านราคา/ลิงก์/SKU จากข้อความอิสระของ AI
+    ข้อความอิสระ (intro, clarify_question) ตรวจก่อนส่ง:
+    - ลิงก์: เก็บเฉพาะที่ตรงกับ product.url ทุกตัวอักษร นอกนั้นลบออกจากข้อความ (ไม่ทำให้ไม่ผ่าน)
+    - ราคาใน intro เมื่อมี products: ทุกราคาต้องตรงกับราคาสินค้าสักตัว ไม่ตรง -> ตัด intro ทั้งข้อความ
+      (การ์ดยังมีราคาที่ถูกต้อง) + คำเตือน intro_price_mismatch
+    - ไม่มี products: ราคาในข้อความส่งตามเดิม — รอคำตอบ: ราคาที่ AI ตอบผิดใครรับผิดชอบ ต้องมีข้อความกำกับไหม
+      (Line_ai_bot.md เรื่องค้าง)
+    - รหัสสินค้า (SKU) ในข้อความไม่ตรวจ: รูปแบบไม่แน่นอน แยกจากรุ่นสินค้า/ตัวเลขอื่นไม่ได้แน่ชัด
+      ตรวจแล้วจะตัดข้อความดีทิ้งเยอะ; การ์ดและปุ่ม detail ใช้ SKU จาก products อยู่แล้ว
+    คำเตือนอยู่ใน errors ทั้งที่ ok=True (ValidationResult อนุญาต) — orchestrator ลง ai_steps
     """
     if route is AiRoute.ESCALATE:
         raise ValueError("route ESCALATE ไม่ต้อง validate — orchestrator ส่งต่อพนักงาน")
 
     errors: list[str] = []
+    warnings: list[str] = []
     messages: list[JsonDict] = []
 
     for i, t in enumerate(prefix_texts):
@@ -133,11 +212,17 @@ def validate(
         else:
             messages.append(replies.text_message(t))
 
-    intro = (result.intro or "").strip()
-
     if route is AiRoute.ANSWER:
         purpose = PURPOSE_ANSWER
+        intro = (result.intro or "").strip()
+        if intro:
+            intro, url_removed = _strip_unknown_urls(intro, result.products)
+            if url_removed:
+                warnings.append(WARN_INTRO_URL_REMOVED)
         if result.products:
+            if intro and not _prices_match(intro, result.products):
+                warnings.append(WARN_INTRO_PRICE_MISMATCH)
+                intro = ""
             errors.extend(_product_errors(result.products))
             if intro:
                 if (e := _text_error("intro", intro)) is not None:
@@ -156,6 +241,10 @@ def validate(
     elif route is AiRoute.CLARIFY:
         purpose = PURPOSE_CLARIFY
         question = (result.clarify_question or "").strip()
+        if question:
+            question, url_removed = _strip_unknown_urls(question, result.products)
+            if url_removed:
+                warnings.append(WARN_CLARIFY_URL_REMOVED)
         if not question:
             errors.append("clarify_question: ว่าง")
         elif (e := _text_error("clarify_question", question)) is not None:
@@ -171,8 +260,10 @@ def validate(
     if len(messages) > LINE_MAX_MESSAGES:
         errors.append(f"messages: เกิน {LINE_MAX_MESSAGES} ข้อความ ({len(messages)})")
     if errors:
-        return _fail(errors)
-    return ValidationResult(ok=True, outbound=OutboundMessage(messages=messages, purpose=purpose))
+        return _fail(errors + warnings)
+    return ValidationResult(
+        ok=True, outbound=OutboundMessage(messages=messages, purpose=purpose), errors=warnings
+    )
 
 
 def on_validate_fail(counters: Counters) -> tuple[bool, Counters]:

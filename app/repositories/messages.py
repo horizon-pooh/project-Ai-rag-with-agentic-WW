@@ -6,11 +6,11 @@
  - บันทึกข้อความขาเข้า/ขาออก (เก็บ text_redacted สำหรับส่ง AI)
  - สถานะขาออก: บันทึกก่อนส่ง (กันส่งซ้ำ) แล้วอัปเดตผล sent / dropped / failed + เหตุผล
  - ดึงข้อความล่าสุด 2-4 ข้อความ (ส่ง AI)
- - attachments: key ใน MinIO
- - anonymize เมื่อครบ 12 เดือน
+ - attachments: key ใน MinIO; retention รูป: list_expired_attachments -> (ผู้เรียกลบไฟล์) -> mark_attachment_deleted
+ - anonymize เมื่อครบ TRACE_RETENTION_MONTHS: text_redacted, payload -> NULL (ทีละก้อน แตะเฉพาะแถวที่ยังมีค่า)
 
 แนวคิดจาก: ใหม่ (ไม่มีในแบบเก่า)
-สถานะ: มีโค้ดแล้ว (งาน 7: PgMessagesRepo ตาม MessagesRepo) — anonymize 12 เดือนยังไม่ทำ
+สถานะ: มีโค้ดแล้ว (งาน 7: PgMessagesRepo ตาม MessagesRepo + R2-A: retention รูป / anonymize)
 """
 
 from __future__ import annotations
@@ -21,7 +21,13 @@ from typing import Any
 from psycopg import AsyncConnection
 from psycopg_pool import AsyncConnectionPool
 
-from app.pipeline.schemas import ChatTurn, OutboundMessage, OutboundReservation, OutboundStatus
+from app.pipeline.schemas import (
+    AttachmentRef,
+    ChatTurn,
+    OutboundMessage,
+    OutboundReservation,
+    OutboundStatus,
+)
 from app.repositories.db import jsonb
 
 
@@ -184,6 +190,44 @@ class PgMessagesRepo:
             row = await cur.fetchone()
         assert row is not None
         return row["id"]
+
+    async def list_expired_attachments(self, before: datetime, limit: int = 500) -> list[AttachmentRef]:
+        async with self._pool.connection() as conn:
+            cur = await conn.execute(
+                """
+                SELECT id, storage_key FROM attachments
+                WHERE created_at < %s AND deleted_at IS NULL
+                ORDER BY created_at, id
+                LIMIT %s
+                """,
+                (before, limit),
+            )
+            rows = await cur.fetchall()
+        return [AttachmentRef.model_validate(r) for r in rows]
+
+    async def mark_attachment_deleted(self, attachment_id: int) -> None:
+        async with self._pool.connection() as conn:
+            await conn.execute(
+                "UPDATE attachments SET deleted_at = now() WHERE id = %s AND deleted_at IS NULL",
+                (attachment_id,),
+            )
+
+    async def anonymize_older_than(self, before: datetime, limit: int = 5000) -> int:
+        async with self._pool.connection() as conn:
+            cur = await conn.execute(
+                """
+                UPDATE messages SET text_redacted = NULL, payload = NULL
+                WHERE id IN (
+                    SELECT id FROM messages
+                    WHERE created_at < %s
+                      AND (text_redacted IS NOT NULL OR payload IS NOT NULL)
+                    ORDER BY created_at, id
+                    LIMIT %s
+                )
+                """,
+                (before, limit),
+            )
+            return cur.rowcount
 
 
 __all__ = ["PgMessagesRepo", "inbound_dedupe_key"]

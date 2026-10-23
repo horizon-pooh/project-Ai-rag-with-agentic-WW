@@ -145,12 +145,160 @@ def test_intro_at_limit_ok() -> None:
 
 
 def test_cards_use_only_product_data_not_intro_text() -> None:
-    # AI เขียนราคา/ลิงก์ปลอมใน intro -> การ์ดยังมาจาก products เท่านั้น
+    # AI เขียนราคา/ลิงก์ปลอมใน intro -> ตัด intro และการ์ดยังมาจาก products เท่านั้น
     r = _products(_p("A", price=Decimal("100")), intro="ราคา ฿1 ที่ https://evil.example/A")
     v = validate(r, AiRoute.ANSWER)
-    bubble = v.outbound.messages[1]["contents"]["contents"][0]
+    assert _types(v) == ["flex"]
+    bubble = v.outbound.messages[0]["contents"]["contents"][0]
     assert bubble["footer"]["contents"][1]["action"]["uri"] == "https://shop.example/A"
     assert bubble["body"]["contents"][1]["text"] == "฿100"
+
+
+# --- ข้อความอิสระของ AI: ลิงก์ / ราคา ---
+
+
+def _intro_text(v) -> str | None:
+    """intro ที่จะส่งจริง (ข้อความ text ก่อน carousel) หรือ None ถ้าถูกตัด"""
+    assert v.ok, v.errors
+    texts = [m["text"] for m in v.outbound.messages if m["type"] == "text"]
+    return texts[0] if texts else None
+
+
+def test_intro_keeps_product_url() -> None:
+    r = _products(_p("A"), intro="ดูได้ที่ https://shop.example/A ค่ะ")
+    v = validate(r, AiRoute.ANSWER)
+    assert _intro_text(v) == "ดูได้ที่ https://shop.example/A ค่ะ"
+    assert v.errors == []
+
+
+@pytest.mark.parametrize(
+    ("intro", "expected"),
+    [
+        ("ดูได้ที่https://evil.example/xคะ", "ดูได้ที่คะ"),
+        ("ดูได้ที่ https://evil.example/x ค่ะ", "ดูได้ที่ ค่ะ"),
+        ("ดูที่ http://shop.example/A.", "ดูที่ ."),
+        ("ไปที่ www.evil.example/promo ได้เลย", "ไปที่ ได้เลย"),
+        ("สั่งที่ shop.example.com/xxx นะคะ", "สั่งที่ นะคะ"),
+        ("สั่งที่shop.example.comนะคะ", "สั่งที่นะคะ"),
+        # ใกล้เคียงกับลิงก์สินค้าแต่ไม่ตรงทุกตัวอักษร -> ลบ
+        ("ดู https://shop.example/AB ค่ะ", "ดู ค่ะ"),
+        ("ดู https://shop.example/A?ref=ai ค่ะ", "ดู ค่ะ"),
+        ("บรรทัดแรก https://evil.example/x\nบรรทัดสอง", "บรรทัดแรก\nบรรทัดสอง"),
+    ],
+)
+def test_intro_unknown_url_removed_without_failing(intro: str, expected: str) -> None:
+    v = validate(_products(_p("A"), intro=intro), AiRoute.ANSWER)
+    assert _intro_text(v) == expected
+    assert "intro_url_removed" in v.errors
+    assert _types(v)[-1] == "flex"
+
+
+def test_product_url_kept_trailing_punctuation_and_thai() -> None:
+    r = _products(_p("A"), _p("B"), intro="A: https://shop.example/A, B: https://shop.example/Bค่ะ")
+    assert _intro_text(validate(r, AiRoute.ANSWER)) == r.intro
+
+
+def test_intro_only_url_is_dropped_carousel_still_sent() -> None:
+    v = validate(_products(_p("A"), intro="https://evil.example/x"), AiRoute.ANSWER)
+    assert _types(v) == ["flex"]
+
+
+def test_answer_without_products_strips_url() -> None:
+    v = validate(
+        AiResult(kind=AiKind.ANSWER, intro="โปรโมชันอยู่ที่ https://evil.example/p ค่ะ"),
+        AiRoute.ANSWER,
+    )
+    assert _intro_text(v) == "โปรโมชันอยู่ที่ ค่ะ"
+    assert v.errors == ["intro_url_removed"]
+
+
+def test_answer_without_products_only_url_fails() -> None:
+    v = validate(AiResult(kind=AiKind.ANSWER, intro="https://evil.example/p"), AiRoute.ANSWER)
+    assert not v.ok
+
+
+@pytest.mark.parametrize(
+    "intro",
+    [
+        "ราคา฿12,990ค่ะ",
+        "ราคา ฿12,990 ค่ะ",
+        "ตัวนี้ 12,990 บาทค่ะ",
+        "ตัวนี้12990บาทค่ะ",
+        "ตัวนี้ 12,990.- ค่ะ",
+        "ราคา 12990 ค่ะ",
+        "ราคา12,990.00บาท",
+        "A ฿12,990, B ฿5,490 ค่ะ",
+    ],
+)
+def test_intro_matching_price_kept(intro: str) -> None:
+    r = _products(_p("A", price=Decimal("12990")), _p("B", price=Decimal("5490.00")), intro=intro)
+    v = validate(r, AiRoute.ANSWER)
+    assert _intro_text(v) == intro
+    assert v.errors == []
+
+
+@pytest.mark.parametrize(
+    "intro",
+    [
+        "ราคา฿12,900ค่ะ",
+        "ตัวนี้ 1,290 บาทค่ะ",
+        "ตัวนี้12999บาทค่ะ",
+        "ตัวนี้ 9,990.- ค่ะ",
+        "ราคา 1299 ค่ะ",
+        "A ฿12,990, B ฿5,000 ค่ะ",  # ตรงตัวหนึ่ง ไม่ตรงอีกตัว -> ตัดทั้งข้อความ
+    ],
+)
+def test_intro_price_mismatch_drops_intro_keeps_cards(intro: str) -> None:
+    r = _products(_p("A", price=Decimal("12990")), _p("B", price=Decimal("5490")), intro=intro)
+    v = validate(r, AiRoute.ANSWER)
+    assert v.ok
+    assert _types(v) == ["flex"]
+    assert v.errors == ["intro_price_mismatch"]
+
+
+def test_intro_price_with_unpriced_products_drops_intro() -> None:
+    v = validate(_products(_p("A"), intro="ราคา ฿100 ค่ะ"), AiRoute.ANSWER)
+    assert _types(v) == ["flex"]
+    assert "intro_price_mismatch" in v.errors
+
+
+@pytest.mark.parametrize(
+    "intro",
+    [
+        "ตู้เย็น 9.1 คิว 2 ประตู รุ่นปี 2024 ค่ะ",
+        "รุ่น RT38K5032S8 ขนาด 13.2Q ค่ะ",
+        "รับประกัน 10 ปี ผ่อน 0% 10 เดือนค่ะ",
+    ],
+)
+def test_non_price_numbers_untouched(intro: str) -> None:
+    v = validate(_products(_p("A", price=Decimal("12990")), intro=intro), AiRoute.ANSWER)
+    assert _intro_text(v) == intro
+    assert v.errors == []
+
+
+def test_no_products_prices_left_as_is() -> None:
+    # ไม่มี products ให้เทียบ -> ส่งราคาตามเดิม (รอคำตอบ: ใครรับผิดชอบราคาผิด / ข้อความกำกับ)
+    v = validate(AiResult(kind=AiKind.ANSWER, intro="ค่าติดตั้ง 500 บาทค่ะ"), AiRoute.ANSWER)
+    assert _intro_text(v) == "ค่าติดตั้ง 500 บาทค่ะ"
+    assert v.errors == []
+
+
+def test_clarify_question_url_removed() -> None:
+    r = AiResult(kind=AiKind.CLARIFY, clarify_question="ดูรุ่นที่https://evil.example/xไหมคะ")
+    v = validate(r, AiRoute.CLARIFY)
+    assert v.outbound.messages == [replies.text_message("ดูรุ่นที่ไหมคะ")]
+    assert v.errors == ["clarify_question_url_removed"]
+
+
+def test_clarify_question_only_url_fails() -> None:
+    r = AiResult(kind=AiKind.CLARIFY, clarify_question="www.evil.example")
+    assert not validate(r, AiRoute.CLARIFY).ok
+
+
+def test_clarify_question_prices_untouched() -> None:
+    q = "งบประมาณ 10,000 บาท หรือ 15,000 บาทคะ"
+    v = validate(AiResult(kind=AiKind.CLARIFY, clarify_question=q), AiRoute.CLARIFY)
+    assert v.outbound.messages == [replies.text_message(q)]
 
 
 # --- ANSWER ไม่มี products ---

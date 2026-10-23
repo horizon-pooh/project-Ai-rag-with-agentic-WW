@@ -5,10 +5,12 @@
 รายละเอียด:
  - หา/สร้าง user จาก LINE user id
  - consent: อ่าน/บันทึกการยินยอม (PDPA)
- - ลบตาม PDPA ทำผ่าน line_users ที่เดียว (cascade) ไฟล์ใน MinIO ต้องลบแยก
+ - get_line_user_id: หา line_user_id จาก user id (ย้ายมาจาก repositories/lookups.py เดิม) — ลบแล้ว -> None
+ - delete_user (PDPA): transaction เดียว เก็บ storage_key ของ attachments -> ลบ line_raw_events ตาม line_user_id
+   (ไม่มี FK) -> ลบ line_users (cascade ที่เหลือ); ไฟล์ใน MinIO ผู้เรียก (app/pipeline/pdpa.py) ลบแยก
 
 แนวคิดจาก: src/store/redisStore.js (แบบเก่า)
-สถานะ: มีโค้ดแล้ว (งาน 7: PgUsersRepo ตาม UsersRepo — get_or_create, has_consent; ยังไม่มีเมธอดบันทึก consent/ลบ user เพราะไม่อยู่ในพอร์ต)
+สถานะ: มีโค้ดแล้ว (งาน 7 + R2-A: get_line_user_id, delete_user) — ยังไม่มีเมธอดบันทึก consent (ไม่อยู่ในพอร์ต)
 """
 
 from __future__ import annotations
@@ -59,6 +61,44 @@ class PgUsersRepo:
             )
             row = await cur.fetchone()
         return row is not None and bool(row["granted"])
+
+    async def get_line_user_id(self, user_id: int) -> str | None:
+        async with self._pool.connection() as conn:
+            cur = await conn.execute(
+                "SELECT line_user_id FROM line_users WHERE id = %s AND deleted_at IS NULL",
+                (user_id,),
+            )
+            row = await cur.fetchone()
+        return None if row is None else row["line_user_id"]
+
+    async def delete_user(self, line_user_id: str) -> list[str] | None:
+        async with self._pool.connection() as conn, conn.transaction():
+            # ล็อกแถว user กัน get_or_create/บันทึกข้อความแทรกระหว่างเก็บ key กับลบ
+            cur = await conn.execute(
+                "SELECT id FROM line_users WHERE line_user_id = %s FOR UPDATE", (line_user_id,)
+            )
+            user = await cur.fetchone()
+            keys: list[str] = []
+            if user is not None:
+                cur = await conn.execute(
+                    """
+                    SELECT a.storage_key
+                    FROM attachments AS a
+                    JOIN messages AS m ON m.id = a.message_id
+                    JOIN conversations AS c ON c.id = m.conversation_id
+                    WHERE c.user_id = %s AND a.deleted_at IS NULL
+                    ORDER BY a.id
+                    """,
+                    (user["id"],),
+                )
+                keys = [r["storage_key"] for r in await cur.fetchall()]
+            # line_raw_events ไม่มี FK ไป line_users -> ลบตาม line_user_id เสมอ (แม้ไม่มีแถว user)
+            await conn.execute("DELETE FROM line_raw_events WHERE line_user_id = %s", (line_user_id,))
+            if user is None:
+                return None
+            # cascade: consents, conversations -> state, messages -> attachments, ai_runs -> ai_steps, feedback, close_tokens
+            await conn.execute("DELETE FROM line_users WHERE id = %s", (user["id"],))
+        return keys
 
 
 __all__ = ["USER_COLUMNS", "PgUsersRepo"]

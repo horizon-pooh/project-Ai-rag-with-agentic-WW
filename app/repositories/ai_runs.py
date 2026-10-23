@@ -6,14 +6,16 @@
  - สร้าง ai_runs ต่อหนึ่งข้อความ (ผูก raw_event_id)
  - ai_steps (orchestrator เป็นคนเรียก): input redact (รูปเก็บแค่ id), output + raw ตัดแล้ว, latency_ms, attempts, error_class, cost (ถ้ามี), raw_event_id, ai_run_id
  - ใช้ทำเวลาตอบ p95 และต้นทุนต่อบทสนทนา
- - anonymize เมื่อครบ 12 เดือน
+ - anonymize เมื่อครบ TRACE_RETENTION_MONTHS: input, output, state_before, state_after -> NULL
+   (ทีละก้อน แตะเฉพาะแถวที่ยังมีค่า; latency_ms / attempts / error_class / cost เก็บไว้ทำสถิติ)
 
 แนวคิดจาก: ใหม่ (ไม่มีในแบบเก่า)
-สถานะ: มีโค้ดแล้ว (งาน 7: PgAiRunsRepo ตาม AiRunsRepo) — anonymize 12 เดือนยังไม่ทำ
+สถานะ: มีโค้ดแล้ว (งาน 7: PgAiRunsRepo ตาม AiRunsRepo + R2-A: anonymize)
 """
 
 from __future__ import annotations
 
+from datetime import datetime
 from decimal import Decimal
 
 from psycopg_pool import AsyncConnectionPool
@@ -96,6 +98,24 @@ class PgAiRunsRepo:
                 """,
                 (route, reason, confidence, ai_run_id),
             )
+
+    async def anonymize_steps_older_than(self, before: datetime, limit: int = 5000) -> int:
+        async with self._pool.connection() as conn:
+            cur = await conn.execute(
+                """
+                UPDATE ai_steps SET input = NULL, output = NULL, state_before = NULL, state_after = NULL
+                WHERE id IN (
+                    SELECT id FROM ai_steps
+                    WHERE created_at < %s
+                      AND (input IS NOT NULL OR output IS NOT NULL
+                           OR state_before IS NOT NULL OR state_after IS NOT NULL)
+                    ORDER BY created_at, id
+                    LIMIT %s
+                )
+                """,
+                (before, limit),
+            )
+            return cur.rowcount
 
 
 __all__ = ["AI_STEP_COLUMNS", "PgAiRunsRepo"]

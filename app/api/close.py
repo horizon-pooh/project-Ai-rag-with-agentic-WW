@@ -139,7 +139,7 @@ async def close_case(request: Request) -> HTMLResponse:
         return _page(MSG_ALREADY_BOT)
 
     try:
-        line_user_id = await state.user_lookup.line_user_id_for_conversation(conv.id)
+        line_user_id = await deps.users.get_line_user_id(conv.user_id)
         if line_user_id is None:
             log.warning("close_no_line_user", conversation_id=conv.id)
         else:

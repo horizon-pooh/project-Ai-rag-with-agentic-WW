@@ -32,6 +32,7 @@ from app.pipeline.schemas import (
     AiRequest,
     AiResult,
     AiStepRecord,
+    AttachmentRef,
     ChatTurn,
     CloseToken,
     Conversation,
@@ -138,6 +139,8 @@ class FakeDb:
     attachments: dict[int, dict[str, Any]] = field(default_factory=dict)
     ai_runs: dict[int, AiRunRow] = field(default_factory=dict)
     ai_steps: list[AiStepRecord] = field(default_factory=list)
+    # created_at ของ ai_steps ตำแหน่งเดียวกัน (AiStepRecord ไม่มีฟิลด์นี้; ใช้กับ anonymize)
+    ai_step_created_at: list[datetime] = field(default_factory=list)
     feedback: list[dict[str, Any]] = field(default_factory=list)
     close_tokens: dict[str, CloseTokenRow] = field(default_factory=dict)
     flags: dict[str, str] = field(default_factory=dict)
@@ -282,6 +285,46 @@ class FakeUsersRepo:
         if not rows:
             return False
         return bool(max(rows, key=lambda c: (c["created_at"], c["id"]))["granted"])
+
+    async def get_line_user_id(self, user_id: int) -> str | None:
+        u = self.db.users.get(user_id)
+        return None if u is None or u.deleted_at is not None else u.line_user_id
+
+    async def delete_user(self, line_user_id: str) -> list[str] | None:
+        db = self.db
+        # line_raw_events ไม่มี FK -> ลบตาม line_user_id เสมอ
+        for rid in [r.id for r in db.raw_events.values() if r.line_user_id == line_user_id]:
+            del db.raw_events[rid]
+        uid = next((u.id for u in db.users.values() if u.line_user_id == line_user_id), None)
+        if uid is None:
+            return None
+        # ON DELETE CASCADE ทั้งสาย (เหมือน migration)
+        conv_ids = {c.id for c in db.conversations.values() if c.user_id == uid}
+        msg_ids = {m.id for m in db.messages.values() if m.conversation_id in conv_ids}
+        run_ids = {r.id for r in db.ai_runs.values() if r.conversation_id in conv_ids}
+        att_ids = sorted(a["id"] for a in db.attachments.values() if a["message_id"] in msg_ids)
+        keys = [
+            db.attachments[a]["storage_key"] for a in att_ids if db.attachments[a]["deleted_at"] is None
+        ]
+        for a in att_ids:
+            del db.attachments[a]
+        for m in msg_ids:
+            del db.messages[m]
+        keep = [i for i, st in enumerate(db.ai_steps) if st.ai_run_id not in run_ids]
+        db.ai_steps = [db.ai_steps[i] for i in keep]
+        db.ai_step_created_at = [db.ai_step_created_at[i] for i in keep]
+        for r in run_ids:
+            del db.ai_runs[r]
+        db.feedback = [f for f in db.feedback if f["conversation_id"] not in conv_ids]
+        db.close_tokens = {
+            h: t for h, t in db.close_tokens.items() if t.conversation_id not in conv_ids
+        }
+        for c in conv_ids:
+            db.states.pop(c, None)
+            del db.conversations[c]
+        db.consents = [c for c in db.consents if c["user_id"] != uid]
+        del db.users[uid]
+        return keys
 
     # ตัวช่วยของเทสต์ (ไม่อยู่ในพอร์ต)
     def add_consent(self, user_id: int, consent_type: str, granted: bool, version: str = "1") -> None:
@@ -567,6 +610,32 @@ class FakeMessagesRepo:
         }
         return aid
 
+    async def list_expired_attachments(self, before: datetime, limit: int = 500) -> list[AttachmentRef]:
+        rows = sorted(
+            (a for a in self.db.attachments.values() if a["created_at"] < before and a["deleted_at"] is None),
+            key=lambda a: (a["created_at"], a["id"]),
+        )[:limit]
+        return [AttachmentRef(id=a["id"], storage_key=a["storage_key"]) for a in rows]
+
+    async def mark_attachment_deleted(self, attachment_id: int) -> None:
+        a = self.db.attachments.get(attachment_id)
+        if a is not None and a["deleted_at"] is None:
+            a["deleted_at"] = self.db.now()
+
+    async def anonymize_older_than(self, before: datetime, limit: int = 5000) -> int:
+        rows = sorted(
+            (
+                m
+                for m in self.db.messages.values()
+                if m.created_at < before and (m.text_redacted is not None or m.payload is not None)
+            ),
+            key=lambda m: (m.created_at, m.id),
+        )[:limit]
+        for m in rows:
+            m.text_redacted = None
+            m.payload = None
+        return len(rows)
+
     # ตัวช่วยของเทสต์ (ไม่อยู่ในพอร์ต)
     def outbound_rows(self, conversation_id: int | None = None) -> list[MessageRow]:
         return [
@@ -595,6 +664,7 @@ class FakeAiRunsRepo:
         if step.ai_run_id not in self.db.ai_runs:
             raise ValueError("FK ai_steps.ai_run_id")
         self.db.ai_steps.append(step)
+        self.db.ai_step_created_at.append(self.db.now())
 
     async def finish_run(
         self,
@@ -611,6 +681,21 @@ class FakeAiRunsRepo:
         run.route = route
         run.reason = reason
         run.confidence = confidence
+
+    async def anonymize_steps_older_than(self, before: datetime, limit: int = 5000) -> int:
+        cols = ("input", "output", "state_before", "state_after")
+        idx = sorted(
+            (
+                i
+                for i, st in enumerate(self.db.ai_steps)
+                if self.db.ai_step_created_at[i] < before
+                and any(getattr(st, c) is not None for c in cols)
+            ),
+            key=lambda i: self.db.ai_step_created_at[i],
+        )[:limit]
+        for i in idx:
+            self.db.ai_steps[i] = self.db.ai_steps[i].model_copy(update=dict.fromkeys(cols))
+        return len(idx)
 
 
 class FakeFeedbackRepo:
@@ -755,14 +840,21 @@ class FakeNotifier:
 
 
 class FakeStorage:
+    """เก็บไฟล์ในหน่วยความจำ; ใส่ key ใน fail_delete ให้ delete ของ key นั้นพัง (จำลอง MinIO ล่ม)"""
+
     def __init__(self) -> None:
         self.objects: dict[str, tuple[bytes, str]] = {}
+        self.deleted: list[str] = []
+        self.fail_delete: set[str] = set()
 
     async def put_image(self, key: str, data: bytes, content_type: str) -> None:
         self.objects[key] = (data, content_type)
 
     async def delete(self, key: str) -> None:
+        if key in self.fail_delete:
+            raise ConnectionError(f"storage down: {key}")
         self.objects.pop(key, None)
+        self.deleted.append(key)
 
 
 class FakeKillSwitch:

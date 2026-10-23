@@ -6,7 +6,7 @@
  - build_deps(settings) -> (Deps, Resources): pool Postgres, repositories, httpx client (ใช้ร่วมทั้ง process),
    Redis (ArqRedis จาก arq.create_pool: ใช้ทั้งใส่คิว ล็อก และ replyToken), MinIO, ai/line/notifier/kill switch,
    reply tokens, SystemClock
- - Resources = ของที่ต้องปิดตอน shutdown + ของที่ไม่อยู่ใน Deps (repos ตัวจริง, user lookup)
+ - Resources = ของที่ต้องปิดตอน shutdown + ของที่ไม่อยู่ใน Deps (repos ตัวจริง)
  - close_resources(res): ปิดทุกอย่าง (พังตัวหนึ่งไม่หยุดตัวอื่น)
  - เปิดพลางกลางทาง (เช่น Redis ต่อไม่ได้) -> ปิดของที่เปิดไปแล้วก่อนยก error (fail fast ไม่รั่ว)
  - init_observability(settings): ตั้ง logging + Sentry (เฉพาะเมื่อมี SENTRY_DSN, ไม่ส่ง PII)
@@ -32,7 +32,6 @@ from app.logging import configure_logging
 from app.pipeline.ports import AiClient, Deps, SystemClock
 from app.repositories import Repos, close_pool, make_repos, open_pool
 from app.repositories.health import ping as ping_db
-from app.repositories.lookups import PgLineUserLookup
 from app.services.ai_client import HttpAiClient, make_ai_client
 from app.services.kill_switch import FlagsKillSwitch
 from app.services.line_client import HttpLineClient
@@ -56,7 +55,6 @@ class Resources:
     line_http: httpx.AsyncClient
     ai_http: httpx.AsyncClient
     ai: AiClient
-    user_lookup: PgLineUserLookup
 
 
 def redis_settings_from(settings: Settings) -> RedisSettings:
@@ -124,7 +122,6 @@ async def build_deps(settings: Settings) -> tuple[Deps, Resources]:
             line_http=line_http,
             ai_http=ai_http,
             ai=ai,
-            user_lookup=PgLineUserLookup(pool),
         )
     except BaseException:
         await _close_opened(opened)

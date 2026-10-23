@@ -1,7 +1,7 @@
 """tests/infra_fakes.py
 
 fake ของโครงสร้างพื้นฐานที่ไม่อยู่ในพอร์ตของ pipeline: Redis (SET NX PX / GETDEL / EVAL ล็อก), arq pool,
-orchestrator.run_turn ปลอม และ user lookup — ใช้ในเทสต์ api / worker / services (งาน 8)
+และ orchestrator.run_turn ปลอม — ใช้ในเทสต์ api / worker / services (งาน 8)
 
 รายละเอียด:
  - FakeRedis: เก็บในหน่วยความจำ หมดอายุตาม time.monotonic จริง (เทสต์ล็อกใช้ TTL ระดับมิลลิวินาที)
@@ -154,11 +154,3 @@ class FakeTurns:
         if queue:
             raise queue.pop(0)
         return self.outcome
-
-
-class FakeUserLookup:
-    def __init__(self, mapping: dict[int, str] | None = None) -> None:
-        self.mapping = dict(mapping or {})
-
-    async def line_user_id_for_conversation(self, conversation_id: int) -> str | None:
-        return self.mapping.get(conversation_id)

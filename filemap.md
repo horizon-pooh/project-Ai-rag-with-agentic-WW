@@ -37,12 +37,14 @@
 - `app/worker/settings.py` — WorkerSettings ของ arq (งาน, cron, Redis)
 - `app/worker/tasks.py` — process_event(raw_event_id): งานหลักต่อ event
 - `app/worker/locks.py` — ล็อกต่อ user ให้ทำทีละข้อความ
-- `app/worker/cron.py` — งานเบื้องหลังตามเวลา
+- `app/worker/cron.py` — งานเบื้องหลังตามเวลา (retention: raw 90 วัน / รูป / anonymize)
+- `app/worker/admin.py` — คำสั่งผู้ดูแล `python -m app.worker.admin pdpa-delete <line_user_id>`
 - `app/worker/deps.py` — ประกอบ Deps จาก Settings ครั้งเดียว (ใช้ร่วม worker และ api)
 - `app/pipeline/` — ลำดับขั้นตัดสินใจ (ไม่เรียก LINE ไม่เขียน SQL)
 - `app/pipeline/orchestrator.py` — เรียก step ตามลำดับ บันทึก ai_steps
 - `app/pipeline/schemas.py` — ชนิดข้อมูล Pydantic v2 ของ step
 - `app/pipeline/handoff.py` — start/end_handoff: จุดเดียวเปลี่ยนสถานะ bot <-> human
+- `app/pipeline/pdpa.py` — ลบข้อมูลลูกค้าตาม PDPA (DB ผ่าน UsersRepo.delete_user แล้วลบไฟล์ใน Storage)
 - `app/pipeline/ports.py` — Protocol ของ repositories/services ที่ pipeline รู้จัก + Deps / แตะเมื่อเพิ่มเมธอดที่ pipeline ใช้
 - `app/pipeline/text.py` — normalize ข้อความ + อ่านไฟล์กฎ prompts/rules/
 - `app/pipeline/replies.py` — ข้อความถึงลูกค้าทั้งหมด (ที่เดียว) + ตัวช่วย quick reply / แตะเมื่อแก้ถ้อยคำ
@@ -60,10 +62,9 @@
 - `app/repositories/` — ที่เดียวที่เขียน SQL (หนึ่งไฟล์ต่อกลุ่มตาราง)
 - `app/repositories/db.py` — เปิด/ปิด pool Postgres (psycopg 3 async) fail fast
 - `app/repositories/flags.py` — ops_flags (เช่น kill_switch)
-- `app/repositories/lookups.py` — ค้นเล็กๆ นอกพอร์ต (line_user_id ของบทสนทนา ให้ cron / /close)
 - `app/repositories/health.py` — ตรวจต่อ Postgres ได้ (/health/ready)
 - `app/repositories/raw_events.py` — line_raw_events
-- `app/repositories/users.py` — line_users, line_consents
+- `app/repositories/users.py` — line_users, line_consents, ลบตาม PDPA (delete_user)
 - `app/repositories/conversations.py` — conversations
 - `app/repositories/messages.py` — messages, attachments
 - `app/repositories/state.py` — conversation_state
@@ -82,12 +83,12 @@
 ## tests/
 - `tests/` — เทสต์แบบใหม่ (Python) / ต่างจาก `test/` แบบเก่า
 - `tests/fakes.py` — fake ในหน่วยความจำของทุกพอร์ตใน ports.py / แตะเมื่อเพิ่มเมธอดในพอร์ต
-- `tests/infra_fakes.py` — fake Redis, arq pool, run_turn, user lookup (api / worker / services)
+- `tests/infra_fakes.py` — fake Redis, arq pool, run_turn (api / worker / services)
 - `tests/test_config.py`, `tests/test_fakes.py`, `tests/test_smoke.py` — config, ความถูกของ fake, smoke
 - `tests/pipeline/` — ทีละ step + orchestrator + handoff + ไฟล์กฎ (`test_rule_files.py`)
 - `tests/services/` — client ภายนอกด้วย respx / fake Redis (`_helpers.py` ตัวช่วยร่วม)
 - `tests/api/` — webhook, /close, /health ผ่าน create_app + fake (`_app.py`)
-- `tests/worker/` — tasks, locks, cron, settings/deps
+- `tests/worker/` — tasks, locks, cron, settings/deps, admin CLI
 - `tests/privacy/` — รูปแบบ redact
 - `tests/repositories/` — SQL: ตรวจแบบ static เสมอ + integration ข้ามถ้าไม่ตั้ง `TEST_DATABASE_URL`
 - `tests/scenarios/` — ตัวรัน regression + `cases/*.toml` (สังเคราะห์ 3 เคส, แชทจริงยังไม่มี)
