@@ -84,22 +84,58 @@ def scrub_processor(
     return event_dict
 
 
+_HANDLER_MARK = "_line_ai_bot_json"
+# INFO ของ httpx/httpcore มี URL ของ request (อาจมี token ใน query) -> เปิดแค่ WARNING
+_QUIET_LOGGERS = ("httpx", "httpcore")
+
+
+def _shared_processors() -> list[Any]:
+    return [
+        structlog.contextvars.merge_contextvars,
+        structlog.processors.add_log_level,
+        structlog.processors.TimeStamper(fmt="iso", utc=True),
+        structlog.processors.StackInfoRenderer(),
+        # แปลง exception เป็น string ก่อน scrub เพื่อให้ traceback ผ่าน redact ด้วย
+        structlog.processors.format_exc_info,
+        scrub_processor,
+    ]
+
+
 def configure_logging(level: str = "INFO") -> None:
-    """ตั้ง structlog ให้เขียน JSON บรรทัดละหนึ่ง event ไป stdout ที่ระดับ `level`"""
+    """ตั้ง structlog ให้เขียน JSON บรรทัดละหนึ่ง event ไป stdout ที่ระดับ `level`
+
+    log ของ stdlib (procrastinate, uvicorn, httpx, psycopg) ผ่าน ProcessorFormatter
+    จึงออกเป็น JSON รูปเดียวกัน ผ่าน scrub/redact และติด id จาก contextvars เหมือนกัน
+    เรียกซ้ำได้: handler เดิมของเราถูกแทน ไม่ซ้อน
+    """
     level_no = logging.getLevelName(level.upper())
     if not isinstance(level_no, int):
         raise ValueError(f"LOG_LEVEL ไม่รู้จัก: {level}")
-    # log ของไลบรารี (uvicorn, httpx) เคารพระดับเดียวกัน
-    logging.basicConfig(level=level_no, stream=sys.stdout, format="%(message)s")
+
+    handler = logging.StreamHandler(sys.stdout)
+    handler.setFormatter(
+        structlog.stdlib.ProcessorFormatter(
+            foreign_pre_chain=_shared_processors(),
+            processors=[
+                structlog.stdlib.ProcessorFormatter.remove_processors_meta,
+                structlog.processors.JSONRenderer(ensure_ascii=False),
+            ],
+        )
+    )
+    setattr(handler, _HANDLER_MARK, True)
+
+    root = logging.getLogger()
+    for h in list(root.handlers):
+        if getattr(h, _HANDLER_MARK, False):
+            root.removeHandler(h)
+    root.addHandler(handler)
+    root.setLevel(level_no)
+    for name in _QUIET_LOGGERS:
+        logging.getLogger(name).setLevel(max(level_no, logging.WARNING))
+
     structlog.configure(
         processors=[
-            structlog.contextvars.merge_contextvars,
-            structlog.processors.add_log_level,
-            structlog.processors.TimeStamper(fmt="iso", utc=True),
-            structlog.processors.StackInfoRenderer(),
-            # แปลง exception เป็น string ก่อน scrub เพื่อให้ traceback ผ่าน redact ด้วย
-            structlog.processors.format_exc_info,
-            scrub_processor,
+            *_shared_processors(),
             structlog.processors.JSONRenderer(ensure_ascii=False),
         ],
         wrapper_class=structlog.make_filtering_bound_logger(level_no),

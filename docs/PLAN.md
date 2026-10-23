@@ -118,7 +118,7 @@ repositories และ services ต้อง implement ตามนี้ เท
 | docker compose | ยังไม่ได้ลอง (เครื่องนี้ไม่มี docker) — ดู `docs/test-deploy.md` |
 | scenarios | ข้อมูลแชทจริง 30 บทสนทนา ยังไม่มี |
 | AI API | สัญญารอคำตอบ ทั้ง 4 ข้อ (Softnix ไหม, JSON/markdown, คืน state ไหม, รับรูป/บอกส่งต่อได้ไหม) |
-| validate | intro ของ AI ส่งตรง ไม่ตรวจราคา/ลิงก์ในข้อความ |
+| validate | ตัดลิงก์ที่ไม่ใช่ของสินค้า + ทิ้ง intro ที่ราคาไม่ตรงสินค้าแล้ว; ไม่มีสินค้า -> ราคาในข้อความยังไม่ตรวจ (รอคำตอบ: ใครรับผิดชอบราคาที่ AI ตอบผิด) |
 | Caddy | `/health/ready` ไม่เปิดผ่าน Caddy |
 | คิว (เสร็จ) | ตัดสินแล้ว 2026-10-23 (D-010): arq maintenance-only (issue #510, 18 ต.ค. 2025) → procrastinate 3.10.0 บน Postgres, เอา Redis ออกทั้งหมด; procrastinate ประกาศหาผู้ดูแลเพิ่ม ("looking for maintainers") แต่ยังออก 3.10.0 เมื่อ ก.ย. 2026 — ติดตามสถานะการดูแลต่อ; ยังไม่ได้ลองบน Docker จริง |
 | cron | งาน periodic ของ procrastinate คิดเวลาเป็น UTC (retention 20:30 UTC = 03:30 เวลาไทย) |
