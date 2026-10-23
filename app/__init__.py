@@ -1,6 +1,6 @@
 """app/__init__.py
 
-แพ็กเกจหลักของบอท LINE OA (Python 3.12 + FastAPI + arq)
+แพ็กเกจหลักของบอท LINE OA (Python 3.12 + FastAPI + procrastinate)
 
 รายละเอียด:
  - ชั้นของโค้ด: api -> worker -> pipeline -> services / repositories

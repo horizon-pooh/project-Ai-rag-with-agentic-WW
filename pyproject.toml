@@ -8,8 +8,10 @@ requires-python = ">=3.12"
 dependencies = [
     "fastapi",
     "uvicorn[standard]",
-    "arq",                     # เช็คสถานะการดูแลของ arq ก่อนใช้
     "psycopg[binary,pool]",    # ตัดสินแล้วใน docs/PLAN.md
+    # คิวบน Postgres แทน arq+Redis (docs/decisions.md D-010) — pin ตรงตัว: schema ของมันอยู่ใน
+    # migrations/20261024000000_procrastinate_schema.sql อัปเกรด = แก้ pin + เพิ่ม migration ของเวอร์ชันใหม่
+    "procrastinate==3.10.0",
     "pydantic",
     "pydantic-settings",
     "httpx",

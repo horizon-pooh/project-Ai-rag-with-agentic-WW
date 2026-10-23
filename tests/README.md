@@ -2,13 +2,13 @@
 
 ชุดทดสอบของแบบใหม่ (Python) — โฟลเดอร์ `test/` เป็นของแบบเก่า (JS) ห้ามแก้
 
-สถานะ: มีเทสต์หน่วยรอบแรก (ใช้ fake ไม่ต่อ Postgres/Redis/LINE/AI จริง)
+สถานะ: มีเทสต์หน่วยรอบแรก (ใช้ fake ไม่ต่อ Postgres/LINE/AI จริง; คิวใช้ InMemoryConnector ของ procrastinate)
 
 | โฟลเดอร์ | ทดสอบอะไร |
 |---|---|
 | `.` (ราก) | `test_config.py`, `test_fakes.py`, `test_smoke.py` + `fakes.py`, `infra_fakes.py` |
 | `pipeline/` | ทีละ step, orchestrator, handoff, ไฟล์กฎ |
-| `services/` | client ภายนอก จำลอง HTTP ด้วย respx, Redis ด้วย fake |
+| `services/` | client ภายนอก จำลอง HTTP ด้วย respx |
 | `api/` | webhook, /close, /health ผ่าน create_app + fake |
 | `worker/` | tasks, locks, cron, settings/deps |
 | `privacy/` | รูปแบบ redact |

@@ -9,6 +9,7 @@
 
 แนวคิดจาก: src/store/ (แบบเก่า ใช้ Redis เก็บทุกอย่าง ล้าสมัย)
 สถานะ: มีโค้ดแล้ว (งาน 7) — psycopg 3 async + psycopg_pool; Repos/make_repos รวม repository ทุกตัวบน pool เดียว
+ - PgReplyTokens (reply_tokens.py, D-010) ไม่อยู่ใน Repos: ต้องใช้ REPLY_TOKEN_TTL_S -> worker/deps.build_deps สร้างเอง
 """
 
 from __future__ import annotations
@@ -24,6 +25,7 @@ from app.repositories.feedback import PgFeedbackRepo
 from app.repositories.flags import PgFlagsRepo
 from app.repositories.messages import PgMessagesRepo
 from app.repositories.raw_events import PgRawEventsRepo
+from app.repositories.reply_tokens import PgReplyTokens
 from app.repositories.state import PgStateRepo
 from app.repositories.users import PgUsersRepo
 
@@ -63,6 +65,7 @@ __all__ = [
     "PgFlagsRepo",
     "PgMessagesRepo",
     "PgRawEventsRepo",
+    "PgReplyTokens",
     "PgStateRepo",
     "PgUsersRepo",
     "Repos",

@@ -5,16 +5,17 @@
 รายละเอียด:
  - create_app(): โหลด config ครั้งเดียว, ตั้ง logging, ต่อ Sentry (ถ้ามี SENTRY_DSN)
  - ต่อ router: api/webhook, api/health, api/close, api/fast_path
- - เปิด/ปิด connection pool ของ Postgres และ Redis ตอน startup/shutdown
+ - เปิด/ปิด connection pool ของ Postgres (และคิว procrastinate บน pool เดียวกัน) ตอน startup/shutdown
  - ห้ามมี dev routes ใน production
  - รันด้วย uvicorn (คำสั่งอยู่ใน docker-compose.yml)
 
 ข้อตัดสินในงาน 8:
  - api/fast_path ไม่มี route ของตัวเอง (webhook เรียกเป็น BackgroundTask)
  - ปิด /docs /redoc /openapi.json (ไม่มี dev routes)
- - lifespan: logging + Sentry -> PipelineConfig (ไฟล์กฎ) -> build_deps (Postgres, Redis ผ่าน arq.create_pool, httpx, MinIO)
-   ArqRedis ตัวเดียวใช้ทั้งใส่คิว (app.state.arq) และ replyToken
- - app.state: settings, deps, resources, arq, pipeline_cfg, ready_check (เทสต์ตั้งเองได้โดยไม่รัน lifespan)
+ - lifespan: logging + Sentry -> PipelineConfig (ไฟล์กฎ) -> build_deps (Postgres, httpx, MinIO)
+   -> worker/app.open_queue(pool) เปิดคิว procrastinate บน pool เดียวกัน (D-010: ไม่มี Redis; replyToken อยู่ตาราง reply_tokens)
+ - app.state: settings, deps, resources, queue (procrastinate App ที่เปิดแล้ว), pipeline_cfg, ready_check
+   (เทสต์ตั้งเองได้โดยไม่รัน lifespan)
 
 แนวคิดจาก: src/app.js, src/server.js (แบบเก่า)
 สถานะ: มีโค้ดแล้ว (งาน 8)
@@ -31,6 +32,7 @@ from fastapi import FastAPI
 from app.api import close, health, webhook
 from app.config import Settings, get_settings
 from app.pipeline import orchestrator
+from app.worker.app import open_queue
 from app.worker.deps import build_deps, check_ready, close_resources, init_observability
 
 
@@ -42,12 +44,13 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     cfg = orchestrator.load_pipeline_config(settings)
     deps, res = await build_deps(settings)
     try:
-        app.state.pipeline_cfg = cfg
-        app.state.deps = deps
-        app.state.resources = res
-        app.state.arq = res.redis
-        app.state.ready_check = partial(check_ready, res)
-        yield
+        async with open_queue(res.pool) as queue:
+            app.state.pipeline_cfg = cfg
+            app.state.deps = deps
+            app.state.resources = res
+            app.state.queue = queue
+            app.state.ready_check = partial(check_ready, res)
+            yield
     finally:
         await close_resources(res)
 

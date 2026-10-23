@@ -17,8 +17,8 @@
 | LINE | เรียกด้วย httpx ใน `services/line_client.py` (จำลองด้วย respx ได้) ตรวจ signature ด้วย `hmac` + base64 เอง ไม่ใช้ line-bot-sdk |
 | schema | ไม่มี `line_chat_schema_v2.sql` ใน repo → เขียน migration ร่างจากแบบหลัก ติดป้าย "ร่าง ต้องเทียบกับไฟล์จริง" |
 | kill switch | ตาราง `ops_flags` ใน Postgres (เปิด/ปิดไม่ต้อง deploy) OR กับ env `KILL_SWITCH` |
-| replyToken | Redis key `replytoken:{raw_event_id}` TTL = `REPLY_TOKEN_TTL_S` (เสนอ 50) ใช้แล้ว GETDEL; ไม่มี/หมดอายุ → push |
-| ล็อกต่อ user | Redis `SET lock:user:{line_user_id} <token> NX PX` TTL = `TURN_DEADLINE_S + 30` วิ ต่ออายุทุก 10 วิระหว่างรอ ปลดล็อกด้วย compare-and-delete (Lua) |
+| replyToken | (แทนที่โดย D-010: ตาราง `reply_tokens`) เดิม Redis key `replytoken:{raw_event_id}` TTL = `REPLY_TOKEN_TTL_S` (เสนอ 50) ใช้แล้ว GETDEL; ไม่มี/หมดอายุ → push |
+| ล็อกต่อ user | (แทนที่โดย D-010: `lock` ของ procrastinate) เดิม Redis `SET lock:user:{line_user_id} <token> NX PX` TTL = `TURN_DEADLINE_S + 30` วิ ต่ออายุทุก 10 วิระหว่างรอ ปลดล็อกด้วย compare-and-delete (Lua) |
 | claim event | `UPDATE line_raw_events SET process_status='processing', claimed_at=now() WHERE id=$1 AND process_status='pending' RETURNING ...` ใครได้แถวคนนั้นทำ (worker และ fast path ใช้ทางเดียวกัน) |
 | ตัวนับสัญญาณหลังเกิดเหตุ | `conversation_state.counters` (jsonb, ไม่ส่ง AI): `clarify_streak`, `cannot_answer_streak`, `validate_fail_streak`, `last_products` |
 | เกณฑ์ (เสนอ ปรับจากข้อมูลจริง) | clarify ติดกันครบ `CLARIFY_MAX=2` แล้วยัง clarify → ส่งต่อ; cannot_answer ครั้งแรก → เสนอปุ่ม, ติดกันครั้งที่ 2 → ส่งต่อ; validate ไม่ผ่านครั้งแรก → ถามกลับ, ติดกันครั้งที่ 2 → ส่งต่อ; ถี่ผิดปกติ > `RATE_LIMIT_PER_MIN=10` ข้อความ/นาที |
@@ -58,7 +58,7 @@ repositories และ services ต้อง implement ตามนี้ เท
 - `FlagsRepo`: get_flag / set_flag (kill switch)
 - `AiClient.call(req, deadline_s) -> AiResult` (ยก AiUnavailable / AiBadResponse)
 - `LineClient`: reply, push, start_loading, get_content
-- `ReplyTokens`: put, take (GETDEL)
+- `ReplyTokens`: put, take (ใช้ครั้งเดียว — ตาราง `reply_tokens` ตาม D-010)
 - `Notifier`: handoff_started(conv, summary, close_url), handoff_ended(conv, reason)
 - `Storage`: put_image, delete
 - `KillSwitch.is_on()`
@@ -120,8 +120,7 @@ repositories และ services ต้อง implement ตามนี้ เท
 | AI API | สัญญารอคำตอบ ทั้ง 4 ข้อ (Softnix ไหม, JSON/markdown, คืน state ไหม, รับรูป/บอกส่งต่อได้ไหม) |
 | validate | intro ของ AI ส่งตรง ไม่ตรวจราคา/ลิงก์ในข้อความ |
 | Caddy | `/health/ready` ไม่เปิดผ่าน Caddy |
-| arq (ต้องตัดสิน) | เช็คแล้ว 2026-10-23: README ของ arq ประกาศ "maintenance only mode" (issue #510, 18 ต.ค. 2025) — แก้เฉพาะช่องโหว่ร้ายแรง ไม่รับแก้บั๊ก/ฟีเจอร์ใหม่ ไม่ได้แนะนำตัวแทน; จุดที่ผูกกับ arq: `app/worker/{settings,tasks,cron}.py`, `enqueue_event` ใน webhook |
-| dependency | redis เป็น dependency ทางอ้อมผ่าน arq |
-| cron | cron ของ arq ใช้เวลาของ container |
+| คิว (เสร็จ) | ตัดสินแล้ว 2026-10-23 (D-010): arq maintenance-only (issue #510, 18 ต.ค. 2025) → procrastinate 3.10.0 บน Postgres, เอา Redis ออกทั้งหมด; procrastinate ประกาศหาผู้ดูแลเพิ่ม ("looking for maintainers") แต่ยังออก 3.10.0 เมื่อ ก.ย. 2026 — ติดตามสถานะการดูแลต่อ; ยังไม่ได้ลองบน Docker จริง |
+| cron | งาน periodic ของ procrastinate คิดเวลาเป็น UTC (retention 20:30 UTC = 03:30 เวลาไทย) |
 | เครื่องนี้ | ใช้ `uv run python -m pytest` เพราะ pytest.exe ถูกบล็อก |
 | ขอพนักงาน | คำสั่งแบบพิมพ์จับแบบ substring ไม่สนคำปฏิเสธ ("ไม่ต้องคุยกับพนักงาน" ยังส่งต่อ) |

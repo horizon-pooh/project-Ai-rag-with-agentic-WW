@@ -7,7 +7,9 @@ fixture ของ integration test ที่ต่อ Postgres จริง (app
    test_sql_static.py ไม่ใช้ DB จึงรันเสมอ
  - ต่อหนึ่ง session: CREATE SCHEMA ชื่อสุ่ม -> รันส่วน `-- migrate:up` ของ migration ทุกไฟล์ (เรียงตามชื่อ) ใน schema นั้น
    -> ทุก connection ของ pool ตั้ง search_path ไปที่ schema นั้น -> จบ session DROP SCHEMA ... CASCADE
- - ต่อหนึ่งเทสต์: pool ใหม่ + TRUNCATE ทุกตาราง (RESTART IDENTITY) ให้เริ่มจากว่าง
+ - ต่อหนึ่งเทสต์: pool ใหม่ + TRUNCATE ทุกตาราง (RESTART IDENTITY) ให้เริ่มจากว่าง — รวมตารางของคิว procrastinate
+   (migration 20261024000000_procrastinate_schema.sql) ด้วย
+ - ฟังก์ชัน/trigger ของ procrastinate ไม่ระบุ schema -> ทำงานใน schema ทดสอบผ่าน search_path ของ connection
  - Windows: psycopg async ใช้ ProactorEventLoop ไม่ได้ -> ใช้ SelectorEventLoop เฉพาะเทสต์ในโฟลเดอร์นี้
    (ผ่าน hook pytest_asyncio_loop_factories ของ pytest-asyncio 1.x ซึ่งมีผลกับ item ใต้ conftest นี้เท่านั้น
    แทนการตั้ง WindowsSelectorEventLoopPolicy ทั้ง process ที่ deprecated และกระทบเทสต์อื่น)
@@ -40,8 +42,9 @@ MIGRATIONS_DIR = Path(__file__).resolve().parents[2] / "migrations"
 # ทุกไฟล์ migration เรียงตามชื่อ (= ลำดับเวลาของ dbmate)
 MIGRATIONS = sorted(MIGRATIONS_DIR.glob("*.sql"))
 
-# ทุกตารางใน migration (TRUNCATE ก่อนทุกเทสต์)
+# ทุกตารางของเราใน migration (TRUNCATE ก่อนทุกเทสต์)
 TABLES = (
+    "reply_tokens",
     "ops_flags",
     "close_tokens",
     "feedback",
@@ -54,6 +57,13 @@ TABLES = (
     "line_raw_events",
     "line_consents",
     "line_users",
+)
+# ตารางของ procrastinate (สร้างโดย migration ของเรา แต่โค้ดเราไม่เขียน SQL ใส่)
+PROCRASTINATE_TABLES = (
+    "procrastinate_events",
+    "procrastinate_periodic_defers",
+    "procrastinate_jobs",
+    "procrastinate_workers",
 )
 
 
@@ -97,7 +107,8 @@ async def pool(db_conninfo: str) -> AsyncIterator[AsyncConnectionPool]:
     pool = await open_pool(db_conninfo, min_size=1, max_size=4)
     try:
         async with pool.connection() as conn:
-            await conn.execute(f"TRUNCATE {', '.join(TABLES)} RESTART IDENTITY CASCADE")  # type: ignore[arg-type]
+            tables = ", ".join(TABLES + PROCRASTINATE_TABLES)
+            await conn.execute(f"TRUNCATE {tables} RESTART IDENTITY CASCADE")  # type: ignore[arg-type]
         yield pool
     finally:
         await close_pool(pool)

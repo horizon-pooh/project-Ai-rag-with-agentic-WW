@@ -33,12 +33,12 @@
 - `app/api/webhook.py` — POST /webhook: บันทึก event, ใส่คิว, ตอบ 200 ทันที
 - `app/api/fast_path.py` — ทางด่วนคำสั่งเปลี่ยนสถานะ ไม่รอล็อกต่อ user (เสนอ)
 - `app/api/close.py` — GET /close?token=: ลิงก์ครั้งเดียวให้พนักงานปิดเคส
-- `app/api/health.py` — GET /health: เช็ค Postgres / Redis
-- `app/worker/` — arq worker: งานจากคิว, cron, ล็อก
-- `app/worker/settings.py` — WorkerSettings ของ arq (งาน, cron, Redis)
-- `app/worker/tasks.py` — process_event(raw_event_id): งานหลักต่อ event
-- `app/worker/locks.py` — ล็อกต่อ user ให้ทำทีละข้อความ
-- `app/worker/cron.py` — งานเบื้องหลังตามเวลา (retention: raw 90 วัน / รูป / anonymize)
+- `app/api/health.py` — GET /health (liveness) และ /health/ready: เช็ค Postgres
+- `app/worker/` — worker ของคิว procrastinate (คิวบน Postgres, D-010): งานจากคิว, งาน periodic
+- `app/worker/app.py` — procrastinate App, งาน process_event + งาน periodic, open_queue, run_worker / แตะเมื่อเพิ่มงานหรือเปลี่ยนรอบเวลา
+- `app/worker/__main__.py` — `python -m app.worker` เริ่ม worker (คำสั่งใน docker-compose.yml)
+- `app/worker/tasks.py` — process_event(raw_event_id): งานหลักต่อ event + enqueue_event (lock ต่อ user, queueing_lock ต่อ raw event)
+- `app/worker/cron.py` — งานเบื้องหลังตามเวลา (requeue/release_stuck/handoff_timeout/retry_stalled_jobs, retention: raw 90 วัน / รูป / anonymize / reply token หมดอายุ)
 - `app/worker/admin.py` — คำสั่งผู้ดูแล `python -m app.worker.admin` pdpa-delete / kill-switch / close-link / conversations
 - `app/worker/deps.py` — ประกอบ Deps จาก Settings ครั้งเดียว (ใช้ร่วม worker และ api)
 - `app/pipeline/` — ลำดับขั้นตัดสินใจ (ไม่เรียก LINE ไม่เขียน SQL)
@@ -71,6 +71,7 @@
 - `app/repositories/state.py` — conversation_state
 - `app/repositories/ai_runs.py` — ai_runs, ai_steps
 - `app/repositories/feedback.py` — feedback
+- `app/repositories/reply_tokens.py` — reply_tokens: replyToken อายุสั้น ใช้ครั้งเดียว (แทน Redis)
 - `app/services/` — client ภายนอกและตัวช่วย
 - `app/services/line_client.py` — LINE Messaging API, ที่เดียวที่ถือ token
 - `app/services/ai_client.py` — AI API ภายนอก, ที่เดียวที่รู้รูปแบบ API (รอคำตอบ)
@@ -79,19 +80,18 @@
 - `app/services/kill_switch.py` — ปิดบอทให้ call center รับทั้งหมด ไม่ต้อง deploy
 - `app/services/notify.py` — แจ้ง call center เมื่อส่งต่อ/คืน AI, เวลาทำการ
 - `app/services/storage.py` — เก็บ/ลบรูปใน MinIO
-- `app/services/redis_store.py` — replyToken ใน Redis (TTL, GETDEL)
 
 ## tests/
 - `tests/` — เทสต์แบบใหม่ (Python) / ต่างจาก `test/` แบบเก่า
 - `tests/fakes.py` — fake ในหน่วยความจำของทุกพอร์ตใน ports.py / แตะเมื่อเพิ่มเมธอดในพอร์ต
-- `tests/infra_fakes.py` — fake Redis, arq pool, run_turn (api / worker / services)
+- `tests/infra_fakes.py` — คิว procrastinate บน InMemoryConnector, run_turn ปลอม (api / worker)
 - `tests/test_config.py`, `tests/test_fakes.py`, `tests/test_smoke.py` — config, ความถูกของ fake, smoke
 - `tests/pipeline/` — ทีละ step + orchestrator + handoff + ไฟล์กฎ (`test_rule_files.py`)
-- `tests/services/` — client ภายนอกด้วย respx / fake Redis (`_helpers.py` ตัวช่วยร่วม)
+- `tests/services/` — client ภายนอกด้วย respx (`_helpers.py` ตัวช่วยร่วม)
 - `tests/api/` — webhook, /close, /health ผ่าน create_app + fake (`_app.py`)
-- `tests/worker/` — tasks, locks, cron, settings/deps, admin CLI
+- `tests/worker/` — tasks, cron, app (คิว/งาน periodic/worker ในหน่วยความจำ), deps, admin CLI
 - `tests/privacy/` — รูปแบบ redact
-- `tests/repositories/` — SQL: ตรวจแบบ static เสมอ + integration ข้ามถ้าไม่ตั้ง `TEST_DATABASE_URL`
+- `tests/repositories/` — SQL: ตรวจแบบ static เสมอ + integration ข้ามถ้าไม่ตั้ง `TEST_DATABASE_URL` (รวม migrations ขึ้น-ลง, reply_tokens, คิว procrastinate บน Postgres จริง)
 - `tests/scenarios/` — ตัวรัน regression + `cases/*.toml` (สังเคราะห์ 3 เคส, แชทจริงยังไม่มี)
 
 ## prompts/
@@ -105,6 +105,8 @@
 - `migrations/` — schema Postgres 16 เป็น .sql รันด้วย dbmate
 - `migrations/20261022000000_init.sql` — schema แรก (ร่าง ต้องเทียบ line_chat_schema_v2.sql) / แตะเมื่อเปลี่ยนตาราง (เพิ่มไฟล์ใหม่ ไม่แก้ไฟล์ที่รันแล้ว)
 - `migrations/20261023000000_retention_indexes.sql` — partial index ของคิวรี retention/anonymize (messages, ai_steps, attachments) / แตะเมื่อแก้ WHERE ของคิวรีเหล่านั้น
+- `migrations/20261024000000_procrastinate_schema.sql` — schema ของ procrastinate 3.10.0 (คัดลอกจากแพ็กเกจ ห้ามแก้มือ) / อัปเกรด procrastinate = เพิ่ม migration ใหม่ตามหัวไฟล์
+- `migrations/20261024000100_reply_tokens.sql` — ตาราง reply_tokens (แทน Redis)
 
 ## แบบเก่า (Node — ห้ามแก้ ห้ามลบ ห้ามย้าย)
 - `src/` — แบบเก่า: โค้ด Node (stub) / อ้างอิงเท่านั้น

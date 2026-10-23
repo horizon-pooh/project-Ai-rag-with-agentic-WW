@@ -6,7 +6,8 @@ POST /webhook: รับ event จาก LINE บันทึกก่อน แ
  - ตรวจ signature จาก body ดิบ (X-Line-Signature) ไม่ผ่าน -> 401
  - บันทึก line_raw_events ก่อนตอบ 200 เสมอ (ตัด replyToken ออกจากแถว)
  - กันซ้ำด้วย UNIQUE webhook_event_id (ซ้ำ -> ข้าม ตอบ 200)
- - ใส่คิว arq โดยใช้ raw id เป็น job id; replyToken เก็บใน Redis กับงานเท่านั้น
+ - ใส่คิว procrastinate (worker/tasks.enqueue_event): lock ต่อ user + queueing_lock = raw:{raw id} กันซ้ำ;
+   replyToken เก็บในตาราง reply_tokens (อายุสั้น ใช้ครั้งเดียว) ไม่ลง line_raw_events
  - คำสั่งเปลี่ยนสถานะ (talk_to_staff, resume_ai, ขอคนชัดเจน) ส่งต่อให้ api/fast_path ด้วย
  - ใส่คิวพลาด -> แถวยังเป็น pending, cron requeue_pending เก็บกวาด
 
@@ -132,7 +133,7 @@ async def webhook(request: Request, background: BackgroundTasks) -> Response:
             blog.info("webhook_fast_path_scheduled")
 
         try:
-            enqueued = await enqueue_event(state.arq, raw_event_id)
+            enqueued = await enqueue_event(state.queue, raw_event_id, _line_user_id(event))
             blog.info("webhook_enqueued", enqueued=enqueued)
         except Exception:
             # แถวยัง pending -> cron requeue_pending ใส่คิวให้

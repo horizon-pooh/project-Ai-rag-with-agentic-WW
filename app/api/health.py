@@ -1,14 +1,15 @@
 """app/api/health.py
 
-GET /health: บอกว่า api ยังอยู่ และต่อ Postgres / Redis ได้
+GET /health: บอกว่า api ยังอยู่ และต่อ Postgres ได้
 
 รายละเอียด:
  - ใช้กับ Uptime Kuma และ healthcheck ของ docker compose
  - ไม่เปิดเผยค่า config หรือ secret
- - แยก liveness (process อยู่) กับ readiness (ต่อ DB/Redis ได้)
+ - แยก liveness (process อยู่) กับ readiness (ต่อ DB ได้)
 
 ข้อตัดสินในงาน 8:
- - GET /health = liveness ไม่แตะ DB/Redis; GET /health/ready = Postgres SELECT 1 + Redis PING -> 200 / 503
+ - GET /health = liveness ไม่แตะ DB; GET /health/ready = Postgres SELECT 1 -> 200 / 503
+   (D-010: ไม่มี Redis แล้ว คิวก็อยู่ใน Postgres ตัวเดียวกัน)
  - ผลบอกแค่ชื่อการตรวจกับ true/false ไม่บอกข้อความ error (อาจมี host/รหัสผ่าน)
  - การตรวจจริงอยู่ที่ worker/deps.check_ready (SQL อยู่ใน repositories/health.py) ตั้งไว้ที่ app.state.ready_check
 

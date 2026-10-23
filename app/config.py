@@ -4,7 +4,7 @@
 
 รายละเอียด:
  - ใช้ pydantic-settings อ่านจาก .env (รายการตัวแปรดู .env.example)
- - บังคับ: LINE_CHANNEL_SECRET, LINE_CHANNEL_ACCESS_TOKEN, DATABASE_URL, REDIS_URL
+ - บังคับ: LINE_CHANNEL_SECRET, LINE_CHANNEL_ACCESS_TOKEN, DATABASE_URL (ไม่มี Redis แล้ว — คิวอยู่ Postgres, D-010)
  - ห้ามข้ามการตรวจ signature ไม่ว่าโหมดไหน
  - AI_TIMEOUT_S, AI_CONCURRENCY, TURN_DEADLINE_S: ค่าจริงรอคำตอบเรื่อง AI API
  - STATE_TTL_HOURS=2, HANDOFF_TTL_HOURS=6
@@ -51,7 +51,6 @@ class Settings(BaseSettings):
 
     # --- ที่เก็บข้อมูล (บังคับ) — URL อาจมีรหัสผ่าน จึงเป็น SecretStr ---
     database_url: SecretStr
-    redis_url: SecretStr
 
     # --- AI API ภายนอก ---
     # ว่าง -> แอปใช้ AI client แบบ stub (ยังไม่มี API จริง) — รอคำตอบเรื่อง AI API

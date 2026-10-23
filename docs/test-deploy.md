@@ -6,6 +6,7 @@
 > เป็น global flag วางก่อน `up`, Postgres ไม่มี TLS ต้องใส่ `?sslmode=disable`; LINE push รับ `X-Line-Retry-Key` (UUID)
 > ส่งซ้ำได้ 409 (โค้ดถือว่าส่งแล้ว), reply ส่งได้ไม่เกิน 5 ข้อความ, loading animation 5–60 วิ.
 > อายุ replyToken ไม่พบตัวเลขในเอกสาร LINE (บอกแค่ใช้ได้ครั้งเดียวและหมดอายุหลังช่วงหนึ่ง) — โค้ดใช้ `REPLY_TOKEN_TTL_S=50` แล้ว push แทนเมื่อใช้ไม่ได้
+> คิวงานเป็น procrastinate บน Postgres ตัวเดียวกัน (docs/decisions.md D-010) — ไม่มี Redis; replyToken อยู่ตาราง `reply_tokens`
 
 เป้าหมาย: ขึ้นทั้งระบบด้วย `docker compose` คุยกับ LINE OA ทดสอบได้ครบ flow (FAQ, ส่งต่อพนักงาน, ปิดเคส, kill switch, รูป)
 โดย **ไม่ต่อ AI จริง** (`AI_API_URL` ว่าง -> `StubAiClient` ทวนข้อความกลับ)
@@ -56,8 +57,6 @@ POSTGRES_USER=linebot
 POSTGRES_PASSWORD=<รหัสผ่าน-db>
 POSTGRES_DB=linebot
 
-REDIS_URL=redis://redis:6379
-
 # MinIO ในเครื่อง: ACCESS/SECRET ต้องเท่ากับ ROOT_USER/ROOT_PASSWORD (รหัสผ่าน >= 8 ตัว)
 MINIO_ENDPOINT=minio:9000
 MINIO_ACCESS_KEY=linebot
@@ -77,7 +76,8 @@ KILL_SWITCH=false
 ```
 
 - `<DOMAIN>` ไม่มี `https://` เช่น `bot-test.example.com`
-- ขาดค่าบังคับ (LINE_*, DATABASE_URL, REDIS_URL) -> api/worker หยุดทันทีตอนเริ่ม ดูใน `docker compose logs api`
+- ขาดค่าบังคับ (LINE_*, DATABASE_URL) -> api/worker หยุดทันทีตอนเริ่ม ดูใน `docker compose logs api`
+- `.env` เก่าที่ยังมี `REDIS_URL` ไม่เป็นไร (ค่าที่ไม่รู้จักถูกข้าม) ลบทิ้งได้
 
 ## 4. รัน
 
@@ -89,12 +89,16 @@ KILL_SWITCH=false
    (ชื่อโฟลเดอร์ = ชื่อ project ของ compose -> network ชื่อ `line_prod_default`)
 2. `docker compose build`
 3. `docker compose up -d`
-4. `docker compose ps -a` — คาดว่า: `postgres`, `redis` = healthy; `migrate` = Exited (0); `api` = healthy;
+4. `docker compose ps -a` — คาดว่า: `postgres` = healthy; `migrate` = Exited (0); `api` = healthy;
    `worker`, `minio`, `caddy` = running
 5. ดู log: `docker compose logs -f api worker` (log เป็น JSON หนึ่งบรรทัดต่อเหตุการณ์)
-   - migrate: `docker compose logs migrate` ต้องเห็น dbmate รอ DB แล้ว apply `20261022000000_init.sql` และ
-     `20261023000000_retention_indexes.sql` (รันซ้ำรอบหลังจะไม่มีอะไรให้ apply และยังจบด้วย 0)
-   - worker ต้องเห็น `ai_stub_mode` (ยืนยันว่าเป็นโหมด stub) และ `worker_started`
+   - migrate: `docker compose logs migrate` ต้องเห็น dbmate รอ DB แล้ว apply `20261022000000_init.sql`,
+     `20261023000000_retention_indexes.sql`, `20261024000000_procrastinate_schema.sql` (ตารางของคิว) และ
+     `20261024000100_reply_tokens.sql` (รันซ้ำรอบหลังจะไม่มีอะไรให้ apply และยังจบด้วย 0)
+   - worker ต้องเห็น `ai_stub_mode` (ยืนยันว่าเป็นโหมด stub), `worker_started` และบรรทัดของ procrastinate
+     `Starting worker on all queues`
+   - เช็คคิว: `docker compose exec worker python -m procrastinate --app=app.worker.app.app healthchecks`
+     ต้องได้ `DB connection: OK` และ `Found procrastinate_jobs table: OK`
 6. (ทางเลือก ไม่มีโดเมน) Cloudflare quick tunnel — ทดสอบเท่านั้น ข้าม Caddy:
    ```sh
    docker compose up -d api worker          # ไม่ต้องเริ่ม caddy
@@ -111,7 +115,7 @@ KILL_SWITCH=false
 | # | ทำ | ผลที่คาด |
 |---|---|---|
 | 1 | `curl -i https://<DOMAIN>/health` | `200` `{"status":"ok"}` |
-| 1b | `docker compose exec api python -c "import urllib.request as u; print(u.urlopen('http://127.0.0.1:8000/health/ready').read().decode())"` | `{"status":"ok","checks":{"postgres":true,"redis":true}}` (`/health/ready` ไม่เปิดผ่าน Caddy: จากข้างนอกได้ 404) |
+| 1b | `docker compose exec api python -c "import urllib.request as u; print(u.urlopen('http://127.0.0.1:8000/health/ready').read().decode())"` | `{"status":"ok","checks":{"postgres":true}}` (`/health/ready` ไม่เปิดผ่าน Caddy: จากข้างนอกได้ 404) |
 | 2 | LINE Developers -> Webhook settings -> กด Verify | Success (api ตอบ 200; event ว่างไม่ทำอะไร) ถ้าได้ 401 ดูข้อ 8.1 |
 | 3 | ส่ง `สวัสดี` | `สวัสดีค่ะ ต้องการให้ช่วยหาสินค้าอะไรคะ` (FAQ จาก `prompts/rules/faq.txt` ไม่เรียก AI) |
 | 4 | ส่ง `ตู้เย็น` | `(โหมดทดสอบ ยังไม่ได้ต่อ AI API) ได้รับข้อความ: ตู้เย็น` (StubAiClient) |
@@ -145,6 +149,8 @@ SELECT id, direction, message_type, status, drop_reason, created_at FROM message
 SELECT id, message_id, storage_key, content_type, size_bytes FROM attachments ORDER BY id DESC LIMIT 5;
 -- kill switch ใน DB
 SELECT * FROM ops_flags;
+-- คิว (procrastinate): งานที่สำเร็จถูกลบทันที ที่เห็นคืองานที่รอ (todo) / กำลังทำ (doing) / ไม่สำเร็จ
+SELECT queue_name, task_name, status, count(*) FROM procrastinate_jobs GROUP BY 1, 2, 3 ORDER BY 1, 2, 3;
 ```
 
 ไฟล์รูปใน MinIO (ไม่ได้เปิดพอร์ต console ออกนอกเครื่อง): MinIO เก็บแต่ละ object เป็นโฟลเดอร์บนดิสก์
@@ -202,10 +208,13 @@ WHERE m.direction = 'out' AND m.status = 'sent' AND m.created_at > now() - inter
 3. **migrate ไม่จบ (exit ไม่ใช่ 0) แล้ว api/worker ไม่เริ่ม** — `docker compose logs migrate`: `DATABASE_URL` ไม่ตรงกับ
    `POSTGRES_*`, host ไม่ใช่ `postgres`, ลืม `?sslmode=disable`, รหัสผ่านมีอักขระพิเศษที่ไม่ได้ encode.
    หมายเหตุ: `POSTGRES_*` มีผลแค่ตอนสร้าง volume ครั้งแรก — เปลี่ยนรหัสทีหลังต้อง `down -v` (ลบข้อมูล) หรือแก้ใน psql
-4. **webhook ตอบ 200 แต่ไม่มีใครตอบลูกค้า** — worker ไม่หยิบงาน: `REDIS_URL` ของ api กับ worker ต้องชี้ Redis ตัวเดียวกัน
-   (`redis://redis:6379`), ดู `docker compose logs worker` ว่ามี `worker_started` และไม่ crash; แถวค้าง
-   `SELECT process_status, count(*) FROM line_raw_events GROUP BY 1;` (pending ค้าง -> cron requeue_pending ใส่คิวใหม่ทุก 1 นาที)
+4. **webhook ตอบ 200 แต่ไม่มีใครตอบลูกค้า** — worker ไม่หยิบงาน: ดู `docker compose logs worker` ว่ามี `worker_started` และไม่ crash
+   (api กับ worker ใช้ `DATABASE_URL` เดียวกันจาก `.env` คิวอยู่ใน DB นั้น); แถวค้าง
+   `SELECT process_status, count(*) FROM line_raw_events GROUP BY 1;` (pending ค้าง -> งาน requeue_pending ใส่คิวใหม่ทุก 1 นาที)
+   และงานในคิว `SELECT status, count(*) FROM procrastinate_jobs GROUP BY 1;` — `todo` ค้างเยอะแต่ไม่มี `doing` = worker ไม่ทำงาน;
+   `doing` ค้างของ worker ที่ตายไปแล้วถือ lock ของ user นั้นไว้ (ข้อความถัดไปของ user นั้นรอ) — งาน retry_stalled_jobs
+   คืนเข้าคิวให้ภายใน ~1 นาทีหลัง heartbeat หยุด 30 วิ; `failed` ดูสาเหตุใน `docker compose logs worker` (เก็บไว้ 7 วันแล้วลบเอง)
 5. **replyToken หมดอายุ -> ส่งแบบ push** — เราเชื่อ replyToken ไม่เกิน `REPLY_TOKEN_TTL_S` (50 วิ) เกินนั้นใช้ push
    (log `send.sent` via `push`); ข้อความ RESUMED หลังกดปิดเคสเป็น push เสมอ. push นับโควตาข้อความรายเดือนของ OA
    (แผนฟรีมีจำกัด — เช็คหน้าจอจริงที่ LINE Official Account Manager) ส่วน reply ไม่นับ
-6. **api ไม่ healthy / ขึ้น ๆ ลง ๆ** — `docker compose logs api` มักเป็นค่าบังคับใน `.env` ขาด หรือ Postgres/Redis ต่อไม่ได้
+6. **api ไม่ healthy / ขึ้น ๆ ลง ๆ** — `docker compose logs api` มักเป็นค่าบังคับใน `.env` ขาด หรือ Postgres ต่อไม่ได้

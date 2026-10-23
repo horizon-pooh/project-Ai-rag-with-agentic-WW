@@ -1,6 +1,6 @@
 """tests/fakes.py
 
-fake ในหน่วยความจำของทุกพอร์ตใน app/pipeline/ports.py ให้เทสต์รันได้โดยไม่ต้องมี Postgres/Redis/LINE/AI
+fake ในหน่วยความจำของทุกพอร์ตใน app/pipeline/ports.py ให้เทสต์รันได้โดยไม่ต้องมี Postgres/LINE/AI
 
 รายละเอียด:
  - ทำตามสัญญา (docstring) ของพอร์ตทุกข้อ รวมเงื่อนไขของ claim / start_handoff / end_handoff /
@@ -814,7 +814,7 @@ class FakeLineClient:
 
 
 class FakeReplyTokens:
-    """Redis replytoken:{raw_event_id} พร้อม TTL ตาม clock; take = GETDEL"""
+    """reply_tokens พร้อมอายุตาม clock; take = หยิบแล้วลบ (ใช้ได้ครั้งเดียว) เหมือน PgReplyTokens"""
 
     def __init__(self, clock: FakeClock, ttl_s: int = 50) -> None:
         self.clock = clock
@@ -879,7 +879,6 @@ def make_settings(**overrides: Any) -> Settings:
         "line_channel_secret": "test-channel-secret",
         "line_channel_access_token": "test-access-token",
         "database_url": "postgresql://test:test@localhost:5432/test",
-        "redis_url": "redis://localhost:6379/0",
         "public_base_url": "https://bot.example.test",
     }
     values.update(overrides)

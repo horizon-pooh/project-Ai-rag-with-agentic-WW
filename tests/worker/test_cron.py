@@ -1,4 +1,4 @@
-"""tests/worker/test_cron.py — งานตามเวลา (fake ทั้งหมด)"""
+"""tests/worker/test_cron.py — งานตามเวลา (fake ทั้งหมด + คิว procrastinate บน InMemoryConnector)"""
 
 from __future__ import annotations
 
@@ -11,8 +11,9 @@ import pytest
 from app.pipeline import replies
 from app.pipeline.schemas import AiStepRecord, ConversationStatus, HandoffEndReason, ProcessStatus
 from app.worker import cron
+from app.worker.tasks import user_lock_for
 from tests.fakes import DEFAULT_NOW, make_deps
-from tests.infra_fakes import FakeArqPool
+from tests.infra_fakes import finish_all, make_queue, queued
 
 
 async def _human_conv(deps: Any, line_user_id: str = "U1") -> Any:
@@ -23,18 +24,22 @@ async def _human_conv(deps: Any, line_user_id: str = "U1") -> Any:
     return conv
 
 
-def _ctx(deps: Any, **extra: Any) -> dict[str, Any]:
-    return {"deps": deps, "redis": FakeArqPool(), **extra}
+class _NoTokens:
+    async def delete_expired(self, limit: int = 0) -> int:
+        return 0
+
+
+async def _retention(deps: Any, raw: Any) -> cron.RetentionResult:
+    return await cron.retention(deps, raw, _NoTokens())
 
 
 async def test_handoff_timeout_sends_once_even_if_run_twice() -> None:
     deps = make_deps()
     conv = await _human_conv(deps)
     deps.clock.advance(hours=6)
-    ctx = _ctx(deps)
 
-    assert await cron.handoff_timeout(ctx) == 1
-    assert await cron.handoff_timeout(ctx) == 0
+    assert await cron.handoff_timeout(deps) == 1
+    assert await cron.handoff_timeout(deps) == 0
 
     pushes = deps.line.pushes
     assert len(pushes) == 1
@@ -68,8 +73,7 @@ async def test_handoff_timeout_skips_when_other_path_closed_first() -> None:
             return timed_out
 
     stale_deps = replace(deps, conversations=StaleRepo())
-    ctx = _ctx(stale_deps)
-    assert await cron.handoff_timeout(ctx) == 0
+    assert await cron.handoff_timeout(stale_deps) == 0
     assert deps.line.pushes == []
 
 
@@ -77,8 +81,7 @@ async def test_handoff_timeout_not_yet() -> None:
     deps = make_deps()
     await _human_conv(deps)
     deps.clock.advance(hours=5, minutes=59)
-    ctx = _ctx(deps)
-    assert await cron.handoff_timeout(ctx) == 0
+    assert await cron.handoff_timeout(deps) == 0
     assert deps.line.pushes == []
 
 
@@ -91,10 +94,37 @@ async def test_requeue_pending_only_stale() -> None:
     fresh = await deps.raw_events.insert(
         webhook_event_id="b", line_user_id="U1", event_type="message", payload={}, occurred_at=DEFAULT_NOW
     )
-    ctx = _ctx(deps)
-    assert await cron.requeue_pending(ctx) == 1
-    assert ctx["redis"].calls == [("process_event", (old,), f"raw:{old}")]
-    assert fresh not in [c[1][0] for c in ctx["redis"].calls]
+    queue, connector = make_queue()
+    assert await cron.requeue_pending(deps, queue) == 1
+    # lock ต่อ user ของแถวนั้น (อ่านจาก raw_events.get)
+    assert queued(connector) == [
+        ("process_event", {"raw_event_id": old}, user_lock_for("U1"), f"raw:{old}")
+    ]
+    assert fresh not in [q[1]["raw_event_id"] for q in queued(connector)]
+    # งานเดิมยังรอในคิว -> ไม่ใส่ซ้ำ แต่ยังนับว่าเจอ (สัญญาณแจ้งเตือน)
+    assert await cron.requeue_pending(deps, queue) == 1
+    assert len(queued(connector)) == 1
+
+
+async def test_requeue_pending_event_without_user_has_no_lock() -> None:
+    deps = make_deps()
+    rid = await deps.raw_events.insert(
+        webhook_event_id="g", line_user_id=None, event_type="message", payload={}, occurred_at=DEFAULT_NOW
+    )
+    deps.clock.advance(minutes=3)
+    queue, connector = make_queue()
+    assert await cron.requeue_pending(deps, queue) == 1
+    assert queued(connector) == [("process_event", {"raw_event_id": rid}, None, f"raw:{rid}")]
+
+
+async def test_requeue_pending_enqueue_failure_is_logged_not_raised() -> None:
+    deps = make_deps()
+    await deps.raw_events.insert(
+        webhook_event_id="a", line_user_id="U1", event_type="message", payload={}, occurred_at=DEFAULT_NOW
+    )
+    deps.clock.advance(minutes=3)
+    queue, _ = make_queue(fail=True)
+    assert await cron.requeue_pending(deps, queue) == 1
 
 
 async def test_release_stuck_after_lock_ttl() -> None:
@@ -103,14 +133,26 @@ async def test_release_stuck_after_lock_ttl() -> None:
         webhook_event_id="a", line_user_id="U1", event_type="message", payload={}, occurred_at=DEFAULT_NOW
     )
     await deps.raw_events.claim(rid)
-    ctx = _ctx(deps)
-    # ยังไม่เกิน TTL ล็อก + ช่องเผื่อ -> ไม่ปล่อย
-    deps.clock.advance(seconds=deps.settings.turn_deadline_s + 30)
-    assert await cron.release_stuck(ctx) == 0
-    deps.clock.advance(seconds=61)
-    assert await cron.release_stuck(ctx) == 1
+    queue, connector = make_queue()
+    # ยังไม่เกินเพดานเวลาของงาน (TURN_DEADLINE_S + 60) + ช่องเผื่อ 30 วิ -> ไม่ปล่อย
+    deps.clock.advance(seconds=deps.settings.turn_deadline_s + 60 + 30)
+    assert await cron.release_stuck(deps, queue) == 0
+    deps.clock.advance(seconds=1)
+    assert await cron.release_stuck(deps, queue) == 1
     assert deps.raw_events.db.raw_events[rid].process_status is ProcessStatus.PENDING
-    assert ctx["redis"].calls == [("process_event", (rid,), f"raw:{rid}")]
+    assert queued(connector) == [
+        ("process_event", {"raw_event_id": rid}, user_lock_for("U1"), f"raw:{rid}")
+    ]
+    # งานเดิม (ที่ worker ตาย) จบไปแล้ว -> ใส่ id เดิมได้
+    finish_all(connector)
+    await deps.raw_events.claim(rid)
+    deps.clock.advance(seconds=deps.settings.turn_deadline_s + 91)
+    assert await cron.release_stuck(deps, queue) == 1
+    assert len(queued(connector)) == 2
+
+
+def test_stuck_after_is_job_timeout_plus_margin() -> None:
+    assert cron.stuck_after(50) == timedelta(seconds=50 + 60 + 30)
 
 
 async def test_retention_deletes_in_batches() -> None:
@@ -126,7 +168,7 @@ async def test_retention_deletes_in_batches() -> None:
             return self.results.pop(0)
 
     repo = Repo()
-    result = await cron.retention(_ctx(deps, raw_retention=repo))
+    result = await _retention(deps, repo)
     assert result.raw_deleted == 2 * cron.RETENTION_BATCH + 3
     assert len(repo.calls) == 3
     assert repo.calls[0] == (DEFAULT_NOW - timedelta(days=90), cron.RETENTION_BATCH)
@@ -138,7 +180,7 @@ async def test_handoff_timeout_deleted_user_closes_without_push() -> None:
     db = deps.users.db
     db.users[conv.user_id] = db.users[conv.user_id].model_copy(update={"deleted_at": DEFAULT_NOW})
     deps.clock.advance(hours=6)
-    assert await cron.handoff_timeout(_ctx(deps)) == 1
+    assert await cron.handoff_timeout(deps) == 1
     assert deps.line.pushes == []
 
 
@@ -190,13 +232,12 @@ async def test_retention_deletes_expired_images_only() -> None:
     deps = make_deps()
     seed = await _seed_history(deps)
     db = deps.users.db
-    ctx = _ctx(deps, raw_retention=_NoRaw())
 
     deps.clock.advance(days=29)
-    assert (await cron.retention(ctx)).images_deleted == 0
+    assert (await _retention(deps, _NoRaw())).images_deleted == 0
 
     deps.clock.advance(days=2)
-    result = await cron.retention(ctx)
+    result = await _retention(deps, _NoRaw())
     assert result.images_deleted == 1 and result.images_failed == 0
     assert seed["key"] not in deps.storage.objects
     assert db.attachments[seed["attachment_id"]]["deleted_at"] == deps.clock.now()
@@ -205,7 +246,7 @@ async def test_retention_deletes_expired_images_only() -> None:
     assert all(m.text_redacted for m in db.messages.values())
 
     # รอบที่สอง: ไม่มีอะไรเหลือ ไม่เรียก Storage ซ้ำ
-    again = await cron.retention(ctx)
+    again = await _retention(deps, _NoRaw())
     assert again.images_deleted == 0
     assert deps.storage.deleted == [seed["key"]]
 
@@ -214,16 +255,15 @@ async def test_retention_image_storage_failure_keeps_row_for_next_run() -> None:
     deps = make_deps()
     seed = await _seed_history(deps)
     db = deps.users.db
-    ctx = _ctx(deps, raw_retention=_NoRaw())
     deps.storage.fail_delete.add(seed["key"])
     deps.clock.advance(days=31)
 
-    result = await cron.retention(ctx)
+    result = await _retention(deps, _NoRaw())
     assert (result.images_deleted, result.images_failed) == (0, 1)
     assert db.attachments[seed["attachment_id"]]["deleted_at"] is None
 
     deps.storage.fail_delete.clear()
-    result = await cron.retention(ctx)
+    result = await _retention(deps, _NoRaw())
     assert (result.images_deleted, result.images_failed) == (1, 0)
     assert db.attachments[seed["attachment_id"]]["deleted_at"] is not None
 
@@ -232,15 +272,14 @@ async def test_retention_anonymizes_after_trace_months_idempotent() -> None:
     deps = make_deps()
     await _seed_history(deps)
     db = deps.users.db
-    ctx = _ctx(deps, raw_retention=_NoRaw())
 
     # ยังไม่ครบ 12 เดือนตามปฏิทิน
     deps.clock.set(cron.months_before(DEFAULT_NOW, -12) - timedelta(seconds=1))
-    first = await cron.retention(ctx)
+    first = await _retention(deps, _NoRaw())
     assert (first.messages_anonymized, first.ai_steps_anonymized) == (0, 0)
 
     deps.clock.advance(seconds=2)
-    result = await cron.retention(ctx)
+    result = await _retention(deps, _NoRaw())
     assert result.messages_anonymized == 2
     assert result.ai_steps_anonymized == 1
     assert all(m.text_redacted is None and m.payload is None for m in db.messages.values())
@@ -249,7 +288,7 @@ async def test_retention_anonymizes_after_trace_months_idempotent() -> None:
     # ค่าสถิติยังอยู่
     assert step.latency_ms == 5 and step.step == "call_ai"
 
-    again = await cron.retention(ctx)
+    again = await _retention(deps, _NoRaw())
     assert (again.messages_anonymized, again.ai_steps_anonymized) == (0, 0)
 
 
@@ -262,7 +301,7 @@ async def test_retention_part_failure_does_not_stop_others() -> None:
             raise RuntimeError("db hiccup")
 
     deps.clock.set(cron.months_before(DEFAULT_NOW, -13))
-    result = await cron.retention(_ctx(deps, raw_retention=BrokenRaw()))
+    result = await _retention(deps, BrokenRaw())
     assert result.raw_deleted == 0
     assert result.images_deleted == 1
     assert result.messages_anonymized == 2
@@ -279,3 +318,61 @@ async def test_retention_part_failure_does_not_stop_others() -> None:
 )
 def test_months_before(now: datetime, months: int, expected: datetime) -> None:
     assert cron.months_before(now, months) == expected
+
+
+# --- reply tokens / งานค้างของ worker ที่ตาย (D-010) ---
+
+
+async def test_retention_deletes_expired_reply_tokens_in_batches() -> None:
+    deps = make_deps()
+
+    class Tokens:
+        def __init__(self) -> None:
+            self.results = [cron.RETENTION_BATCH, 7]
+            self.limits: list[int] = []
+
+        async def delete_expired(self, limit: int = 0) -> int:
+            self.limits.append(limit)
+            return self.results.pop(0)
+
+    tokens = Tokens()
+    result = await cron.retention(deps, _NoRaw(), tokens)
+    assert result.reply_tokens_deleted == cron.RETENTION_BATCH + 7
+    assert tokens.limits == [cron.RETENTION_BATCH, cron.RETENTION_BATCH]
+
+
+async def test_retention_reply_token_failure_does_not_stop_others() -> None:
+    deps = make_deps()
+    await _seed_history(deps)
+
+    class BrokenTokens:
+        async def delete_expired(self, limit: int = 0) -> int:
+            raise RuntimeError("db hiccup")
+
+    deps.clock.set(cron.months_before(DEFAULT_NOW, -13))
+    result = await cron.retention(deps, _NoRaw(), BrokenTokens())
+    assert result.reply_tokens_deleted == 0
+    assert result.images_deleted == 1 and result.messages_anonymized == 2
+
+
+async def test_retry_stalled_jobs_only_dead_workers() -> None:
+    from datetime import UTC
+    from datetime import datetime as dt
+
+    queue, connector = make_queue()
+    jm = queue.job_manager
+    await queue.configure_task("process_event", lock="user:a").defer_async(raw_event_id=1)
+    await queue.configure_task("process_event", lock="user:b").defer_async(raw_event_id=2)
+    dead = await jm.register_worker()
+    alive = await jm.register_worker()
+    job_dead = await jm.fetch_job(queues=None, worker_id=dead)
+    job_alive = await jm.fetch_job(queues=None, worker_id=alive)
+    assert job_dead is not None and job_alive is not None
+
+    # worker ที่ยังส่ง heartbeat -> ไม่แตะ
+    assert await cron.retry_stalled_jobs(jm) == 0
+    # dead หยุดส่ง heartbeat นานกว่า STALLED_HEARTBEAT_S -> งานกลับเป็น todo (ปล่อย lock ของ user)
+    connector.workers[dead] = dt.now(UTC) - timedelta(seconds=cron.STALLED_HEARTBEAT_S + 5)
+    assert await cron.retry_stalled_jobs(jm) == 1
+    assert connector.jobs[job_dead.id]["status"] == "todo"
+    assert connector.jobs[job_alive.id]["status"] == "doing"

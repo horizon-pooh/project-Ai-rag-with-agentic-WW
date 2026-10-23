@@ -10,10 +10,12 @@ from typing import Any
 import pytest
 from fastapi.testclient import TestClient
 
+from app.api import webhook as webhook_mod
 from app.pipeline import orchestrator
 from app.pipeline.schemas import InboundEvent, ProcessStatus
+from app.worker.tasks import user_lock_for
 from tests.api._app import body_of, make_test_app, postback_event, sign, text_event
-from tests.infra_fakes import FakeArqPool, FakeTurns
+from tests.infra_fakes import FakeTurns, finish_all, make_queue, queued
 
 
 @pytest.fixture
@@ -48,7 +50,7 @@ def test_missing_signature_401(fast_seen: Any) -> None:
     resp = _post(TestClient(app), body_of(text_event()), None)
     assert resp.status_code == 401
     assert deps.raw_events.db.raw_events == {}
-    assert app.state.arq.calls == []
+    assert queued(app.state.queue.connector) == []
 
 
 def test_bad_signature_401(fast_seen: Any) -> None:
@@ -85,7 +87,11 @@ async def test_valid_event_saved_token_stored_and_enqueued(
     assert "rt-secret" not in str(raw.payload)
     assert raw.process_status is ProcessStatus.PENDING
     assert await deps.reply_tokens.take(raw.id) == "rt-secret"
-    assert app.state.arq.calls == [("process_event", (raw.id,), f"raw:{raw.id}")]
+    # lock ต่อ user (hash ไม่ใช่ line_user_id ตัวจริง) + queueing_lock ต่อ raw event
+    assert queued(app.state.queue.connector) == [
+        ("process_event", {"raw_event_id": raw.id}, user_lock_for("U1"), f"raw:{raw.id}")
+    ]
+    assert "U1" not in (user_lock_for("U1") or "")
     # ข้อความธรรมดาไม่วิ่งทางด่วน
     assert turns.calls == []
 
@@ -95,10 +101,11 @@ def test_duplicate_webhook_event_not_reenqueued(fast_seen: Any) -> None:
     client = TestClient(app)
     body = body_of(text_event(1))
     assert _post(client, body, sign(body)).status_code == 200
-    app.state.arq.finish("raw:1")  # งานแรกจบแล้ว: ถ้าใส่ซ้ำ arq จะรับ -> webhook ต้องไม่ใส่เอง
+    # งานแรกจบแล้ว: ถ้าใส่ซ้ำคิวจะรับ (queueing_lock กันแค่งานที่ยังรอ) -> webhook ต้องไม่ใส่เอง
+    finish_all(app.state.queue.connector)
     assert _post(client, body, sign(body)).status_code == 200
     assert len(deps.raw_events.db.raw_events) == 1
-    assert len(app.state.arq.calls) == 1
+    assert len(queued(app.state.queue.connector)) == 1
 
 
 def test_fast_path_event_scheduled_and_also_enqueued(
@@ -113,21 +120,21 @@ def test_fast_path_event_scheduled_and_also_enqueued(
     assert turns.calls == [raw_id]
     assert deps.raw_events.db.raw_events[raw_id].process_status is ProcessStatus.DONE
     assert fast_seen[0].postback_action == "talk_to_staff"
-    assert app.state.arq.calls == [("process_event", (raw_id,), f"raw:{raw_id}")]
+    assert [q[1] for q in queued(app.state.queue.connector)] == [{"raw_event_id": raw_id}]
 
 
 def test_fast_path_skips_when_already_claimed(
     fast_seen: list[InboundEvent], turns: FakeTurns, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     app, deps = make_test_app()
-    orig_enqueue = app.state.arq.enqueue_job
+    orig_enqueue = webhook_mod.enqueue_event
 
-    async def enqueue_and_claim(fn: str, raw_id: int, **kw: Any) -> Any:
+    async def enqueue_and_claim(queue: Any, raw_id: int, line_user_id: str | None) -> bool:
         # จำลอง worker หยิบงานไป claim ก่อน BackgroundTask ของทางด่วนจะเริ่ม
         await deps.raw_events.claim(raw_id)
-        return await orig_enqueue(fn, raw_id, **kw)
+        return await orig_enqueue(queue, raw_id, line_user_id)
 
-    monkeypatch.setattr(app.state.arq, "enqueue_job", enqueue_and_claim)
+    monkeypatch.setattr(webhook_mod, "enqueue_event", enqueue_and_claim)
     body = body_of(postback_event(6, "action=talk_to_staff"))
     assert _post(TestClient(app), body, sign(body)).status_code == 200
     assert turns.calls == []
@@ -135,7 +142,7 @@ def test_fast_path_skips_when_already_claimed(
 
 def test_enqueue_failure_still_200(fast_seen: Any) -> None:
     app, deps = make_test_app()
-    app.state.arq = FakeArqPool(fail=True)
+    app.state.queue, _ = make_queue(fail=True)
     body = body_of(text_event(1))
     resp = _post(TestClient(app), body, sign(body))
     assert resp.status_code == 200
@@ -166,7 +173,10 @@ def test_event_without_user_saved_without_fast_path(fast_seen: list[Any]) -> Non
     raw = next(iter(deps.raw_events.db.raw_events.values()))
     assert raw.line_user_id is None
     assert fast_seen == []
-    assert len(app.state.arq.calls) == 1
+    # ไม่มี user -> ไม่มี lock
+    assert queued(app.state.queue.connector) == [
+        ("process_event", {"raw_event_id": raw.id}, None, f"raw:{raw.id}")
+    ]
 
 
 def test_event_without_webhook_event_id_skipped(fast_seen: Any) -> None:

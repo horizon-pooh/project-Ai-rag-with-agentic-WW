@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-Stack (ยังเป็นข้อเสนอ): Python 3.12, FastAPI, arq+Redis (เป็นคิวอย่างเดียว), Postgres, MinIO, Docker Compose
+Stack (ยังเป็นข้อเสนอ): Python 3.12, FastAPI, procrastinate (คิวบน Postgres), Postgres, MinIO, Docker Compose
 สถานะ: มีโค้ดรอบแรก (ยังไม่ทดสอบกับ Postgres/LINE/AI จริง) — ดู docs/PLAN.md
 
 ## คำสั่ง (เมื่อมีโค้ด)

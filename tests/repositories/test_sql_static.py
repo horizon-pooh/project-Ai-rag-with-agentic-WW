@@ -4,6 +4,8 @@
 - signature ของทุกเมธอดตรงกับ Protocol (ชื่อ/ชนิดพารามิเตอร์/ค่าตั้งต้น/annotation)
 - รายชื่อคอลัมน์ที่ SELECT/RETURNING ตรงกับฟิลด์ของ model (model เป็น extra='forbid') และมีจริงใน migration
 - คอลัมน์ใน INSERT (...) และ UPDATE ... SET ของทุกไฟล์มีจริงในตารางนั้นของ migration (กันพิมพ์ชื่อผิด)
+- ตาราง procrastinate_* (schema ของไลบรารีคิว) ไม่นับ: โค้ดเราไม่เขียน SQL ใส่ ตรวจใน test_migrations.py แทน
+- PgReplyTokens (ไม่อยู่ใน Repos เพราะต้องรับ TTL) ตรวจกับ ports.ReplyTokens แยก
 - เทสต์ในโฟลเดอร์นี้ได้ SelectorEventLoop (psycopg async บน Windows ต้องใช้)
 """
 
@@ -26,6 +28,7 @@ from app.repositories import (
     PgFlagsRepo,
     PgMessagesRepo,
     PgRawEventsRepo,
+    PgReplyTokens,
     PgStateRepo,
     PgUsersRepo,
     Repos,
@@ -61,11 +64,16 @@ def _protocol_methods(proto: type) -> list[str]:
     return [n for n, v in vars(proto).items() if not n.startswith("_") and inspect.isfunction(v)]
 
 
+PROCRASTINATE_PREFIX = "procrastinate_"
+
+
 def _migration_tables() -> dict[str, set[str]]:
-    """{ตาราง: {คอลัมน์}} จาก CREATE TABLE ในส่วน migrate:up ของทุกไฟล์ migration"""
+    """{ตาราง: {คอลัมน์}} จาก CREATE TABLE ในส่วน migrate:up ของทุกไฟล์ migration (ไม่รวม procrastinate_*)"""
     up = "\n".join(migrate_up_sql(p.read_text(encoding="utf-8")) for p in MIGRATIONS)
     tables: dict[str, set[str]] = {}
     for name, body in re.findall(r"CREATE TABLE (\w+) \((.*?)\n\);", up, flags=re.S):
+        if name.startswith(PROCRASTINATE_PREFIX):
+            continue
         cols = set()
         for line in body.splitlines():
             m = re.match(
@@ -88,6 +96,20 @@ def test_migration_parsed_all_tables() -> None:
 @pytest.mark.parametrize(("impl", "proto"), PAIRS, ids=_IDS)
 def test_repo_satisfies_protocol(impl: type, proto: type) -> None:
     assert isinstance(impl(_DummyPool()), proto)
+
+
+def test_reply_tokens_repo_matches_protocol() -> None:
+    assert isinstance(PgReplyTokens(_DummyPool(), ttl_s=50), ports.ReplyTokens)  # type: ignore[arg-type]
+    for name in _protocol_methods(ports.ReplyTokens):
+        want = inspect.signature(getattr(ports.ReplyTokens, name))
+        got = inspect.signature(getattr(PgReplyTokens, name))
+        assert inspect.iscoroutinefunction(getattr(PgReplyTokens, name)), name
+        assert [(p.name, p.kind, p.default, p.annotation) for p in got.parameters.values()] == [
+            (p.name, p.kind, p.default, p.annotation) for p in want.parameters.values()
+        ], name
+        assert got.return_annotation == want.return_annotation, name
+    with pytest.raises(ValueError):
+        PgReplyTokens(_DummyPool(), ttl_s=0)  # type: ignore[arg-type]
 
 
 @pytest.mark.parametrize(("impl", "proto"), PAIRS, ids=_IDS)

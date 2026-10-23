@@ -50,7 +50,7 @@ from app.pipeline.schemas import (
 
 @runtime_checkable
 class RawEventsRepo(Protocol):
-    """ตาราง line_raw_events — ความจริงของงานในคิว (Redis เก็บแค่ id)"""
+    """ตาราง line_raw_events — ความจริงของงานในคิว (งานใน procrastinate_jobs เก็บแค่ raw_event_id)"""
 
     async def insert(
         self,
@@ -418,14 +418,14 @@ class LineClient(Protocol):
 
 @runtime_checkable
 class ReplyTokens(Protocol):
-    """Redis key replytoken:{raw_event_id} TTL = REPLY_TOKEN_TTL_S"""
+    """ตาราง reply_tokens (repositories/reply_tokens.py) อายุ REPLY_TOKEN_TTL_S — ความลับอายุสั้น ห้ามลง log"""
 
     async def put(self, raw_event_id: int, reply_token: str) -> None:
-        """SET replytoken:{raw_event_id} <token> EX REPLY_TOKEN_TTL_S (webhook เรียก)"""
+        """เก็บ token ของ raw event นี้ expires_at = now() + REPLY_TOKEN_TTL_S (webhook เรียก)"""
         ...
 
     async def take(self, raw_event_id: int) -> str | None:
-        """GETDEL — ใช้ได้ครั้งเดียว; None = ไม่มี/หมดอายุ/ใช้ไปแล้ว -> ผู้เรียกใช้ push"""
+        """หยิบแล้วลบ — ใช้ได้ครั้งเดียว; None = ไม่มี/หมดอายุ/ใช้ไปแล้ว -> ผู้เรียกใช้ push"""
         ...
 
 

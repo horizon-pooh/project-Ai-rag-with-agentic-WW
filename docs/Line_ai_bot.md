@@ -1,6 +1,7 @@
 # LINE OA AI Bot: สถาปัตยกรรม หลักการเขียนโปรแกรม และคำตัดสินของสภา
 
-อัปเดต 22 ต.ค. 2026 (ฉบับ 3: AI เป็น API ภายนอกที่ค้นและตอบเอง, รวมขั้น 6–8 เดิมเป็น `call_ai` ครั้งเดียว, เพิ่มรายละเอียด handoff_check / call_ai, ทางด่วนตอนขอพนักงาน, ย้ายของที่ยังใช้จากเอกสารเก่า)
+อัปเดต 23 ต.ค. 2026: คิวเปลี่ยนเป็น procrastinate ตัด Redis (D-010)
+ฉบับ 3 (22 ต.ค. 2026): AI เป็น API ภายนอกที่ค้นและตอบเอง, รวมขั้น 6–8 เดิมเป็น `call_ai` ครั้งเดียว, เพิ่มรายละเอียด handoff_check / call_ai, ทางด่วนตอนขอพนักงาน, ย้ายของที่ยังใช้จากเอกสารเก่า
 ฉบับ 2 (22 ต.ค. 2026): ตัด Jev ออกจากเส้นทางหลัก, เพิ่มการคืน AI, นิยามความสำเร็จ, หลักการเขียนโปรแกรม
 
 หมายเหตุเรื่องสภา: ในแชทไม่มี sub-agent ขนาน ผมรันทั้ง 5 มุมมองและรอบตรวจกันเองทีละมุมในรอบเดียว ผลจึงเป็นมุมมองที่ถูกบังคับให้ต่างกัน ไม่ใช่ 5 โมเดลอิสระ
@@ -24,7 +25,7 @@
 | รูปภาพ | ส่งรูป (ย่อแล้ว) ให้ AI พร้อมข้อความ — **รอคำตอบ: AI API รับรูปได้ไหม** (ถ้าไม่ได้ → เก็บรูปแล้วถามกลับเป็นข้อความ หรือส่งต่อ) |
 | ฝั่งค้นหา | AI API ภายนอกค้นเอง (hybrid search อยู่ข้างใน) เราไม่เรียกระบบค้นหาเอง ไม่มี Qdrant |
 | AI | API ภายนอก เรียกครั้งเดียวต่อข้อความ (`call_ai`) ได้คำตอบพร้อมสินค้า ไม่ทำ agent / tool-calling ฝั่งเรา |
-| คิว | Redis + arq รันบนเครื่องตัวเอง |
+| คิว | procrastinate (คิวบน Postgres) รันบนเครื่องตัวเอง — เดิม Redis + arq, เปลี่ยน 23 ต.ค. 2026 เพราะ arq เข้า maintenance only (D-010) |
 | Jev | ไม่ใช้ในเส้นทางหลัก ใช้กฎในโค้ด + สัญญาณจาก AI API (`kind`, `escalate_hint` ถ้ามี) + สัญญาณหลังเกิดเหตุแทน |
 | คืนให้ AI | user กดปุ่ม Rich Menu หรือพิมพ์ "คุยกับ AI" เพื่อกลับมาคุยกับ AI ได้ |
 | หมดเวลาส่งต่อ | เกิน 6 ชม. **นับจากตอนส่งต่อ** ระบบตัดการคุยกับพนักงานและกลับมาคุยกับ AI |
@@ -34,7 +35,7 @@
 
 | เรื่อง | ข้อเสนอ |
 |---|---|
-| Stack | Python, FastAPI, arq, Postgres, Pydantic, httpx, MinIO, Docker Compose |
+| Stack | Python, FastAPI, procrastinate, Postgres, Pydantic, httpx, MinIO, Docker Compose |
 | การรวมความจำ | ขึ้นกับว่า AI API คืน state/filter ที่อัปเดตแล้วหรือไม่ (**รอคำตอบ**): คืน → ใช้ `state_out` (ถ้ามีแบบ `Delta` new_search / refine / new_topic / clear ก็ให้โค้ดรวมเอง); ไม่คืน → ส่งแชทย้อนหลังสั้นๆ แทน |
 | เส้นทางแทน Jev | กฎในโค้ด (ขั้น 5) + `AiResult.kind` / `escalate_hint` จาก AI API โค้ดตัดสินสุดท้าย (ตารางในหัวข้อ 4 ขั้น call_ai) |
 | sendGuard | ข้อความขาออกทุกข้อความผ่านด่านเดียว อ่านสถานะล่าสุดก่อนส่ง (`human` หรือ kill switch → ทิ้ง+log) เพราะสถานะเปลี่ยนได้ระหว่างรอ AI |
@@ -47,7 +48,7 @@
 ## 4. โครงสร้างการทำงาน
 
 ```
-LINE OA -> Webhook (FastAPI) -> Queue (arq + Redis) -> Worker + pipeline -> sendGuard -> ตอบกลับ LINE
+LINE OA -> Webhook (FastAPI) -> Queue (procrastinate บน Postgres) -> Worker + pipeline -> sendGuard -> ตอบกลับ LINE
               |                                            |          |
         line_raw_events                              Postgres    AI API ภายนอก
                                                 (แชท ความจำ trace)  (ค้น hybrid search + ตอบเอง)
@@ -56,7 +57,7 @@ LINE OA -> Webhook (FastAPI) -> Queue (arq + Redis) -> Worker + pipeline -> send
 - **Webhook**: ตรวจ signature, บันทึกเหตุการณ์ดิบ, ใส่คิว, ตอบ 200 ทันที
 - **Queue**: ถืองานไม่ให้หาย, retry ได้ ลำดับต่อ user มาจากล็อกของ Worker ไม่ใช่ตัวคิว
 - **Worker**: process แยกที่หยิบงานจากคิวมารัน pipeline ทั้งหมด
-- **Redis**: เป็นคิวอย่างเดียว เก็บ id ของงานกับ `replyToken` ส่วนความจริงอยู่ที่ `line_raw_events`
+- **คิว (procrastinate)**: ตาราง job ใน Postgres, lock ต่อ user ให้ทำทีละข้อความตามลำดับ; `replyToken` อยู่ตาราง `reply_tokens` อายุสั้น ใช้ครั้งเดียว ส่วนความจริงอยู่ที่ `line_raw_events` (ไม่มี Redis แล้ว — D-010)
 
 ### Flow ต่อหนึ่งข้อความ
 
@@ -151,7 +152,7 @@ orchestrator บันทึก `ai_steps` ทุกขั้น (step ไม่
 | ลูกค้าขอพนักงานระหว่างรอ AI | ทางด่วน (หัวข้อ 5): ไม่รอล็อก ตั้ง `human` ทันที sendGuard ทิ้งคำตอบ AI ที่มาช้า (= เคส `escalationRace` เดิม) |
 | ข้อความใหม่ระหว่างรอ AI | เสนอ (ตัดสินหลังรู้ความเร็ว API): ก่อนส่งเช็ค event ใหม่ค้าง `pending` → ทิ้งคำตอบเก่าแล้วตอบรวมรอบหน้า หรือส่งไปก่อน |
 | ล็อกต่อ user หมดอายุระหว่างรอ AI | TTL ต้องมากกว่า deadline ของ call_ai และต่ออายุระหว่างรอ ไม่งั้นงานถัดไปของ user เดียวกันจะรันซ้อน |
-| Redis หรือ Worker พัง | งานเก็บกวาดทุกนาทีหรือสองนาทีหา event ที่ค้าง `pending` แล้วใส่คิวใหม่ด้วย job id เดิม ข้อความไม่หาย แค่ตอบช้า และใช้เป็นตัวแจ้งเตือนได้ |
+| คิวหรือ Worker พัง | งานเก็บกวาดทุกนาทีหรือสองนาทีหา event ที่ค้าง `pending` แล้วใส่คิวใหม่ด้วย job id เดิม ข้อความไม่หาย แค่ตอบช้า และใช้เป็นตัวแจ้งเตือนได้ |
 | ส่งซ้ำตอน retry | ตรวจสถานะขาออกก่อนส่ง |
 | replyToken หมดอายุ | ใช้ push แทน |
 
@@ -313,7 +314,7 @@ Retention: raw 90 วัน, ข้อความและ trace 12 เดื�
 | เว็บ | FastAPI + uvicorn |
 | HTTPS | Caddy หรือ Cloudflare Tunnel (webhook ต้องเป็น HTTPS ที่เข้าถึงได้จากอินเทอร์เน็ต) |
 | LINE | line-bot-sdk (เช็คเวอร์ชันล่าสุดก่อนใช้) |
-| คิว | arq + Redis (เช็คสถานะการดูแลของ arq ก่อนใช้) |
+| คิว | procrastinate บน Postgres (arq เช็คแล้ว: maintenance only ตั้งแต่ ต.ค. 2025 — D-010) |
 | ฐานข้อมูล | Postgres 16, psycopg 3 หรือ asyncpg เขียน SQL ตรงในชั้น `repositories` |
 | Migration | ไฟล์ `.sql` + dbmate |
 | ชนิดข้อมูล | Pydantic v2 |
@@ -324,7 +325,7 @@ Retention: raw 90 วัน, ข้อความและ trace 12 เดื�
 | ทดสอบ | pytest, pytest-asyncio, respx |
 | เครื่องมือ | uv, ruff |
 
-Docker Compose มี service: caddy (หรือ tunnel), api, worker, postgres, redis, minio
+Docker Compose มี service: caddy (หรือ tunnel), api, worker, migrate, postgres, minio
 
 ไม่ใช้ในรอบแรก: LangChain/LangGraph, Kubernetes, microservice, vector database ฝั่งเรา, ORM หนัก
 
@@ -488,5 +489,5 @@ migrations/  prompts/  tests/
 - พนักงานติดป้ายเคสส่งเกิน/ขาดผ่านช่องทางไหน
 - พนักงานต่อเวลาเกิน 6 ชม. ได้หรือไม่
 - รายละเอียดของ Rich Menu (ผมเข้าใจว่ารองรับ postback แต่ควรเช็คเอกสาร LINE)
-- สถานะการดูแลของ arq (เช็ค repo ก่อนใช้)
+- ~~สถานะการดูแลของ arq~~ เช็คแล้ว: maintenance only → เปลี่ยนเป็น procrastinate (D-010)
 - ตัวเลขเกณฑ์ต่างๆ (จำนวน retry, จำนวนครั้งที่ถามกลับก่อนส่งต่อ, เพดานเวลา) ต้องปรับจากข้อมูลจริง

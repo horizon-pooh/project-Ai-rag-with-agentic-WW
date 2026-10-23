@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
 from typing import Any
 
 import pytest
@@ -23,9 +25,8 @@ def test_liveness_needs_nothing() -> None:
 @pytest.mark.parametrize(
     ("checks", "code"),
     [
-        ({"postgres": True, "redis": True}, 200),
-        ({"postgres": True, "redis": False}, 503),
-        ({"postgres": False, "redis": True}, 503),
+        ({"postgres": True}, 200),
+        ({"postgres": False}, 503),
     ],
 )
 def test_ready(checks: dict[str, bool], code: int) -> None:
@@ -39,7 +40,7 @@ def test_ready(checks: dict[str, bool], code: int) -> None:
     assert resp.status_code == code
     assert resp.json()["checks"] == checks
     # ไม่เปิดเผย secret / config
-    for secret in ("test-channel-secret", "test-access-token", "postgresql://", "redis://"):
+    for secret in ("test-channel-secret", "test-access-token", "postgresql://"):
         assert secret not in resp.text
 
 
@@ -69,7 +70,17 @@ def test_lifespan_builds_and_closes(monkeypatch: pytest.MonkeyPatch) -> None:
     calls: list[str] = []
 
     class Res:
-        redis = object()
+        pool = object()
+
+    queue = object()
+    opened: list[Any] = []
+
+    @asynccontextmanager
+    async def open_queue(pool: Any) -> AsyncIterator[Any]:
+        opened.append(pool)
+        calls.append("queue_open")
+        yield queue
+        calls.append("queue_close")
 
     async def build(s: Any) -> tuple[Any, Any]:
         calls.append("build")
@@ -79,12 +90,13 @@ def test_lifespan_builds_and_closes(monkeypatch: pytest.MonkeyPatch) -> None:
         calls.append("close")
 
     async def ready(res: Any) -> dict[str, bool]:
-        return {"postgres": True, "redis": True}
+        return {"postgres": True}
 
     cfg = object()
     monkeypatch.setattr(main, "build_deps", build)
     monkeypatch.setattr(main, "close_resources", close)
     monkeypatch.setattr(main, "check_ready", ready)
+    monkeypatch.setattr(main, "open_queue", open_queue)
     monkeypatch.setattr(main, "init_observability", lambda s: calls.append("obs"))
     monkeypatch.setattr(orchestrator, "load_pipeline_config", lambda s: cfg, raising=False)
 
@@ -92,6 +104,7 @@ def test_lifespan_builds_and_closes(monkeypatch: pytest.MonkeyPatch) -> None:
     with TestClient(app) as client:
         assert app.state.deps is deps
         assert app.state.pipeline_cfg is cfg
-        assert app.state.arq is Res.redis
+        assert app.state.queue is queue
         assert client.get("/health/ready").status_code == 200
-    assert calls == ["obs", "build", "close"]
+    assert calls == ["obs", "build", "queue_open", "queue_close", "close"]
+    assert opened == [Res.pool]

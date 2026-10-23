@@ -7,6 +7,8 @@ schema ของ Postgres 16 เป็นไฟล์ `.sql` รันด้ว�
 - คำสั่ง: `dbmate up` / `dbmate rollback` (อ่าน `DATABASE_URL`)
 - ไฟล์: `YYYYMMDDHHMMSS_ชื่อ.sql` มีส่วน `-- migrate:up` และ `-- migrate:down`
 - มีแต่ `app/repositories/` ที่เขียน SQL ในโค้ด แก้ schema ที่นี่แล้วตามแก้ที่นั่น
+- `20261024000000_procrastinate_schema.sql` = schema ของคิว procrastinate 3.10.0 (D-010) คัดลอกจากแพ็กเกจ ห้ามแก้มือ;
+  ตาราง `procrastinate_*` เป็นของไลบรารี — อัปเกรด procrastinate ทำตามหัวไฟล์ (เพิ่ม migration ใหม่ ไม่แก้ไฟล์นี้)
 
 ## ต้นทาง
 

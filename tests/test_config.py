@@ -14,7 +14,6 @@ REQUIRED = {
     "LINE_CHANNEL_SECRET": "s",
     "LINE_CHANNEL_ACCESS_TOKEN": "t",
     "DATABASE_URL": "postgresql://u:p@db:5432/x",
-    "REDIS_URL": "redis://redis:6379",
 }
 
 

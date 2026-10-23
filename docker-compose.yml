@@ -1,7 +1,8 @@
 # ยังไม่ได้ทดสอบบน Docker host จริง (เครื่อง dev ไม่มี docker) — ตรวจแค่ว่า YAML อ่านได้
 # วิธีขึ้นระบบทดสอบ + เช็คลิสต์: docs/test-deploy.md
 # service ตาม docs/Line_ai_bot.md หัวข้อ Stack; secret อยู่ใน .env (ดู .env.example) ห้ามใส่ในไฟล์นี้
-# ลำดับเริ่ม: postgres/redis healthy -> migrate (dbmate up) จบสำเร็จ -> api, worker -> caddy
+# ลำดับเริ่ม: postgres healthy -> migrate (dbmate up) จบสำเร็จ -> api, worker -> caddy
+# คิวงานคือ procrastinate บน Postgres ตัวเดียวกัน (D-010) ไม่มี Redis; schema ของคิวอยู่ใน migrations/ (dbmate สร้าง)
 
 services:
   caddy:
@@ -62,20 +63,20 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-      redis:
-        condition: service_healthy
       migrate:
         condition: service_completed_successfully
 
   worker:
     build: .
-    command: arq app.worker.settings.WorkerSettings
+    # worker ของ procrastinate (app/worker/__main__.py): งานจากคิว + งาน periodic (requeue/release/handoff/retention)
+    command: ["python", "-m", "app.worker"]
     restart: unless-stopped
     env_file: .env
+    # SIGTERM -> หยุดรับงาน รองานที่ทำอยู่ไม่เกิน 20 วิ (SHUTDOWN_GRACEFUL_TIMEOUT_S ใน app/worker/app.py) แล้วตัด
+    # (งานที่ถูกตัดกลับเข้าคิว) — ต้องนานกว่านั้น ไม่งั้น docker ฆ่าก่อน (ค่าตั้งต้น 10 วิ)
+    stop_grace_period: 30s
     depends_on:
       postgres:
-        condition: service_healthy
-      redis:
         condition: service_healthy
       migrate:
         condition: service_completed_successfully
@@ -95,16 +96,6 @@ services:
       test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U \"$${POSTGRES_USER}\" -d \"$${POSTGRES_DB}\""]
       interval: 5s
       timeout: 5s
-      retries: 20
-
-  redis:
-    # คิวอย่างเดียว (ความจริงทั้งหมดอยู่ใน Postgres)
-    image: redis:7
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 5s
-      timeout: 3s
       retries: 20
 
   minio:

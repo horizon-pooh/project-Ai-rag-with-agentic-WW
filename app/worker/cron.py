@@ -3,7 +3,8 @@
 งานเบื้องหลังตามเวลา
 
 รายละเอียด:
- - requeue_pending (ทุก 1-2 นาที): หา line_raw_events ที่ค้าง pending นานเกินควร ใส่คิวใหม่ด้วย job id เดิม; จำนวนที่เจอใช้แจ้งเตือนได้
+ - requeue_pending (ทุก 1-2 นาที): หา line_raw_events ที่ค้าง pending นานเกินควร ใส่คิวใหม่ (queueing_lock เดิม กันซ้ำ);
+   จำนวนที่เจอใช้แจ้งเตือนได้
  - handoff_timeout (ทุกไม่กี่นาที): conversation ที่ human และ now - handoff_started_at >= HANDOFF_TTL_HOURS -> end_handoff(reason='timeout')
  - handoff_check ในขั้น 4 เช็คซ้ำเป็นตาข่าย ทั้งสองทางใช้ end_handoff ตัวเดียว (ไม่ส่งซ้ำ)
  - retention (วันละครั้ง): raw 90 วัน, ข้อความและ trace TRACE_RETENTION_MONTHS (12) เดือนแล้ว anonymize,
@@ -11,20 +12,28 @@
  - (เสนอ) รายงานรายวัน ยังไม่อยู่ในรอบแรก
 
 ข้อตัดสินในงาน 8:
- - release_stuck (ทุก 2 นาที): processing ค้างนานกว่า TTL ล็อก + ช่องเผื่อ (worker ตายกลางทาง) -> pending แล้วใส่คิว
+ - release_stuck (ทุก 2 นาที): processing ค้างนานกว่าเพดานเวลาของงาน + ช่องเผื่อ (worker ตายกลางทาง) -> pending แล้วใส่คิว
  - handoff_timeout สำเร็จ -> push ข้อความ HANDOFF_TIMED_OUT_PREFIX + EMPTY ผ่าน sendGuard
    dedupe_key ผูกกับรอบส่งต่อ (conversation + handoff_started_at) -> รันซ้ำ/ชนกับ handoff_check ก็ไม่ส่งซ้ำ
- - ctx ที่ใช้: deps, redis (ArqRedis ของ arq ใช้ใส่คิว), raw_retention (ตั้งใน settings.on_startup)
  - หา line_user_id ของเคสผ่าน deps.users.get_line_user_id (ย้ายเข้าพอร์ตแล้วใน R2-A)
 
 ข้อตัดสินใน R2-A (retention):
- - แต่ละส่วน (raw / รูป / anonymize) พังไม่หยุดส่วนอื่น (log แล้วไปต่อ รอบหน้าทำต่อ)
+ - แต่ละส่วน (raw / รูป / anonymize / reply token) พังไม่หยุดส่วนอื่น (log แล้วไปต่อ รอบหน้าทำต่อ)
  - รูป: Storage.delete ก่อนแล้วจึง mark_attachment_deleted; ลบไฟล์ไม่ได้ -> ไม่ mark (รอบหน้าลองใหม่)
    ก้อนที่มีตัวพังหยุดวนก้อนถัดไป (ตัวพังจะกลับมาหัวแถวอีก กันวนไม่จบ)
  - anonymize: ตัดเดือนตามปฏิทิน (months_before) ทำทีละก้อนจนได้ < RETENTION_BATCH; รันซ้ำได้ 0
 
+ข้อตัดสินใน D-010 (arq -> procrastinate):
+ - ทุกฟังก์ชันเป็น async ธรรมดารับของที่ใช้เป็นพารามิเตอร์ (deps, queue = procrastinate App, ...) ไม่รู้จัก context ของคิว
+   worker/app.py ห่อเป็นงาน periodic ของ procrastinate (รอบเวลาเดิมของ arq cron)
+ - ใส่คิวใหม่ต้องรู้ line_user_id (lock ต่อ user) -> อ่านแถวด้วย raw_events.get ทีละ id (ปกติเจอ 0 แถว)
+ - retry_stalled_jobs (ทุกนาที): งาน doing ของ worker ที่หยุดส่ง heartbeat (ตายกลางทาง) -> retry ตามเอกสาร
+   procrastinate (howto/production/retry_stalled_jobs) — สำคัญ: งานที่ค้าง doing ยังถือ lock ของ user ไว้
+   งานถัดไปของ user นั้นรอจนกว่าจะ retry; release_stuck + requeue_pending ยังเป็นตาข่ายฝั่งแถว line_raw_events
+ - retention ลบ reply_tokens ที่หมดอายุแล้วด้วย (replyToken ย้ายจาก Redis มา Postgres)
+
 แนวคิดจาก: src/jobs/, src/ops/dailyReport.js (แบบเก่า)
-สถานะ: มีโค้ดแล้ว (งาน 8 + R2-A: retention ครบ raw / รูป / anonymize)
+สถานะ: มีโค้ดแล้ว (งาน 8 + R2-A: retention ครบ raw / รูป / anonymize + D-010: procrastinate, reply_tokens)
 """
 
 from __future__ import annotations
@@ -32,7 +41,7 @@ from __future__ import annotations
 import calendar
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from typing import Any, Protocol
+from typing import TYPE_CHECKING, Protocol
 
 import structlog
 
@@ -40,15 +49,21 @@ from app.pipeline import handoff, replies
 from app.pipeline.ports import Deps
 from app.pipeline.schemas import HandoffEndReason
 from app.pipeline.steps.send import send
-from app.worker.locks import LOCK_TTL_MARGIN_S
-from app.worker.tasks import enqueue_event
+from app.worker.tasks import JOB_TIMEOUT_MARGIN_S, enqueue_event
+
+if TYPE_CHECKING:
+    from procrastinate import App
+    from procrastinate.manager import JobManager
 
 log = structlog.get_logger(__name__)
 
-# pending ที่รับมานานกว่านี้ถือว่าหลุดคิว (Redis/worker พัง หรือใส่คิวไม่สำเร็จ)
+# pending ที่รับมานานกว่านี้ถือว่าหลุดคิว (worker พัง หรือใส่คิวไม่สำเร็จ)
 STALE_PENDING_AFTER = timedelta(minutes=2)
-# processing ค้างนานกว่า TTL ล็อก (TURN_DEADLINE_S + 30) + ช่องเผื่อนี้ = worker ตายกลางทาง
-STUCK_EXTRA_MARGIN = timedelta(seconds=60)
+# processing ค้างนานกว่าเพดานเวลาของงาน (TURN_DEADLINE_S + 60) + ช่องเผื่อนี้ = worker ตายกลางทาง
+STUCK_EXTRA_MARGIN = timedelta(seconds=30)
+# งาน doing ของ worker ที่ไม่ส่ง heartbeat นานเกินนี้ (วินาที) = worker ตาย — ค่าตั้งต้นของ procrastinate
+# (worker ส่ง heartbeat ทุก 10 วิ; ถ้าแก้ต้องดู update_heartbeat_interval / stalled_worker_timeout ด้วย)
+STALLED_HEARTBEAT_S = 30.0
 SWEEP_LIMIT = 500
 HANDOFF_TIMEOUT_LIMIT = 100
 
@@ -68,6 +83,12 @@ class RawRetention(Protocol):
     async def delete_older_than(self, cutoff: datetime, limit: int = ...) -> int: ...
 
 
+class ReplyTokenRetention(Protocol):
+    """repositories/reply_tokens.PgReplyTokens.delete_expired (ไม่อยู่ในพอร์ต)"""
+
+    async def delete_expired(self, limit: int = ...) -> int: ...
+
+
 @dataclass(frozen=True)
 class RetentionResult:
     """จำนวนที่ทำในรอบนี้ (ไม่มีข้อมูลส่วนบุคคล)"""
@@ -77,6 +98,7 @@ class RetentionResult:
     images_failed: int = 0
     messages_anonymized: int = 0
     ai_steps_anonymized: int = 0
+    reply_tokens_deleted: int = 0
 
 
 def months_before(dt: datetime, months: int) -> datetime:
@@ -89,8 +111,11 @@ def months_before(dt: datetime, months: int) -> datetime:
 
 
 def stuck_after(turn_deadline_s: float) -> timedelta:
-    """processing นานกว่านี้ถือว่าค้าง: TTL ล็อก (TURN_DEADLINE_S + 30 วิ) + ช่องเผื่อ"""
-    return timedelta(seconds=turn_deadline_s + LOCK_TTL_MARGIN_S) + STUCK_EXTRA_MARGIN
+    """processing นานกว่านี้ถือว่าค้าง: เพดานเวลาของงาน (TURN_DEADLINE_S + 60 วิ) + ช่องเผื่อ 30 วิ
+
+    งานที่ยังมีชีวิตจบหรือถูกตัดที่เพดานเวลาของงานเสมอ (worker/app.py) เกินกว่านั้น = worker ตายกลางทาง
+    """
+    return timedelta(seconds=turn_deadline_s + JOB_TIMEOUT_MARGIN_S) + STUCK_EXTRA_MARGIN
 
 
 def handoff_timeout_dedupe_key(conversation_id: int, started_at: datetime) -> str:
@@ -101,34 +126,41 @@ def handoff_timeout_text() -> str:
     return f"{replies.HANDOFF_TIMED_OUT_PREFIX} {replies.EMPTY}"
 
 
-async def requeue_pending(ctx: dict[str, Any]) -> int:
-    """pending ที่ค้างเกิน STALE_PENDING_AFTER -> ใส่คิวใหม่ (job id เดิม arq กันซ้ำให้) คืนจำนวนที่เจอ"""
-    deps: Deps = ctx["deps"]
+async def _requeue(deps: Deps, queue: App, raw_event_id: int) -> bool:
+    """ใส่คิวใหม่ด้วย line_user_id ของแถว (lock ต่อ user); แถวหายไปแล้ว / อยู่ในคิวแล้ว -> False"""
+    raw = await deps.raw_events.get(raw_event_id)
+    if raw is None:
+        return False
+    return await enqueue_event(queue, raw_event_id, raw.line_user_id)
+
+
+async def requeue_pending(deps: Deps, queue: App) -> int:
+    """pending ที่ค้างเกิน STALE_PENDING_AFTER -> ใส่คิวใหม่ (queueing_lock เดิมกันซ้ำ) คืนจำนวนที่เจอ"""
     ids = await deps.raw_events.list_stale(deps.clock.now() - STALE_PENDING_AFTER, limit=SWEEP_LIMIT)
     if not ids:
         return 0
     enqueued = 0
     for rid in ids:
         try:
-            if await enqueue_event(ctx["redis"], rid):
+            if await _requeue(deps, queue, rid):
                 enqueued += 1
         except Exception:
             log.exception("requeue_enqueue_failed", raw_event_id=rid)
     # สัญญาณแจ้งเตือน: ปกติควรเป็น 0 (แปลว่าคิวหลุดหรือ worker ไม่ทัน)
+    # enqueued < count = งานของ event นั้นยังรออยู่ในคิว (เช่นรอ lock ของ user ที่ AI ตอบช้า)
     log.warning("requeue_pending_found", count=len(ids), enqueued=enqueued)
     return len(ids)
 
 
-async def release_stuck(ctx: dict[str, Any]) -> int:
-    """processing ที่ค้างนานเกินอายุล็อก -> pending แล้วใส่คิวใหม่ คืนจำนวนที่ปล่อย"""
-    deps: Deps = ctx["deps"]
+async def release_stuck(deps: Deps, queue: App) -> int:
+    """processing ที่ค้างนานเกินเพดานเวลาของงาน -> pending แล้วใส่คิวใหม่ คืนจำนวนที่ปล่อย"""
     cutoff = deps.clock.now() - stuck_after(deps.settings.turn_deadline_s)
     ids = await deps.raw_events.release_stuck(cutoff, limit=SWEEP_LIMIT)
     if not ids:
         return 0
     for rid in ids:
         try:
-            await enqueue_event(ctx["redis"], rid)
+            await _requeue(deps, queue, rid)
         except Exception:
             # ไม่เป็นไร: แถวเป็น pending แล้ว requeue_pending เก็บรอบหน้า
             log.exception("release_stuck_enqueue_failed", raw_event_id=rid)
@@ -136,12 +168,31 @@ async def release_stuck(ctx: dict[str, Any]) -> int:
     return len(ids)
 
 
-async def handoff_timeout(ctx: dict[str, Any]) -> int:
+async def retry_stalled_jobs(job_manager: JobManager) -> int:
+    """งาน doing ของ worker ที่ไม่ส่ง heartbeat เกิน STALLED_HEARTBEAT_S -> retry (กลับเป็น todo) คืนจำนวน
+
+    ตามเอกสาร procrastinate howto/production/retry_stalled_jobs; งานที่ retry รันซ้ำได้ปลอดภัย (claim ใน DB)
+    แถว line_raw_events ที่ค้าง processing จากงานนั้น release_stuck ปล่อยให้ตามเวลา
+    """
+    stalled = list(await job_manager.get_stalled_jobs(seconds_since_heartbeat=STALLED_HEARTBEAT_S))
+    retried = 0
+    for job in stalled:
+        try:
+            await job_manager.retry_job(job)
+            retried += 1
+        except Exception:
+            # เช่น worker อื่น retry ไปก่อน (สถานะไม่ใช่ doing แล้ว)
+            log.exception("retry_stalled_job_failed", job_id=job.id)
+    if stalled:
+        log.warning("stalled_jobs_found", count=len(stalled), retried=retried)
+    return retried
+
+
+async def handoff_timeout(deps: Deps) -> int:
     """human ที่ครบ HANDOFF_TTL_HOURS นับจาก handoff_started_at -> end_handoff(TIMEOUT) แล้วบอกลูกค้า
 
     คืนจำนวนที่ปิดสำเร็จ; end_handoff ได้ None (ทางอื่นปิดไปก่อน) -> ไม่ส่งอะไร
     """
-    deps: Deps = ctx["deps"]
     convs = await deps.conversations.list_handoff_timed_out(
         deps.settings.handoff_ttl, limit=HANDOFF_TIMEOUT_LIMIT
     )
@@ -176,8 +227,7 @@ async def handoff_timeout(ctx: dict[str, Any]) -> int:
     return closed
 
 
-async def _delete_raw(ctx: dict[str, Any], now: datetime) -> int:
-    repo: RawRetention = ctx["raw_retention"]
+async def _delete_raw(repo: RawRetention, now: datetime) -> int:
     cutoff = now - RAW_RETENTION
     total = 0
     for _ in range(RETENTION_MAX_BATCHES):
@@ -226,16 +276,28 @@ async def _anonymize(deps: Deps, now: datetime) -> tuple[int, int]:
     return counts[0], counts[1]
 
 
-async def retention(ctx: dict[str, Any]) -> RetentionResult:
-    """วันละครั้ง: ลบ raw เกิน 90 วัน, ลบรูปเกิน IMAGE_RETENTION_DAYS, anonymize เกิน TRACE_RETENTION_MONTHS
+async def _delete_reply_tokens(repo: ReplyTokenRetention) -> int:
+    total = 0
+    for _ in range(RETENTION_MAX_BATCHES):
+        n = await repo.delete_expired(limit=RETENTION_BATCH)
+        total += n
+        if n < RETENTION_BATCH:
+            break
+    return total
+
+
+async def retention(
+    deps: Deps, raw_retention: RawRetention, reply_token_retention: ReplyTokenRetention
+) -> RetentionResult:
+    """วันละครั้ง: ลบ raw เกิน 90 วัน, ลบรูปเกิน IMAGE_RETENTION_DAYS, anonymize เกิน TRACE_RETENTION_MONTHS,
+    ลบ reply_tokens ที่หมดอายุ
 
     แต่ละส่วนพังไม่หยุดส่วนอื่น (log แล้วไปต่อ) คืนจำนวนของแต่ละส่วน
     """
-    deps: Deps = ctx["deps"]
     now = deps.clock.now()
-    raw = images = images_failed = msgs = steps = 0
+    raw = images = images_failed = msgs = steps = tokens = 0
     try:
-        raw = await _delete_raw(ctx, now)
+        raw = await _delete_raw(raw_retention, now)
     except Exception:
         log.exception("retention_raw_failed")
     try:
@@ -246,12 +308,17 @@ async def retention(ctx: dict[str, Any]) -> RetentionResult:
         msgs, steps = await _anonymize(deps, now)
     except Exception:
         log.exception("retention_anonymize_failed")
+    try:
+        tokens = await _delete_reply_tokens(reply_token_retention)
+    except Exception:
+        log.exception("retention_reply_tokens_failed")
     result = RetentionResult(
         raw_deleted=raw,
         images_deleted=images,
         images_failed=images_failed,
         messages_anonymized=msgs,
         ai_steps_anonymized=steps,
+        reply_tokens_deleted=tokens,
     )
     log.info(
         "retention_done",
@@ -260,6 +327,7 @@ async def retention(ctx: dict[str, Any]) -> RetentionResult:
         images_failed=images_failed,
         messages_anonymized=msgs,
         ai_steps_anonymized=steps,
+        reply_tokens_deleted=tokens,
     )
     return result
 
@@ -267,6 +335,9 @@ async def retention(ctx: dict[str, Any]) -> RetentionResult:
 __all__ = [
     "RAW_RETENTION",
     "STALE_PENDING_AFTER",
+    "STALLED_HEARTBEAT_S",
+    "RawRetention",
+    "ReplyTokenRetention",
     "RetentionResult",
     "handoff_timeout",
     "handoff_timeout_dedupe_key",
@@ -275,5 +346,6 @@ __all__ = [
     "release_stuck",
     "requeue_pending",
     "retention",
+    "retry_stalled_jobs",
     "stuck_after",
 ]

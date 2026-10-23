@@ -18,6 +18,7 @@
 - ปริมาณ 4–5 พันข้อความ/วัน server เดียวรับได้สบาย
 - Redis ทำให้ข้อมูลไม่หายตอน restart และเก็บคิว Softnix ได้
 - **สถานะ (22 ต.ค.): แทนที่บางส่วน** — pm2 → Docker Compose (เสนอ); Redis เครื่องเดียวกันยังใช้แต่เป็นคิวอย่างเดียว ข้อมูลอยู่ Postgres (ดู D-008)
+- **สถานะ (23 ต.ค.): Redis แทนที่** — ไม่ใช้ Redis แล้ว คิวย้ายไป Postgres (ดู D-010)
 
 ## D-003 ระบบเราเป็นผู้ส่งข้อความเข้า LINE แต่เพียงผู้เดียว (Softnix ไม่ส่งเอง)
 
@@ -103,8 +104,8 @@
 | LINE | httpx เอง ตรวจ signature ด้วย hmac ไม่ใช้ line-bot-sdk | ต้องใช้ฟีเจอร์ที่ SDK ทำให้มาก |
 | schema | migration ร่างจากแบบหลัก | ได้ `line_chat_schema_v2.sql` จริง |
 | kill switch | ตาราง `ops_flags` OR env `KILL_SWITCH`; อ่านค่าไม่ได้ → ถือว่าเปิด | — |
-| replyToken | Redis TTL `REPLY_TOKEN_TTL_S`, GETDEL; ไม่มี/หมดอายุ → push | — |
-| ล็อกต่อ user | Redis `SET NX PX` + ต่ออายุ + compare-and-delete; ไม่ใช้ advisory lock เพราะถือ connection ค้างระหว่างรอ AI | — |
+| ~~replyToken~~ | **แทนที่โดย D-010** (ตาราง `reply_tokens` ใน Postgres) — เดิม: Redis TTL `REPLY_TOKEN_TTL_S`, GETDEL; ไม่มี/หมดอายุ → push | — |
+| ~~ล็อกต่อ user~~ | **แทนที่โดย D-010** (`lock` ของ procrastinate) — เดิม: Redis `SET NX PX` + ต่ออายุ + compare-and-delete; ไม่ใช้ advisory lock เพราะถือ connection ค้างระหว่างรอ AI | — |
 | claim event | `UPDATE ... WHERE process_status='pending' RETURNING` ใช้ทั้ง worker และ fast path | — |
 | ตัวนับ | `conversation_state.counters` (jsonb ไม่ส่ง AI) | — |
 | เกณฑ์ส่งต่อ | `CLARIFY_MAX=2`, cannot_answer / validate ติดกันครั้งที่ 2, `RATE_LIMIT_PER_MIN=10` | ได้ข้อมูลแชทจริง |
@@ -113,6 +114,33 @@
 | AI API | สัญญาเสนอ JSON (`AiRequest`/`AiResult`), Markdown = stub, ยังไม่ส่งรูป — รอคำตอบ | ได้สเปก API |
 | dedupe_key ขาออก | `out:<raw_event_id>:<ลำดับการส่งในรอบ>` ไม่ผูก purpose เพราะ retry อาจได้เส้นทางอื่น | — |
 | /close | GET แสดงหน้ายืนยัน ปิดจริงด้วย POST (กัน link preview ใช้ token) | — |
-| arq | `keep_result=0` ให้ cron ใส่คิวซ้ำด้วย job id เดิมได้ | — |
+| ~~arq~~ | **แทนที่โดย D-010** (arq maintenance-only → procrastinate) — เดิม: `keep_result=0` ให้ cron ใส่คิวซ้ำด้วย job id เดิมได้ | — |
 | ไฟล์กฎ | ตัด "แอดมิน", "สินค้าเสีย", "ของเสีย", "ดีค่ะ/ดีครับ" เพราะจับผิด (ดูหัวไฟล์ใน `prompts/rules/`) | มีวิธีจับที่ไม่พลาด + เคสทดสอบ |
 | redact | ที่อยู่ไม่ redact (ยังไม่มีรูปแบบที่เชื่อถือได้) | มีรูปแบบที่ทดสอบได้ |
+
+## D-010 คิวงาน: arq + Redis → procrastinate (คิวบน Postgres) และเอา Redis ออกทั้งหมด
+
+- **สถานะ:** ตัดสินแล้ว — เจ้าของโปรเจกต์เลือก (2026-10-23) รายละเอียดการลงมือตัดสินโดย orchestrator; ยังไม่ได้ลองบน Docker จริง
+- **เหตุผล:**
+  - arq ประกาศ "maintenance only mode" (issue #510, 18 ต.ค. 2025) แก้เฉพาะช่องโหว่ร้ายแรง ไม่รับแก้บั๊ก/ฟีเจอร์ใหม่ (เช็คแล้ว 2026-10-23 ดู `docs/PLAN.md`)
+  - procrastinate ยังออกรุ่นใหม่ (3.10.0 ก.ย. 2026) และใช้ Postgres ที่ต้องมีอยู่แล้ว → service น้อยลงหนึ่งตัว จุดพังน้อยลงหนึ่งจุด
+    และงาน + ความจริง (`line_raw_events`) อยู่ฐานเดียวกัน
+  - ความเสี่ยงที่รู้: README ของ procrastinate ประกาศหาผู้ดูแลเพิ่ม ("looking for additional maintainers")
+
+| เรื่อง | ตัดสิน |
+|---|---|
+| คิว | procrastinate **3.10.0** (pin ตรงตัวใน `pyproject.toml`) บน `PsycopgConnector` ใช้ pool เดียวกับ repositories (`app/worker/app.py`, `open_queue`) |
+| ล็อกต่อ user | `lock` ของ procrastinate = `user:` + hash ตัดสั้นของ line_user_id (`pdpa.user_ref`) — งาน lock เดียวกันรันทีละงาน เรียงตาม priority แล้วเวลาสร้าง (เอกสาร howto/advanced/locks); ไม่ใส่ line_user_id ตัวจริงในตารางของไลบรารี (ลบตาม PDPA ไม่ต้องตามไปลบ); ลบ `app/worker/locks.py` |
+| กันใส่คิวซ้ำ | `queueing_lock` = `raw:{raw_event_id}` (กันได้เฉพาะงานที่ยังรอ todo) — `AlreadyEnqueued` = อยู่ในคิวแล้ว; กันทำซ้ำจริงยังเป็น claim ใน DB |
+| ลองใหม่ | `RetryStrategy(max_attempts=10, wait=10 วิ)` ทุก error ของงาน; event ลองเองได้ 3 ครั้งเหมือนเดิม (release แล้วยก `EventRetry`); ระหว่างรอ งานใหม่กว่าของ user เดียวกันรอด้วย (รักษาลำดับ) |
+| เพดานเวลา | procrastinate ไม่มี timeout ในตัว → งานครอบ `asyncio.timeout(TURN_DEADLINE_S + 60)` |
+| worker ตาย | heartbeat ของ procrastinate + งาน periodic `retry_stalled_jobs` ทุกนาที (เอกสาร howto/production/retry_stalled_jobs) — สำคัญเพราะงานที่ค้าง `doing` ถือ lock ของ user ไว้; `release_stuck` / `requeue_pending` ของเรายังเป็นตาข่ายฝั่งแถว |
+| cron | งาน periodic ของ procrastinate (เวลา UTC) รอบเดิมของ arq + `retry_stalled_jobs` + `remove_old_jobs` (งานสำเร็จลบทันที ที่เหลือเก็บ 7 วัน) |
+| replyToken | ตาราง `reply_tokens` (`expires_at = now() + REPLY_TOKEN_TTL_S`, take = `DELETE ... RETURNING` ใช้ครั้งเดียว) ลบตาม raw event (CASCADE), retention ลบที่หมดอายุ; CHECK ห้าม replyToken ใน payload คงเดิม |
+| schema ของคิว | dbmate migration `20261024000000_procrastinate_schema.sql` = `schema.sql` ของ 3.10.0 ไม่แก้มือ; อัปเกรด = แก้ pin + เพิ่ม migration จากไฟล์ใหม่ใน `sql/migrations` ของแพ็กเกจ (วิธีอยู่หัวไฟล์) |
+| readiness | `/health/ready` เช็ค Postgres อย่างเดียว |
+| เริ่ม worker | `python -m app.worker` (`App.run_worker_async` ตอนคิวเปิดอยู่) concurrency = max(`AI_CONCURRENCY`×2, 4) |
+
+- **จะเปลี่ยนใจเมื่อ:** procrastinate หยุดพัฒนา (ไม่มีรุ่นใหม่/ไม่แก้ช่องโหว่) หรือเจอปัญหาประสิทธิภาพของคิวบน Postgres ที่ปริมาณจริง
+  (เช่น polling/LISTEN กินทรัพยากร DB, ตาราง `procrastinate_jobs` โตจน fetch ช้า)
+- **ผล:** D-009 แถว replyToken / ล็อกต่อ user / arq แทนที่; D-002 ส่วน Redis แทนที่; ไม่มี service redis ใน docker compose และไม่มี `REDIS_URL`

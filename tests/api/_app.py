@@ -12,7 +12,7 @@ from fastapi import FastAPI
 
 from app.main import create_app
 from tests.fakes import make_deps, make_settings
-from tests.infra_fakes import FakeArqPool
+from tests.infra_fakes import make_queue
 
 SECRET = "test-channel-secret"
 
@@ -22,7 +22,8 @@ def make_test_app(**deps_overrides: Any) -> tuple[FastAPI, Any]:
     deps = make_deps(settings=settings, **deps_overrides)
     app = create_app(settings)
     app.state.deps = deps
-    app.state.arq = FakeArqPool()
+    # คิว procrastinate บน InMemoryConnector: งานที่ใส่ดูได้ที่ app.state.queue.connector.jobs
+    app.state.queue, _ = make_queue()
     app.state.pipeline_cfg = object()
     return app, deps
 
