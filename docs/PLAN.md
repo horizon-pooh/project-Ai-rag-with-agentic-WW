@@ -120,6 +120,7 @@ repositories และ services ต้อง implement ตามนี้ เท
 | AI API | สัญญารอคำตอบ ทั้ง 4 ข้อ (Softnix ไหม, JSON/markdown, คืน state ไหม, รับรูป/บอกส่งต่อได้ไหม) |
 | validate | intro ของ AI ส่งตรง ไม่ตรวจราคา/ลิงก์ในข้อความ |
 | Caddy | `/health/ready` ไม่เปิดผ่าน Caddy |
+| arq (ต้องตัดสิน) | เช็คแล้ว 2026-10-23: README ของ arq ประกาศ "maintenance only mode" (issue #510, 18 ต.ค. 2025) — แก้เฉพาะช่องโหว่ร้ายแรง ไม่รับแก้บั๊ก/ฟีเจอร์ใหม่ ไม่ได้แนะนำตัวแทน; จุดที่ผูกกับ arq: `app/worker/{settings,tasks,cron}.py`, `enqueue_event` ใน webhook |
 | dependency | redis เป็น dependency ทางอ้อมผ่าน arq |
 | cron | cron ของ arq ใช้เวลาของ container |
 | เครื่องนี้ | ใช้ `uv run python -m pytest` เพราะ pytest.exe ถูกบล็อก |

@@ -2,6 +2,10 @@
 
 > **ยังไม่ได้ลองบนเครื่องจริง — แก้ตามที่เจอ** (เขียนจากการอ่านโค้ดใน branch `feat/python-impl`; เครื่อง dev ไม่มี Docker)
 > ที่ติดป้าย "เช็คหน้าจอจริง" = ไม่แน่ใจว่าหน้าจอ LINE ตอนนี้เป็นแบบนั้น
+> เช็คกับเอกสารแล้ว (2026-10-23): image `ghcr.io/amacneil/dbmate:2` มีจริง, `--wait` / `--no-dump-schema` / `--migrations-dir`
+> เป็น global flag วางก่อน `up`, Postgres ไม่มี TLS ต้องใส่ `?sslmode=disable`; LINE push รับ `X-Line-Retry-Key` (UUID)
+> ส่งซ้ำได้ 409 (โค้ดถือว่าส่งแล้ว), reply ส่งได้ไม่เกิน 5 ข้อความ, loading animation 5–60 วิ.
+> อายุ replyToken ไม่พบตัวเลขในเอกสาร LINE (บอกแค่ใช้ได้ครั้งเดียวและหมดอายุหลังช่วงหนึ่ง) — โค้ดใช้ `REPLY_TOKEN_TTL_S=50` แล้ว push แทนเมื่อใช้ไม่ได้
 
 เป้าหมาย: ขึ้นทั้งระบบด้วย `docker compose` คุยกับ LINE OA ทดสอบได้ครบ flow (FAQ, ส่งต่อพนักงาน, ปิดเคส, kill switch, รูป)
 โดย **ไม่ต่อ AI จริง** (`AI_API_URL` ว่าง -> `StubAiClient` ทวนข้อความกลับ)
