@@ -1,5 +1,7 @@
-# โครงเท่านั้น ยังไม่ได้ทดสอบ
+# ยังไม่ได้ทดสอบบน Docker host จริง (เครื่อง dev ไม่มี docker) — ตรวจแค่ว่า YAML อ่านได้
+# วิธีขึ้นระบบทดสอบ + เช็คลิสต์: docs/test-deploy.md
 # service ตาม docs/Line_ai_bot.md หัวข้อ Stack; secret อยู่ใน .env (ดู .env.example) ห้ามใส่ในไฟล์นี้
+# ลำดับเริ่ม: postgres/redis healthy -> migrate (dbmate up) จบสำเร็จ -> api, worker -> caddy
 
 services:
   caddy:
@@ -21,39 +23,94 @@ services:
     depends_on:
       - api
 
+  migrate:
+    # dbmate รัน migrations/*.sql ครั้งเดียวแล้วจบ (api/worker รอให้จบสำเร็จก่อน)
+    # global flag ต้องอยู่หน้าคำสั่ง up; --wait = รอจน Postgres รับ connection
+    # --no-dump-schema: ไม่เขียน schema.sql กลับ (mount แบบอ่านอย่างเดียว)
+    image: ghcr.io/amacneil/dbmate:2
+    command: ["--wait", "--no-dump-schema", "--migrations-dir", "/db/migrations", "up"]
+    # ส่งแค่ DATABASE_URL (ไม่ใช้ env_file: dbmate ไม่ต้องเห็น secret อื่น)
+    # ต้องเป็นรูปที่ทั้ง dbmate และ psycopg อ่านได้ ดู .env.example
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+    volumes:
+      - ./migrations:/db/migrations:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: "no"
+
   api:
     build: .
     command: uvicorn app.main:create_app --factory --host 0.0.0.0 --port 8000
+    restart: unless-stopped
     # ภายในเท่านั้น ไม่เปิดพอร์ตออก host (ข้างนอกเข้าผ่าน caddy)
     expose:
       - "8000"
     env_file: .env
+    # python:3.12-slim ไม่มี curl -> ใช้ urllib (liveness /health ไม่แตะ DB)
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=3)"
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
     depends_on:
-      - postgres
-      - redis
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
 
   worker:
     build: .
     command: arq app.worker.settings.WorkerSettings
+    restart: unless-stopped
     env_file: .env
     depends_on:
-      - postgres
-      - redis
-      - minio
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+      # MinIO ไม่ต้องพร้อมก่อน (storage สร้าง bucket ตอนใช้ครั้งแรก)
+      minio:
+        condition: service_started
 
   postgres:
     image: postgres:16
+    restart: unless-stopped
     env_file: .env
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    # $$ = ส่ง $ ให้ shell ใน container ขยายเอง (ค่ามาจาก env_file ไม่ใช่ตอน compose อ่านไฟล์)
+    # -h 127.0.0.1: เช็คผ่าน TCP ตอน init ครั้งแรก postgres เปิดแค่ unix socket ชั่วคราว จะได้ไม่ healthy ก่อนเวลา
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U \"$${POSTGRES_USER}\" -d \"$${POSTGRES_DB}\""]
+      interval: 5s
+      timeout: 5s
+      retries: 20
 
   redis:
     # คิวอย่างเดียว (ความจริงทั้งหมดอยู่ใน Postgres)
     image: redis:7
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
 
   minio:
     image: minio/minio
     command: server /data
+    restart: unless-stopped
     env_file: .env
     volumes:
       - minio_data:/data

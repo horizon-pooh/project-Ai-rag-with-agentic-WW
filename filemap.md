@@ -5,7 +5,7 @@
 - `README.md` — แบบเก่า (ติดป้ายแล้ว) / ไม่ต้องแตะ
 - `.env.example` — รายชื่อ env ที่ต้องตั้ง / แตะเมื่อเพิ่ม config
 - `pyproject.toml` — dependency และเครื่องมือ Python / แตะเมื่อเพิ่ม package
-- `docker-compose.yml` — โครง service ตาม Stack (ยังไม่ทดสอบ) / แตะเมื่อเพิ่ม service
+- `docker-compose.yml` — service ตาม Stack + migrate (dbmate) + healthcheck/ลำดับเริ่ม (ยังไม่ทดสอบบน Docker จริง) / แตะเมื่อเพิ่ม service
 - `Dockerfile` — image เดียวของ api และ worker (uv sync ตาม uv.lock) / แตะเมื่อเปลี่ยนวิธี build
 - `.dockerignore` — ไฟล์ที่ไม่ใส่ใน image / แตะเมื่อเพิ่มโฟลเดอร์ใหญ่
 - `.python-version` — pin Python 3.12 ให้ uv / แตะเมื่อเปลี่ยนเวอร์ชัน
@@ -16,6 +16,7 @@
 - `docs/Line_ai_bot.md` — แบบหลัก: สถาปัตยกรรม, flow, หลักการ, Stack / อ่านก่อนทำงานทุกครั้ง
 - `docs/PLAN.md` — แผนงานรอบแรก + สัญญาระหว่างโมดูล + เรื่องค้าง / อ่านก่อนแก้โค้ด
 - `docs/decisions.md` — บันทึกการตัดสินใจและเหตุผล / แตะเมื่อตัดสินใจใหม่
+- `docs/test-deploy.md` — ขึ้นระบบทดสอบบนเครื่องจริง (LINE OA ทดสอบ, AI stub) + เช็คลิสต์ + วัดเวลา (ยังไม่ได้ลอง) / แตะเมื่อ flow หรือคำสั่งเปลี่ยน
 - `docs/conversation.md` — แบบเก่า: การคุยแชทต่อเนื่อง
 - `docs/data-model.md` — แบบเก่า: รูปแบบการเก็บข้อมูล
 - `docs/migration-map.md` — แบบเก่า: ไฟล์จาก line_ (MVP) ย้ายไปไหน
@@ -38,7 +39,7 @@
 - `app/worker/tasks.py` — process_event(raw_event_id): งานหลักต่อ event
 - `app/worker/locks.py` — ล็อกต่อ user ให้ทำทีละข้อความ
 - `app/worker/cron.py` — งานเบื้องหลังตามเวลา (retention: raw 90 วัน / รูป / anonymize)
-- `app/worker/admin.py` — คำสั่งผู้ดูแล `python -m app.worker.admin pdpa-delete <line_user_id>`
+- `app/worker/admin.py` — คำสั่งผู้ดูแล `python -m app.worker.admin` pdpa-delete / kill-switch / close-link / conversations
 - `app/worker/deps.py` — ประกอบ Deps จาก Settings ครั้งเดียว (ใช้ร่วม worker และ api)
 - `app/pipeline/` — ลำดับขั้นตัดสินใจ (ไม่เรียก LINE ไม่เขียน SQL)
 - `app/pipeline/orchestrator.py` — เรียก step ตามลำดับ บันทึก ai_steps

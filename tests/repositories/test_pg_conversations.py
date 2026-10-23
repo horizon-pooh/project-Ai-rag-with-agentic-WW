@@ -179,6 +179,19 @@ async def test_list_handoff_timed_out(repos: Repos, db: Db) -> None:
     assert await repos.conversations.list_handoff_timed_out(timedelta(hours=6), limit=0) == []
 
 
+async def test_list_open_human_newest_first(repos: Repos, db: Db) -> None:
+    a = await _human(repos)
+    b_user = await repos.users.get_or_create("U2")
+    b, _ = await repos.conversations.get_or_open(b_user.id, TTL)
+    b = await repos.conversations.start_handoff(b.id, "x")
+    assert b is not None
+    c_user = await repos.users.get_or_create("U3")
+    await repos.conversations.get_or_open(c_user.id, TTL)  # bot -> ไม่อยู่ในรายการ
+    await _age(db, a.id, handoff_started_at=timedelta(hours=7))
+    assert [c.id for c in await repos.conversations.list_open_human()] == [b.id, a.id]
+    assert [c.id for c in await repos.conversations.list_open_human(limit=1)] == [b.id]
+
+
 # --- close token ---
 
 

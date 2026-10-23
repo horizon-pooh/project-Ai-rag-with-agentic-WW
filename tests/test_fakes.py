@@ -157,6 +157,19 @@ async def test_list_handoff_timed_out(deps: ports.Deps) -> None:
     assert [c.id for c in await deps.conversations.list_handoff_timed_out(ttl)] == [conv.id]
 
 
+async def test_list_open_human_newest_first(deps: ports.Deps) -> None:
+    clock: FakeClock = deps.clock
+    a = await _human_conv(deps)
+    clock.advance(seconds=5)
+    user = await deps.users.get_or_create("U2")
+    b, _ = await deps.conversations.get_or_open(user.id, deps.settings.state_ttl)
+    await deps.conversations.start_handoff(b.id, "x")
+    other = await deps.users.get_or_create("U3")
+    await deps.conversations.get_or_open(other.id, deps.settings.state_ttl)
+    assert [c.id for c in await deps.conversations.list_open_human()] == [b.id, a.id]
+    assert [c.id for c in await deps.conversations.list_open_human(limit=1)] == [b.id]
+
+
 async def test_close_token_single_use_and_expiry(deps: ports.Deps) -> None:
     clock: FakeClock = deps.clock
     conv = await _human_conv(deps)

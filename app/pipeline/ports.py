@@ -193,6 +193,10 @@ class ConversationsRepo(Protocol):
         """status='human' AND handoff_started_at <= now() - ttl เรียงเก่าสุดก่อน (ให้ cron handoff_timeout)"""
         ...
 
+    async def list_open_human(self, limit: int = 50) -> list[Conversation]:
+        """status='human' ทั้งหมด (ไม่สนอายุ) เรียงส่งต่อล่าสุดก่อน — ให้คำสั่งผู้ดูแล (admin conversations)"""
+        ...
+
     async def create_close_token(
         self, conversation_id: int, handoff_started_at: datetime, ttl: timedelta
     ) -> str:

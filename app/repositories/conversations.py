@@ -7,6 +7,7 @@
  - start_handoff: UPDATE ... SET status='human', handoff_started_at=now(), handoff_reason WHERE status='bot'
  - end_handoff: UPDATE ... SET status='bot', handoff_ended_at=now(), handoff_end_reason=$2 WHERE id=$1 AND status='human' AND handoff_started_at=$3 RETURNING *
  - หา human ที่เกิน HANDOFF_TTL_HOURS (ให้ cron handoff_timeout)
+ - list_open_human: human ทั้งหมด ล่าสุดก่อน (ให้ `python -m app.worker.admin conversations --status human`)
  - token ลิงก์ /close (ใช้ครั้งเดียว)
  - outcome, outcome_source, staff_label (ข้อเสนอ หัวข้อ นิยามความสำเร็จและการวัด)
 
@@ -175,6 +176,20 @@ class PgConversationsRepo:
                 LIMIT %s
                 """,
                 (ttl, limit),
+            )
+            rows = await cur.fetchall()
+        return [_conv(r) for r in rows]
+
+    async def list_open_human(self, limit: int = 50) -> list[Conversation]:
+        async with self._pool.connection() as conn:
+            cur = await conn.execute(
+                f"""
+                SELECT {_COLS} FROM conversations
+                WHERE status = 'human'
+                ORDER BY handoff_started_at DESC, id DESC
+                LIMIT %s
+                """,
+                (limit,),
             )
             rows = await cur.fetchall()
         return [_conv(r) for r in rows]

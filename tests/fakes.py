@@ -436,6 +436,11 @@ class FakeConversationsRepo:
         ]
         return sorted(rows, key=lambda c: (c.handoff_started_at, c.id))[:limit]
 
+    async def list_open_human(self, limit: int = 50) -> list[Conversation]:
+        rows = [c for c in self.db.conversations.values() if c.status is ConversationStatus.HUMAN]
+        rows.sort(key=lambda c: (c.handoff_started_at, c.id), reverse=True)
+        return rows[:limit]
+
     async def create_close_token(
         self, conversation_id: int, handoff_started_at: datetime, ttl: timedelta
     ) -> str:
