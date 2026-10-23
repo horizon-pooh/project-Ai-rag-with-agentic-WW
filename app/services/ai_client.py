@@ -3,17 +3,19 @@
 client ของ AI API ภายนอก: ที่เดียวที่รู้จักรูปแบบ API
 
 รายละเอียด:
- - รับ AiRequest คืน AiResult (ใช้ ai_parsers แปลงผล)
+ - API จริง (วัด 2026-10-23, docs/decisions.md D-011): gateway แบบ OpenAI ที่ค้นสินค้า HomePro เอง
+   POST {AI_API_URL}/chat/completions {"model", "messages", "temperature"} + Bearer AI_API_KEY
+ - รับ AiRequest คืน AiResult (ใช้ ai_parsers แปลงผล ตาม AI_RESPONSE_FORMAT)
  - httpx async + timeout (AI_TIMEOUT_S) ทุกครั้ง
  - asyncio.Semaphore(AI_CONCURRENCY) จำกัดงานพร้อมกันตามที่ API รับไหว
  - ลองซ้ำ: timeout/ต่อไม่ได้/429/5xx -> 1 ครั้งถ้าเวลาเหลือพอ (เคารพ retry-after); 4xx อื่น/อ่านไม่ออก -> ไม่ซ้ำ
  - รวมทุกรอบไม่เกิน deadline ที่ส่งเข้ามา
  - error: AiUnavailable (ลองแล้วยังพัง), AiBadResponse (อ่านไม่ออก/4xx)
- - ส่งเฉพาะข้อความ redact แล้ว
- - รอคำตอบ: API คือ Softnix หรือไม่, JSON/markdown, คืน state หรือไม่, รับรูปได้หรือไม่
+ - ส่งเฉพาะข้อความ redact แล้ว: แชทย้อนหลัง (redact) + ข้อความปัจจุบัน (redact) — ไม่ส่ง state / flags / รูป
+ - รอคำตอบ: gateway รับพร้อมกันได้กี่งาน, รับรูปได้ไหม, บอกส่งต่อได้ไหม, ผลถูกตัดกลางรายการเพราะอะไร
 
 แนวคิดจาก: src/ai/aiClient.js, src/ai/llmClient.js (แบบเก่า)
-สถานะ: มีโค้ดแล้ว — HttpAiClient ใช้สัญญาเสนอของเรา (รอคำตอบ: รูปแบบจริงของ API) + StubAiClient เมื่อไม่มี AI_API_URL
+สถานะ: มีโค้ดแล้ว — HttpAiClient ตามรูปแบบ API ที่วัดจริง (OpenAI chat) + StubAiClient เมื่อไม่มี AI_API_URL
 """
 
 from __future__ import annotations
@@ -22,21 +24,31 @@ import asyncio
 import math
 import time
 from collections.abc import Awaitable, Callable
+from typing import Any
 
 import httpx
 import structlog
 
 from app.config import Settings
 from app.pipeline.ports import AiClient
-from app.pipeline.schemas import AiBadResponse, AiKind, AiRequest, AiResult, AiUnavailable
-from app.services.ai_parsers import AiParser, JsonParser
+from app.pipeline.schemas import (
+    AiBadResponse,
+    AiKind,
+    AiRequest,
+    AiResult,
+    AiUnavailable,
+    Direction,
+)
+from app.services.ai_parsers import AiParser, JsonParser, MarkdownParser
 
 log = structlog.get_logger(__name__)
 
 # ลองได้ทั้งหมดกี่ครั้ง (ครั้งแรก + ซ้ำ 1)
 MAX_ATTEMPTS = 2
-# (เสนอ) เวลาขั้นต่ำที่ต้องเหลือหลังรอ retry-after ถึงจะคุ้มลองซ้ำ — รอคำตอบ: ความเร็วจริงของ API
+# (เสนอ) เวลาขั้นต่ำที่ต้องเหลือหลังรอ retry-after ถึงจะคุ้มลองซ้ำ (คำถามทั่วไปตอบเร็วสุด ~2 วิ)
 MIN_RETRY_BUDGET_S = 1.0
+# path ต่อจาก AI_API_URL (OpenAI-compatible)
+CHAT_COMPLETIONS_PATH = "/chat/completions"
 # ข้อความที่ StubAiClient ทวนกลับ (กันเกินเพดาน text ของ LINE)
 STUB_ECHO_MAX_CHARS = 500
 STUB_PREFIX = "(โหมดทดสอบ ยังไม่ได้ต่อ AI API) ได้รับข้อความ: "
@@ -68,11 +80,48 @@ def parse_retry_after(value: str | None) -> float | None:
     return seconds
 
 
-class HttpAiClient:
-    """เรียก AI API ด้วย HTTP — สัญญาเสนอของเรา (รอคำตอบ: รูปแบบจริงของ API)
+def make_parser(settings: Settings) -> AiParser:
+    """AI_RESPONSE_FORMAT: markdown (วัดจริง) -> MarkdownParser; json (สัญญาเสนอเดิม) -> JsonParser"""
+    if settings.ai_response_format == "json":
+        return JsonParser()
+    return MarkdownParser()
 
-    - POST AI_API_URL, body = AiRequest.model_dump(mode="json"), header Authorization: Bearer AI_API_KEY
-    - ตอบ 2xx -> parser (ตั้งต้น JsonParser) แปลงเป็น AiResult
+
+def load_system_prompt(settings: Settings) -> str | None:
+    """อ่าน AI_SYSTEM_PROMPT_FILE (utf-8) ตอนสร้าง client; ไม่ตั้ง/ไฟล์ว่าง -> None; ไม่มีไฟล์ -> error ตอนเริ่ม"""
+    path = settings.ai_system_prompt_file
+    if path is None:
+        return None
+    text = path.read_text(encoding="utf-8").strip()
+    return text or None
+
+
+def build_messages(req: AiRequest, system_prompt: str | None = None) -> list[dict[str, str]]:
+    """AiRequest -> messages ของ OpenAI chat (redact แล้วทั้งหมด)
+
+    - [system (ถ้าตั้ง AI_SYSTEM_PROMPT_FILE)] + แชทย้อนหลัง (in -> user, out -> assistant) + ข้อความปัจจุบัน (user)
+    - gateway ไม่คืน state จึงจำบทสนทนาจากแชทย้อนหลังนี้ (วัดจริง: "สีดำ งบไม่เกิน 20000" ต่อจากรอบก่อนได้)
+    - ไม่ส่ง state: gateway ไม่มีช่องรับ และ state ของเราไม่ถูกอัปเดตจาก API (state_out = None เสมอ)
+    - ไม่ส่ง flags (state_expired / handoff_timed_out / just_resumed) เป็นข้อความ: ไม่รู้ว่าจะไปกวน prompt
+      ของ gateway อย่างไร — ข้อความแจ้งลูกค้าเรื่องนี้ orchestrator ส่งเองอยู่แล้ว (prefix_texts)
+    - ไม่ส่งรูป (รอคำตอบ: gateway รับรูปได้ไหม)
+    """
+    messages: list[dict[str, str]] = []
+    if system_prompt:
+        messages.append({"role": "system", "content": system_prompt})
+    for turn in req.recent_messages:
+        role = "user" if turn.direction is Direction.IN else "assistant"
+        messages.append({"role": role, "content": turn.text_redacted})
+    messages.append({"role": "user", "content": req.text_redacted})
+    return messages
+
+
+class HttpAiClient:
+    """เรียก AI API ด้วย HTTP — gateway แบบ OpenAI (วัดจริง 2026-10-23, D-011)
+
+    - POST {AI_API_URL}/chat/completions body {"model": AI_MODEL, "messages": build_messages(...),
+      "temperature": AI_TEMPERATURE}, header Authorization: Bearer AI_API_KEY
+    - ตอบ 2xx -> parser ตาม AI_RESPONSE_FORMAT (ตั้งต้น MarkdownParser) แปลงเป็น AiResult
     - Semaphore เป็นของ instance (ไม่ใช่ global): หนึ่ง process ควรสร้าง client ตัวเดียวแล้วใช้ร่วมกัน
     - เวลาที่รอ Semaphore นับรวมใน deadline และใน latency_ms
     - ห้าม log ข้อความของ request และ key — log แค่ attempt / error_class / status_code
@@ -88,13 +137,16 @@ class HttpAiClient:
     ) -> None:
         if not settings.ai_api_url:
             raise ValueError("HttpAiClient ต้องมี AI_API_URL (ไม่มีให้ใช้ make_ai_client -> StubAiClient)")
-        self._url = settings.ai_api_url
+        self._url = settings.ai_api_url + CHAT_COMPLETIONS_PATH
         self._key = settings.ai_api_key
+        self._model = settings.ai_model
+        self._temperature = settings.ai_temperature
+        self._system_prompt = load_system_prompt(settings)
         self._timeout_s = settings.ai_timeout_s
         self._sem = asyncio.Semaphore(settings.ai_concurrency)
         self._owns_http = http is None
         self._http = http if http is not None else httpx.AsyncClient()
-        self._parser: AiParser = parser if parser is not None else JsonParser()
+        self._parser: AiParser = parser if parser is not None else make_parser(settings)
         self._sleep = sleep
         self._monotonic = monotonic
 
@@ -108,6 +160,14 @@ class HttpAiClient:
         if self._key is not None and self._key.get_secret_value():
             headers["Authorization"] = f"Bearer {self._key.get_secret_value()}"
         return headers
+
+    def payload(self, req: AiRequest) -> dict[str, Any]:
+        """body ของ request (ไม่มี key / token — header ใส่แยก)"""
+        return {
+            "model": self._model,
+            "messages": build_messages(req, self._system_prompt),
+            "temperature": self._temperature,
+        }
 
     async def call(self, req: AiRequest, deadline_s: float) -> AiResult:
         start = self._monotonic()
@@ -147,7 +207,7 @@ class HttpAiClient:
         elapsed_ms: Callable[[], int],
         unavailable: Callable[[str, int], AiUnavailable],
     ) -> AiResult:
-        payload = req.model_dump(mode="json")
+        payload = self.payload(req)
         headers = self._headers()
         attempt = 0
         while True:
@@ -230,11 +290,15 @@ def make_ai_client(settings: Settings) -> AiClient:
 
 
 __all__ = [
+    "CHAT_COMPLETIONS_PATH",
     "MAX_ATTEMPTS",
     "MIN_RETRY_BUDGET_S",
     "STUB_PREFIX",
     "HttpAiClient",
     "StubAiClient",
+    "build_messages",
+    "load_system_prompt",
     "make_ai_client",
+    "make_parser",
     "parse_retry_after",
 ]

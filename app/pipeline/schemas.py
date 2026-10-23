@@ -347,7 +347,11 @@ class AiFlags(_Frozen):
 
 
 class AiRequest(_Frozen):
-    """สิ่งที่ส่งให้ AI API (สัญญาเสนอ — รอคำตอบ: รูปแบบจริงของ API) ทุกข้อความต้อง redact แล้ว"""
+    """ข้อมูลของหนึ่งรอบที่ ai_client ใช้สร้าง request ทุกข้อความต้อง redact แล้ว
+
+    API จริง (D-011) รับแค่ messages: ai_client ส่ง recent_messages + text_redacted เท่านั้น
+    (state / flags / images ยังอยู่ในชนิดนี้เพื่อลง ai_steps และเผื่อ API รองรับภายหลัง)
+    """
 
     state: JsonDict | None = None  # None ถ้าหมดอายุ/เพิ่งล้าง
     text_redacted: str

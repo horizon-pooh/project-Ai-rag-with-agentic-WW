@@ -25,7 +25,7 @@
 | การจับคำ | `resume_ai.txt` และ `faq.txt` ตรงทั้งข้อความหลัง normalize; `escalate.txt` มีอยู่ในข้อความ (substring) หลัง normalize |
 | รูปแบบ `faq.txt` | `pattern<TAB>คำตอบ`; คำตอบเป็น `-` = keyword ของ Vendor 1 (บอทไม่ตอบ) |
 | แจ้ง call center | ช่องทางรอคำตอบ → `LogNotifier` (log อย่างเดียว) หลัง interface `Notifier` |
-| AI API | สัญญาเสนอ (รอคำตอบ): POST `AI_API_URL` JSON ของ `AiRequest`, Bearer `AI_API_KEY`, ตอบ JSON ตามฟิลด์ `AiResult` → `JsonParser`; `MarkdownParser` = stub ที่ยก `NotImplementedError("รอคำตอบ: ...")`; รูปยังไม่ส่ง (รอคำตอบ) |
+| AI API | (แทนที่โดย D-011, วัดจริง 2026-10-23) POST `{AI_API_URL}/chat/completions` แบบ OpenAI `{"model", "messages", "temperature"}` + Bearer `AI_API_KEY`; messages = แชทย้อนหลัง redact + ข้อความปัจจุบัน; ตอบ markdown → `MarkdownParser` (`AI_RESPONSE_FORMAT=json` → `JsonParser` สัญญาเสนอเดิม); รูปยังไม่ส่ง (รอคำตอบ) |
 
 ## สัญญาระหว่างโมดูล
 
@@ -117,7 +117,9 @@ repositories และ services ต้อง implement ตามนี้ เท
 | repositories | รันกับ Postgres 16.2 จริงแล้ว (2026-10-23, pgserver บนเครื่อง dev) ผ่านทั้งหมด — ยังไม่ได้ลองกับข้อมูลปริมาณจริง (แผนของ index retention ยืนยันแค่บนตารางว่าง) |
 | docker compose | ยังไม่ได้ลอง (เครื่องนี้ไม่มี docker) — ดู `docs/test-deploy.md` |
 | scenarios | ข้อมูลแชทจริง 30 บทสนทนา ยังไม่มี |
-| AI API | สัญญารอคำตอบ ทั้ง 4 ข้อ (Softnix ไหม, JSON/markdown, คืน state ไหม, รับรูป/บอกส่งต่อได้ไหม) |
+| AI API | ตอบแล้วจากการวัดจริง 2026-10-23 (D-011): (1) Softnix ไหม → ไม่รู้ชื่อระบบ เป็น gateway ภายในแบบ OpenAI-compatible model `gemma4-31b` ที่ค้นสินค้า HomePro เอง ตอบ 2–7 วิ (ทั่วไป) / 22–43 วิ (ค้นสินค้า); (2) JSON/markdown → markdown ใน chat.completion (`MarkdownParser`); (3) คืน state ไหม → ไม่คืน ใช้แชทย้อนหลังใน `messages` แทน; (4) รับรูป → ยังไม่รู้ (ไม่ส่ง), บอกส่งต่อ → ไม่มีสัญญาณ (พึ่งกฎขั้น 5) — ยังรอคำตอบ: รับพร้อมกันได้กี่งาน (`AI_CONCURRENCY`), kind แบบมีโครงสร้าง, ตัวอย่างจริงเพิ่มให้ถึง 20–30 (มี 7) |
+| AI API: ผลถูกตัดกลางรายการ | ทั้ง 4 ตัวอย่างที่มีรายการถูกตัดกลางสินค้าทั้งที่ `finish_reason` = "stop" — parser ทิ้งก้อนที่ไม่ครบ (ได้การ์ด 2–4 ใบ); ต้องถามเจ้าของ API ว่าเป็นเพดาน max_tokens ฝั่ง server ไหม ปรับ/ขอจำนวนสินค้าน้อยลงได้ไหม |
+| AI API: kind | clarify = มีบรรทัดลงท้าย "?" (heuristic) — คำตอบที่ปิดด้วยคำถามชวนคุยจะนับเป็น clarify และนับ `clarify_streak` (ครบเกณฑ์ → ส่งต่อ) ต้องดูจากแชทจริง |
 | validate | ตัดลิงก์ที่ไม่ใช่ของสินค้า + ทิ้ง intro ที่ราคาไม่ตรงสินค้าแล้ว; ไม่มีสินค้า -> ราคาในข้อความยังไม่ตรวจ (รอคำตอบ: ใครรับผิดชอบราคาที่ AI ตอบผิด) |
 | Caddy | `/health/ready` ไม่เปิดผ่าน Caddy |
 | คิว (เสร็จ) | ตัดสินแล้ว 2026-10-23 (D-010): arq maintenance-only (issue #510, 18 ต.ค. 2025) → procrastinate 3.10.0 บน Postgres, เอา Redis ออกทั้งหมด; procrastinate ประกาศหาผู้ดูแลเพิ่ม ("looking for maintainers") แต่ยังออก 3.10.0 เมื่อ ก.ย. 2026 — ติดตามสถานะการดูแลต่อ; ยังไม่ได้ลองบน Docker จริง |

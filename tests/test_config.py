@@ -52,9 +52,11 @@ def test_defaults(clean_env: pytest.MonkeyPatch) -> None:
     # ค่าว่างแบบใน .env.example -> ใช้ค่าตั้งต้น
     clean_env.setenv("AI_TIMEOUT_S", "")
     s = _settings()
-    assert s.ai_timeout_s == 30
+    assert s.ai_timeout_s == 60
     assert s.ai_concurrency == 4
-    assert s.turn_deadline_s == 50
+    assert s.turn_deadline_s == 90
+    assert (s.ai_model, s.ai_temperature, s.ai_response_format) == ("gemma4-31b", 0.2, "markdown")
+    assert s.ai_system_prompt_file is None
     assert s.ai_api_url is None and s.ai_api_key is None and not s.ai_enabled
     assert s.state_ttl == timedelta(hours=2)
     assert s.handoff_ttl == timedelta(hours=6)

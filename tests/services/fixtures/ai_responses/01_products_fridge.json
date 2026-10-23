@@ -1,0 +1,33 @@
+{
+  "_meta": {
+    "captured": "2026-10-23",
+    "status": 200,
+    "latency_s": 21.7,
+    "request_messages": [
+      {
+        "role": "user",
+        "content": "สวัสดี มีตู้เย็น 2 ประตูไหม"
+      }
+    ]
+  },
+  "id": "chatcmpl-90d93af1",
+  "object": "chat.completion",
+  "created": 1792740562,
+  "model": "gemma4-31b",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "สวัสดีค่ะ มีตู้เย็น 2 ประตูให้เลือกหลายรุ่นเลยค่ะ โดยมีทั้งขนาดเล็กและขนาดใหญ่ตามการใช้งาน ดังนี้ค่ะ\n\n## Product List\n\n### 1. ตู้เย็น 2 ประตู HISENSE RT549N4TBN 15 คิว สีดำ\n- Brand: HISENSE\n- Price: ฿14,999.00\n- Details: ระบบ Inverter, รับประกันคอมเพรสเซอร์ 25 ปี\n- Product code: 1289220\n- Product link: [View product details](https://www.homepro.co.th/p/1289220)\n\n### 2. ตู้เย็น 2 ประตู LG GN-X392PMGB.ACMPLMT 14 คิว สีฟ้า อินเวอร์เตอร์\n- Brand: LG\n- Price: ฿18,990.00\n- Details: ระบบ Inverter, มีสัญญาณแจ้งเตือนการปิดประตู\n- Product code: 1225597\n- Product link: [View product details](https://www.homepro.co.th/p/1225597)\n\n### 3. ตู้เย็น 2 ประตู LG GN-C702HXCM.ABLPLMT 18.1 คิว สีดำ อินเวอร์เตอร์\n- Brand: LG\n- Price: ฿22,490.00\n- Details: ระบบ Inverter, รองรับการเชื่อมต่อผ่านสมาร์ทโฟน\n- Product code: 1241238\n- Product link: [View product details](https://www.homepro.co.th/p/1241238)\n\n### 4. ตู้เย็น 2 ประตู LG GN-X392PBGB 14 คิว สีเบจ อินเวอร์เตอร์\n- Brand: LG\n- Price: ฿18,990.00\n- Details: ระบบ Inverter, มีจอแสดงผลแบบดิจิตอล\n- Product code: 1225613\n- Product link: [View product details](https://www.homepro.co.th/p/1225613)\n\n### 5. ตู้เย็น 2 ประตู TOSHI",
+        "tool_calls": null
+      },
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 0,
+    "completion_tokens": 0,
+    "total_tokens": 0
+  }
+}

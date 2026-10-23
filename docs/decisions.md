@@ -111,7 +111,7 @@
 | เกณฑ์ส่งต่อ | `CLARIFY_MAX=2`, cannot_answer / validate ติดกันครั้งที่ 2, `RATE_LIMIT_PER_MIN=10` | ได้ข้อมูลแชทจริง |
 | การจับคำ | resume_ai / faq ตรงทั้งข้อความ, escalate substring (หลัง normalize) | จับพลาดในแชทจริง |
 | แจ้ง call center | `LogNotifier` หลัง interface `Notifier` | รู้ช่องทางจริง |
-| AI API | สัญญาเสนอ JSON (`AiRequest`/`AiResult`), Markdown = stub, ยังไม่ส่งรูป — รอคำตอบ | ได้สเปก API |
+| ~~AI API~~ | **แทนที่โดย D-011** (OpenAI chat + `MarkdownParser`) — เดิม: สัญญาเสนอ JSON (`AiRequest`/`AiResult`), Markdown = stub, ยังไม่ส่งรูป | ได้สเปก API |
 | dedupe_key ขาออก | `out:<raw_event_id>:<ลำดับการส่งในรอบ>` ไม่ผูก purpose เพราะ retry อาจได้เส้นทางอื่น | — |
 | /close | GET แสดงหน้ายืนยัน ปิดจริงด้วย POST (กัน link preview ใช้ token) | — |
 | ~~arq~~ | **แทนที่โดย D-010** (arq maintenance-only → procrastinate) — เดิม: `keep_result=0` ให้ cron ใส่คิวซ้ำด้วย job id เดิมได้ | — |
@@ -144,3 +144,37 @@
 - **จะเปลี่ยนใจเมื่อ:** procrastinate หยุดพัฒนา (ไม่มีรุ่นใหม่/ไม่แก้ช่องโหว่) หรือเจอปัญหาประสิทธิภาพของคิวบน Postgres ที่ปริมาณจริง
   (เช่น polling/LISTEN กินทรัพยากร DB, ตาราง `procrastinate_jobs` โตจน fetch ช้า)
 - **ผล:** D-009 แถว replyToken / ล็อกต่อ user / arq แทนที่; D-002 ส่วน Redis แทนที่; ไม่มี service redis ใน docker compose และไม่มี `REDIS_URL`
+
+## D-011 AI API จริง: gateway แบบ OpenAI ที่ค้นสินค้าเอง ตอบเป็น markdown
+
+- **สถานะ:** วัดจาก API จริงแล้ว (2026-10-23, เจ้าของโปรเจกต์อนุมัติให้ลองเรียก) — รูปแบบคำตอบอนุมานจาก 7 ตัวอย่าง ยังไม่ได้สเปกจากเจ้าของ API
+- **สิ่งที่วัดได้:**
+  - เป็น gateway แบบ OpenAI-compatible (FastAPI หลัง nginx) ไม่รู้ชื่อระบบ (ไม่ได้ยืนยันว่าเป็น Softnix):
+    `GET {AI_API_URL}/models` → model `gemma4-31b`; `POST {AI_API_URL}/chat/completions` + `Authorization: Bearer <AI_API_KEY>`
+    body `{"model", "messages", "temperature": 0.2}` → chat.completion มาตรฐาน คำตอบอยู่ใน `choices[0].message.content`,
+    `finish_reason` = "stop", `usage` เป็น 0 ทั้งหมด, `tool_calls` = null
+  - gateway ค้นแคตตาล็อก HomePro เอง และใช้ `messages` ย้อนหลังเป็นบริบท (ต่อเงื่อนไข "สีดำ งบไม่เกิน 20000" จากรอบก่อนได้, เปลี่ยนเรื่องเป็นทีวีได้) — **ไม่คืน state**
+  - content เป็น markdown: ย่อหน้าเกริ่น (มีหรือไม่มี) → `## Product List` → ก้อน `### N. ชื่อ` / `![..](https://statice.homepro.co.th/..)` (บางก้อน) /
+    `- Brand` / `- Price: ฿14,999.00` / `- Details` / `- Product code` / `- Product link: [View product details](https://www.homepro.co.th/p/<code>)`; บางครั้งมีข้อความต่อท้าย
+  - **คำตอบสินค้าถูกตัดกลางรายการบ่อย** (ครบทั้ง 4 ตัวอย่างที่มีรายการ ตัดที่ก้อนที่ 5 หรือ 3 เช่นจบที่ "### 5. ตู้เย็น 2 ประตู TOSHI" หรือ "- Product link: [View product") ทั้งที่ `finish_reason` = "stop"
+  - คำถามทั่วไปตอบเป็นข้อความไทย (มี **ตัวหนา** / รายการเลข); คำถามกว้างๆ ได้คำถามกลับที่มี "?"
+  - เวลา: คำถามทั่วไป 2–7 วิ, ค้นสินค้า 22–43 วิ
+- **ตัดสิน:**
+
+| เรื่อง | ตัดสิน |
+|---|---|
+| request | `messages` = แชทย้อนหลัง (redact, in → user / out → assistant, ≤4) + ข้อความปัจจุบัน (redact); ไม่ส่ง state / flags / รูป; ไม่มี system prompt (gateway มีของตัวเอง) — ใส่ได้ด้วย `AI_SYSTEM_PROMPT_FILE` |
+| ความจำ | ไม่มี state จาก API → ใช้ "ส่งแชทย้อนหลังสั้นๆ" ตามแบบหลัก §ความจำ; ข้อความขาออกที่เก็บเป็นแชทย้อนหลัง = ข้อความ text + altText ของ carousel ("สินค้าแนะนำ: ชื่อ, ชื่อ") ไม่ใช่ JSON ของ flex |
+| ตัวแปลง | `AI_RESPONSE_FORMAT=markdown` (ตั้งต้น) → `MarkdownParser`; `json` → `JsonParser` (สัญญาเสนอเดิม เผื่อ API เปลี่ยน) |
+| สินค้า | รับเฉพาะก้อนที่ครบ (ชื่อ + Product code + Price + ลิงก์ https) ก้อนที่ถูกตัดทิ้งแล้ว log จำนวน; รูปจากบรรทัด `![..](https://..)` |
+| kind | มีสินค้าครบ ≥1 → products; ไม่งั้นมีบรรทัดลงท้าย ? → clarify; ไม่งั้น answer — heuristic (**รอคำตอบ**: API ไม่บอก kind) ไม่มีทาง cannot_answer / escalate_hint จาก API |
+| เวลา | `AI_TIMEOUT_S=60`, `TURN_DEADLINE_S=90` (หนึ่งครั้งอาจถึง ~45 วิ เผื่อลองซ้ำหนึ่งครั้ง) → เพดานงาน worker 150 วิ; `AI_CONCURRENCY=4` ยังเป็นค่าเสนอ |
+
+- **ยังไม่รู้ (ถามเจ้าของ API):**
+  - gateway รับงานพร้อมกันได้กี่งาน (`AI_CONCURRENCY`)
+  - รับรูปได้ไหม (ตอนนี้ไม่ส่ง)
+  - มีสัญญาณให้ส่งต่อพนักงาน / บอกว่าตอบไม่ได้ไหม (ตอนนี้ไม่มี — พึ่งกฎในโค้ดขั้น 5)
+  - ผลถูกตัดกลางรายการเพราะเพดาน max_tokens ฝั่ง server หรือไม่ ปรับได้ไหม / ขอจำนวนสินค้าน้อยลงได้ไหม
+  - บอก kind (สินค้า / ตอบ / ถามกลับ) แบบมีโครงสร้างได้ไหม แทน heuristic
+- **จะเปลี่ยนใจเมื่อ:** ได้สเปกจากเจ้าของ API (รูปแบบ JSON / ฟิลด์ kind / state) หรือรูปแบบ markdown เปลี่ยน — ต้องเก็บตัวอย่างจริงเพิ่มให้ถึง 20–30 ชิ้น
+- **ผล:** D-009 แถว AI API แทนที่; ตัวอย่างจริงอยู่ที่ `tests/services/fixtures/ai_responses/`

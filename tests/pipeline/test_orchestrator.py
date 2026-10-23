@@ -228,7 +228,8 @@ async def test_happy_path_products_carousel_state_and_steps(settings, cfg) -> No
     assert req.text_redacted == "หาตู้เย็น 2 ประตู โทร [PHONE]"
     assert req.state is None and req.images == [] and req.recent_messages == []
     assert 0 < deadline <= settings.turn_deadline_s
-    assert deps.line.loadings == [(USER, 50)]  # type: ignore[attr-defined]
+    # loading animation ของ LINE สูงสุด 60 วิ (TURN_DEADLINE_S ตั้งต้น 90 ถูกตัดที่เพดาน)
+    assert deps.line.loadings == [(USER, min(orchestrator.LOADING_MAX_S, 90))]  # type: ignore[attr-defined]
 
     # reply ด้วย replyToken ของ event นี้: intro + carousel ที่สร้างจาก products
     ((token, msgs),) = deps.line.replies  # type: ignore[attr-defined]
@@ -463,20 +464,21 @@ async def test_ai_bad_response_risky_escalates(settings, cfg, monkeypatch) -> No
 
 
 class _SlowLoadingLine(FakeLineClient):
-    """loading animation ที่กินเวลา 60 วิ (เกิน TURN_DEADLINE_S และอายุ replyToken)"""
+    """loading animation ที่กินเวลาเกิน TURN_DEADLINE_S (และเกินอายุ replyToken)"""
 
-    def __init__(self, clock: FakeClock) -> None:
+    def __init__(self, clock: FakeClock, spend_s: float) -> None:
         super().__init__()
         self.clock = clock
+        self.spend_s = spend_s
 
     async def start_loading(self, line_user_id: str, seconds: int = 20) -> None:
         await super().start_loading(line_user_id, seconds)
-        self.clock.advance(seconds=60)
+        self.clock.advance(seconds=self.spend_s)
 
 
 async def test_deadline_spent_goes_to_fallback_without_calling_ai(settings, cfg) -> None:
     clock = FakeClock()
-    deps = _deps(settings, clock=clock, line=_SlowLoadingLine(clock))
+    deps = _deps(settings, clock=clock, line=_SlowLoadingLine(clock, settings.turn_deadline_s + 10))
     out = await _turn(deps, cfg, text="ตู้เย็น")
     assert out.route == TurnRoute.AI_DOWN and out.reason == "deadline"
     assert _ai_calls(deps) == []

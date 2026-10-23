@@ -1,0 +1,33 @@
+{
+  "_meta": {
+    "captured": "2026-10-23",
+    "status": 200,
+    "latency_s": 38.5,
+    "request_messages": [
+      {
+        "role": "user",
+        "content": "เครื่องซักผ้าฝาหน้า 10 กิโล รุ่นไหนประหยัดไฟ"
+      }
+    ]
+  },
+  "id": "chatcmpl-87d63f3d",
+  "object": "chat.completion",
+  "created": 1792740702,
+  "model": "gemma4-31b",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "สำหรับเครื่องซักผ้าฝาหน้าขนาด 10 กิโลกรัม ที่เน้นเรื่องการประหยัดไฟ ขอแนะนำรุ่นที่ได้รับฉลากประหยัดไฟเบอร์ 5 ระดับ 5 ดาว ซึ่งเป็นระดับสูงสุด ดังนี้ครับ\n\n## Product List\n\n### 1. เครื่องซักผ้าฝาหน้า SHARP ES-FH10AT-W 10 กก.\n- Brand: SHARP\n- Price: ฿16,990.00\n- Details: ฉลากประหยัดไฟเบอร์ 5 (5 ดาว), รอบปั่นหมาด 1400 รอบ/นาที\n- Product code: 1249051\n- Product link: [View product details](https://www.homepro.co.th/p/1249051)\n\n### 2. เครื่องซักผ้าฝาหน้าพร้อมขาตั้ง ELECTROLUX EWF1043R7SC 10 กก.\n- Brand: ELECTROLUX\n- Price: ฿34,990.00\n- Details: ฉลากประหยัดไฟเบอร์ 5 (5 ดาว), ระบบ Inverter และระบบไอน้ำ\n- Product code: 1281772\n- Product link: [View product details](https://www.homepro.co.th/p/1281772)\n\n### 3. เครื่องซักผ้าฝาหน้า ELECTROLUX EWF1024P5WB 10 กก.\n![เครื่องซักผ้าฝาหน้า ELECTROLUX EWF1024P5WB 10 กก.](https://statice.homepro.co.th/homepro/ARTICLE_IMAGE/11/891/1189182/447x447/26012024_1189182$Imagec1.jpg)\n- Brand: ELECTROLUX\n- Price: ฿31,990.00\n- Details: ฉลากประหยัดไฟเบอร์ 5 (5 ดาว), มีระบบไอน้ำและโปรแกรมซักด่วน\n- Product code: 1189182\n- Product link: [View product",
+        "tool_calls": null
+      },
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 0,
+    "completion_tokens": 0,
+    "total_tokens": 0
+  }
+}

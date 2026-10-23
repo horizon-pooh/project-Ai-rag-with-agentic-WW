@@ -1,0 +1,33 @@
+{
+  "_meta": {
+    "captured": "2026-10-23",
+    "status": 200,
+    "latency_s": 2.0,
+    "request_messages": [
+      {
+        "role": "user",
+        "content": "อยากได้ของ"
+      }
+    ]
+  },
+  "id": "chatcmpl-08c1a72e",
+  "object": "chat.completion",
+  "created": 1792740658,
+  "model": "gemma4-31b",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "สวัสดีค่ะ ยินดีต้อนรับสู่ HomePro ค่ะ ไม่ทราบว่าคุณลูกค้ากำลังมองหาสินค้าประเภทไหน หรืออยากให้ช่วยแนะนำสินค้าสำหรับใช้งานในส่วนไหนของบ้านเป็นพิเศษไหมคะ?\n\nสามารถแจ้งชื่อสินค้า แบรนด์ หรือคุณสมบัติที่ต้องการได้เลยค่ะ เดี๋ยวทางเราช่วยค้นหาให้ค่ะ",
+        "tool_calls": null
+      },
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 0,
+    "completion_tokens": 0,
+    "total_tokens": 0
+  }
+}

@@ -6,7 +6,7 @@
  - ใช้ pydantic-settings อ่านจาก .env (รายการตัวแปรดู .env.example)
  - บังคับ: LINE_CHANNEL_SECRET, LINE_CHANNEL_ACCESS_TOKEN, DATABASE_URL (ไม่มี Redis แล้ว — คิวอยู่ Postgres, D-010)
  - ห้ามข้ามการตรวจ signature ไม่ว่าโหมดไหน
- - AI_TIMEOUT_S, AI_CONCURRENCY, TURN_DEADLINE_S: ค่าจริงรอคำตอบเรื่อง AI API
+ - AI_TIMEOUT_S=60, TURN_DEADLINE_S=90 ตั้งจากความเร็วที่วัดจริง (D-011); AI_CONCURRENCY ยังรอคำตอบ
  - STATE_TTL_HOURS=2, HANDOFF_TTL_HOURS=6
  - token / key อยู่ที่นี่ที่เดียว ห้ามส่งเข้า AI API ห้ามลง log
 
@@ -20,6 +20,7 @@ import re
 from datetime import time, timedelta
 from functools import lru_cache
 from pathlib import Path
+from typing import Literal
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from pydantic import Field, SecretStr, field_validator
@@ -52,16 +53,24 @@ class Settings(BaseSettings):
     # --- ที่เก็บข้อมูล (บังคับ) — URL อาจมีรหัสผ่าน จึงเป็น SecretStr ---
     database_url: SecretStr
 
-    # --- AI API ภายนอก ---
-    # ว่าง -> แอปใช้ AI client แบบ stub (ยังไม่มี API จริง) — รอคำตอบเรื่อง AI API
+    # --- AI API ภายนอก (gateway แบบ OpenAI ที่ค้นสินค้าเอง — วัดจริง 2026-10-23, docs/decisions.md D-011) ---
+    # ฐานของ API เช่น https://host/v1 (client ต่อ /chat/completions เอง); ว่าง -> AI client แบบ stub
     ai_api_url: str | None = None
     ai_api_key: SecretStr | None = None
-    # (เสนอ) รอคำตอบเรื่อง AI API
-    ai_timeout_s: float = Field(default=30, gt=0)
-    # (เสนอ) รอคำตอบเรื่อง AI API
+    # ชื่อ model ที่ GET {AI_API_URL}/models คืน
+    ai_model: str = Field(default="gemma4-31b", min_length=1)
+    ai_temperature: float = Field(default=0.2, ge=0, le=2)
+    # markdown = รูปแบบที่วัดได้จริง (MarkdownParser); json = สัญญาเสนอเดิมของเรา (JsonParser)
+    ai_response_format: Literal["markdown", "json"] = "markdown"
+    # (ไม่บังคับ) ไฟล์ system prompt ที่ใส่นำหน้า messages — ว่าง = ไม่ส่ง (gateway มี prompt ของตัวเอง)
+    ai_system_prompt_file: Path | None = None
+    # วัดจริง: คำถามทั่วไป 2-7 วิ, ค้นสินค้า 22-43 วิ ต่อหนึ่งครั้ง -> 60 วิ เผื่อครั้งที่ช้า
+    ai_timeout_s: float = Field(default=60, gt=0)
+    # (เสนอ) ยังไม่รู้ว่า gateway รับพร้อมกันได้กี่งาน — รอคำตอบ
     ai_concurrency: int = Field(default=4, ge=1)
-    # (เสนอ) เพดานเวลารวมต่อข้อความ รวมทุกรอบที่ลองซ้ำ — รอคำตอบเรื่อง AI API
-    turn_deadline_s: float = Field(default=50, gt=0)
+    # เพดานเวลารวมต่อข้อความ รวมทุกรอบที่ลองซ้ำ: หนึ่งครั้งอาจถึง ~45 วิ -> 90 วิ ให้ลองซ้ำได้หนึ่งครั้ง
+    # ถ้าครั้งแรกพังเร็ว (ต่อไม่ได้/5xx) — ครั้งแรกที่ timeout เต็ม 60 วิ ครั้งที่สองได้แค่ 30 วิที่เหลือ
+    turn_deadline_s: float = Field(default=90, gt=0)
 
     # --- MinIO ---
     minio_endpoint: str = "minio:9000"
@@ -76,7 +85,8 @@ class Settings(BaseSettings):
     state_ttl_hours: float = Field(default=2, gt=0)
     # นับจาก handoff_started_at
     handoff_ttl_hours: float = Field(default=6, gt=0)
-    # (เสนอ) อายุ replyToken ที่เราเชื่อ (LINE ~1 นาที ต้องเช็คเอกสาร)
+    # (เสนอ) อายุ replyToken ที่เราเชื่อ (LINE ~1 นาที ต้องเช็คเอกสาร) — ค้นสินค้า 22-43 วิ ส่วนใหญ่ยัง reply ทัน
+    # ช้ากว่านี้ send ใช้ push เอง (กินโควตา push)
     reply_token_ttl_s: int = Field(default=50, gt=0)
     # (เสนอ) clarify ติดกันครบเท่านี้แล้วยัง clarify -> ส่งต่อ
     clarify_max: int = Field(default=2, ge=1)

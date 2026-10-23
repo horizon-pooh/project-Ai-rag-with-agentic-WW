@@ -74,8 +74,8 @@
 - `app/repositories/reply_tokens.py` — reply_tokens: replyToken อายุสั้น ใช้ครั้งเดียว (แทน Redis)
 - `app/services/` — client ภายนอกและตัวช่วย
 - `app/services/line_client.py` — LINE Messaging API, ที่เดียวที่ถือ token
-- `app/services/ai_client.py` — AI API ภายนอก, ที่เดียวที่รู้รูปแบบ API (รอคำตอบ)
-- `app/services/ai_parsers.py` — แปลงคำตอบดิบ AI เป็น AiResult
+- `app/services/ai_client.py` — AI API ภายนอก (gateway แบบ OpenAI chat, D-011), ที่เดียวที่รู้รูปแบบ API
+- `app/services/ai_parsers.py` — แปลงคำตอบดิบ AI เป็น AiResult (MarkdownParser ตั้งต้น / JsonParser)
 - `app/services/flex_builder.py` — สร้างข้อความ LINE ด้วยโค้ด (ไม่ใช่ AI)
 - `app/services/kill_switch.py` — ปิดบอทให้ call center รับทั้งหมด ไม่ต้อง deploy
 - `app/services/notify.py` — แจ้ง call center เมื่อส่งต่อ/คืน AI, เวลาทำการ
@@ -88,6 +88,8 @@
 - `tests/test_config.py`, `tests/test_fakes.py`, `tests/test_smoke.py` — config, ความถูกของ fake, smoke
 - `tests/pipeline/` — ทีละ step + orchestrator + handoff + ไฟล์กฎ (`test_rule_files.py`)
 - `tests/services/` — client ภายนอกด้วย respx (`_helpers.py` ตัวช่วยร่วม)
+- `tests/services/test_ai_parsers_markdown.py` — MarkdownParser กับคำตอบจริง + เคสสังเคราะห์
+- `tests/services/fixtures/ai_responses/` — คำตอบจริงของ AI API (2026-10-23) `_meta` = status, latency_s, request_messages / ข้อมูลแคตตาล็อกสาธารณะ ไม่มีข้อมูลลูกค้า
 - `tests/api/` — webhook, /close, /health ผ่าน create_app + fake (`_app.py`)
 - `tests/worker/` — tasks, cron, app (คิว/งาน periodic/worker ในหน่วยความจำ), deps, admin CLI
 - `tests/privacy/` — รูปแบบ redact

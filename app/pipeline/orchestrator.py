@@ -16,7 +16,8 @@
        - ผู้เรียก (worker / fast path) claim event และตั้ง process_status เอง; run_turn ไม่แตะ process_status
        - ไม่ถือ transaction ข้ามการรอ AI (ทุกการเขียนเป็นคำสั่งสั้นๆ ผ่าน repositories)
        - error อื่นนอกจาก AiError ปล่อยขึ้นไป (ผู้เรียก mark_failed)
-       - รอคำตอบ (ความเร็ว AI API): กลยุทธ์ "reply 'กำลังค้นหา' แล้ว push คำตอบ" ยังไม่ทำ ใช้ loading animation อย่างเดียว
+       - ความเร็ว AI API วัดแล้ว (D-011: 2-43 วิ): กลยุทธ์ "reply 'กำลังค้นหา' แล้ว push คำตอบ" ยังไม่ทำ
+         ใช้ loading animation อย่างเดียว (เกินอายุ replyToken -> send ใช้ push เอง)
        - รอคำตอบ: AI API รับรูปได้ไหม — ตอนนี้ไม่ส่งรูป (SEND_IMAGES_TO_AI = False)
 """
 
@@ -644,8 +645,9 @@ class _Turn:
     async def start_loading(self, deadline_s: float) -> None:
         """loading animation ระหว่างรอ AI (พังไม่เป็นไร)
 
-        รอคำตอบ (ความเร็ว AI API): ถ้า API ช้าเกินอายุ replyToken ต้อง reply SEARCHING ทันทีแล้ว push คำตอบ
-        (send ใช้ push เองเมื่อ replyToken หมดอายุ) — ยังไม่ทำจนกว่าจะรู้ความเร็วจริง
+        ความเร็วที่วัดจริง (D-011): ค้นสินค้า 22-43 วิ ส่วนใหญ่ยัง reply ทัน; ช้ากว่า REPLY_TOKEN_TTL_S send ใช้ push เอง
+        loading animation สูงสุด 60 วิ (TURN_DEADLINE_S 90 ช่วงท้ายจึงไม่มี animation)
+        ยังไม่ทำ: reply SEARCHING ทันทีแล้ว push คำตอบ — ตัดสินเมื่อเห็นสัดส่วนที่ต้อง push ในการใช้งานจริง
         """
         try:
             await self.deps.line.start_loading(

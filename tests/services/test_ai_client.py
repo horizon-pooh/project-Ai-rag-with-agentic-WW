@@ -14,11 +14,13 @@
  - 200 แต่อ่านไม่ออก -> ไม่ลองซ้ำ -> AiBadResponse
  - รวมทุกรอบไม่เกิน deadline
  - Semaphore: งานพร้อมกันไม่เกิน AI_CONCURRENCY
- - request ที่ส่งออกไม่มีข้อความดิบ ไม่มี token LINE (มีแค่ text_redacted)
- - MarkdownParser (ถ้าใช้): 20-30 ตัวอย่างจากคำตอบจริง (รอคำตอบเรื่อง AI API ข้อ 2)
+ - request ที่ส่งออก = OpenAI chat {"model", "messages", "temperature"} ไป {AI_API_URL}/chat/completions
+   ไม่มีข้อความดิบ ไม่มี token LINE ไม่มี state/flags (มีแค่แชทย้อนหลัง + text_redacted)
+ - เลือก parser ตาม AI_RESPONSE_FORMAT (markdown ตั้งต้น / json); system prompt จากไฟล์ (ถ้าตั้ง)
+ - MarkdownParser กับคำตอบจริง: tests/services/test_ai_parsers_markdown.py
 
 แนวคิดจาก: src/ai/aiClient.js, src/ai/softnixParser.js (แบบเก่า)
-สถานะ: มีโค้ดแล้ว — ครบทุกเคสข้างบน (รูปแบบ API เป็นสัญญาเสนอ รอคำตอบ); MarkdownParser เทสต์แค่ว่ายังเป็น stub
+สถานะ: มีโค้ดแล้ว — ครบทุกเคสข้างบน (รูปแบบ request ตาม API จริงที่วัด 2026-10-23, D-011)
 """
 
 from __future__ import annotations
@@ -48,19 +50,52 @@ from app.services.ai_client import (
     STUB_PREFIX,
     HttpAiClient,
     StubAiClient,
+    build_messages,
     make_ai_client,
+    make_parser,
     parse_retry_after,
 )
 from app.services.ai_parsers import JsonParser, MarkdownParser
 from tests.fakes import make_settings
 from tests.services._helpers import FakeTime, RecordingLogger
 
-AI_URL = "https://ai.example.test/v1/chat"
+AI_BASE = "https://ai.example.test/v1"
+AI_URL = AI_BASE + "/chat/completions"  # client ต่อ path เอง
 AI_KEY = "ai-secret-key-xyz"
 LINE_TOKEN = "line-access-token-should-never-leave"
 RAW_TEXT = "สวัสดีค่ะ เบอร์ 0812345678 อยากได้ตู้เย็น"  # ข้อความดิบ (ยังไม่ redact) — ห้ามออกไปหา API
 REDACTED_TEXT = "สวัสดีค่ะ เบอร์ [phone] อยากได้ตู้เย็น"
 
+PRODUCTS_MD = (
+    "แนะนำตู้เย็น 2 รุ่นค่ะ\n\n## Product List\n\n"
+    "### 1. ตู้เย็น 2 ประตู\n"
+    "![ตู้เย็น 2 ประตู](https://shop.example.test/i/RF-100.jpg)\n"
+    "- Brand: X\n- Price: ฿12,990.00\n- Details: ทดสอบ\n- Product code: RF-100\n"
+    "- Product link: [View product details](https://shop.example.test/p/RF-100)\n\n"
+    "### 2. ตู้เย็น 1 ประตู\n"
+    "- Brand: Y\n- Price: ฿5,990.00\n- Product code: RF-200\n"
+    "- Product link: [View product details](https://shop.example.test/p/RF-200)\n"
+)
+
+
+def chat_body(content: str) -> dict:
+    """ซอง chat.completion แบบที่ gateway ตอบจริง"""
+    return {
+        "id": "chatcmpl-test",
+        "object": "chat.completion",
+        "model": "gemma4-31b",
+        "choices": [
+            {
+                "index": 0,
+                "message": {"role": "assistant", "content": content, "tool_calls": None},
+                "finish_reason": "stop",
+            }
+        ],
+        "usage": {"prompt_tokens": 0, "completion_tokens": 0, "total_tokens": 0},
+    }
+
+
+# สัญญาเสนอเดิม (AI_RESPONSE_FORMAT=json)
 PRODUCTS_BODY = {
     "kind": "products",
     "intro": "แนะนำตู้เย็น 2 รุ่นค่ะ",
@@ -80,7 +115,7 @@ PRODUCTS_BODY = {
 
 def settings(**kw):
     values = {
-        "ai_api_url": AI_URL,
+        "ai_api_url": AI_BASE,
         "ai_api_key": AI_KEY,
         "ai_timeout_s": 30,
         "ai_concurrency": 4,
@@ -100,7 +135,7 @@ def request() -> AiRequest:
 
 
 def ok(body: dict | None = None) -> httpx.Response:
-    return httpx.Response(200, json=body if body is not None else PRODUCTS_BODY)
+    return httpx.Response(200, json=body if body is not None else chat_body(PRODUCTS_MD))
 
 
 @pytest.fixture
@@ -154,14 +189,24 @@ async def test_200_valid_returns_ai_result_with_products(http, fake_time, logger
     p = result.products[0]
     assert (p.name, p.price, p.url, p.image_url) == (
         "ตู้เย็น 2 ประตู",
-        Decimal("12990"),
+        Decimal("12990.00"),
         "https://shop.example.test/p/RF-100",
         "https://shop.example.test/i/RF-100.jpg",
     )
-    assert result.products[1].price is None and result.products[1].image_url is None
-    assert result.state_out == {"category": "ตู้เย็น"}
+    assert result.products[1].price == Decimal("5990") and result.products[1].image_url is None
+    assert result.state_out is None and result.escalate_hint is None  # API ไม่มีฟิลด์นี้
     assert result.attempts == 1
     assert result.latency_ms >= 0
+    assert result.raw.startswith("แนะนำตู้เย็น")
+
+
+@respx.mock
+async def test_json_format_uses_json_parser(http, fake_time, logger):
+    respx.post(AI_URL).mock(return_value=httpx.Response(200, json=PRODUCTS_BODY))
+    result = await make_client(http, fake_time, ai_response_format="json").call(request(), 50)
+    assert result.kind is AiKind.PRODUCTS
+    assert result.state_out == {"category": "ตู้เย็น"}
+    assert result.products[1].price is None
     assert json.loads(result.raw)["kind"] == "products"
 
 
@@ -319,10 +364,14 @@ async def test_other_4xx_no_retry_bad_response(http, fake_time, logger, status):
     [
         b"not json at all",
         b"<html>oops</html>",
-        json.dumps({"kind": "dance"}).encode(),  # kind ไม่รู้จัก
-        json.dumps({"intro": "ไม่มี kind"}).encode(),  # ขาดฟิลด์บังคับ
-        json.dumps(["products"]).encode(),  # ไม่ใช่ object
-        json.dumps({"kind": "products", "products": [{"name": "ไม่มี sku", "url": "u"}]}).encode(),
+        json.dumps(["choices"]).encode(),  # ไม่ใช่ object
+        json.dumps({"kind": "answer", "intro": "ไม่ใช่ซอง chat"}).encode(),  # ไม่มี choices
+        json.dumps({"choices": []}).encode(),
+        json.dumps({"choices": [{"message": {"content": "   "}}]}).encode(),  # content ว่าง
+        json.dumps({"choices": [{"message": {"content": None}}]}).encode(),
+        json.dumps({"choices": [{"finish_reason": "stop"}]}).encode(),  # ไม่มี message
+        # มีแต่รายการที่ถูกตัด ไม่มีข้อความเกริ่น -> ไม่มีอะไรใช้ได้
+        json.dumps(chat_body("## Product List\n\n### 1. ถูกตัด\n- Price: ฿1")).encode(),
         b"\xff\xfe\x00bad-utf8",
     ],
 )
@@ -333,6 +382,26 @@ async def test_200_unreadable_no_retry_bad_response(http, fake_time, logger, bod
     assert route.call_count == 1
     assert ei.value.error_class == "parse"
     assert ei.value.attempts == 1
+
+
+@respx.mock
+@pytest.mark.parametrize(
+    "body",
+    [
+        b"not json at all",
+        json.dumps({"kind": "dance"}).encode(),  # kind ไม่รู้จัก
+        json.dumps({"intro": "ไม่มี kind"}).encode(),  # ขาดฟิลด์บังคับ
+        json.dumps(["products"]).encode(),  # ไม่ใช่ object
+        json.dumps({"kind": "products", "products": [{"name": "ไม่มี sku", "url": "u"}]}).encode(),
+        b"\xff\xfe\x00bad-utf8",
+    ],
+)
+async def test_200_unreadable_json_format_bad_response(http, fake_time, logger, body):
+    route = respx.post(AI_URL).mock(return_value=httpx.Response(200, content=body))
+    with pytest.raises(AiBadResponse) as ei:
+        await make_client(http, fake_time, ai_response_format="json").call(request(), 50)
+    assert route.call_count == 1
+    assert ei.value.error_class == "parse"
 
 
 # --- deadline ---
@@ -463,14 +532,84 @@ async def test_request_contains_only_redacted_text_and_no_line_token(http, fake_
     await make_client(http, fake_time).call(request(), 50)
 
     sent = route.calls[0].request
-    body = json.loads(sent.content)
-    assert body == request().model_dump(mode="json")
-    assert body["text_redacted"] == REDACTED_TEXT
-    assert sent.headers["authorization"] == f"Bearer {AI_KEY}"
     everything = sent.content.decode() + repr(dict(sent.headers))
     assert LINE_TOKEN not in everything
     assert RAW_TEXT not in everything
     assert "0812345678" not in everything
+    # state / flags / รูป ไม่ส่ง (gateway ไม่มีช่องรับ และไม่รู้ว่าจะกวน prompt อย่างไร)
+    assert set(json.loads(sent.content)) == {"model", "messages", "temperature"}
+    for name in ("category", "state", "just_resumed", "flags", "images"):
+        assert name not in sent.content.decode()
+
+
+@respx.mock
+async def test_request_is_openai_chat_with_history_and_redacted_text(http, fake_time, logger):
+    route = respx.post(AI_URL).mock(return_value=ok())
+    await make_client(http, fake_time).call(request(), 50)
+
+    sent = route.calls[0].request
+    assert str(sent.url) == AI_URL
+    assert json.loads(sent.content) == {
+        "model": "gemma4-31b",
+        "messages": [
+            {"role": "assistant", "content": "ต้องการหาสินค้าอะไรคะ"},
+            {"role": "user", "content": REDACTED_TEXT},
+        ],
+        "temperature": 0.2,
+    }
+    assert sent.headers["authorization"] == f"Bearer {AI_KEY}"
+
+
+def test_build_messages_maps_directions_in_order():
+    req = AiRequest(
+        text_redacted="เอาสีดำ",
+        recent_messages=[
+            ChatTurn(direction=Direction.IN, text_redacted="มีตู้เย็นไหม"),
+            ChatTurn(direction=Direction.OUT, text_redacted="มีค่ะ\nสินค้าแนะนำ: A, B"),
+            ChatTurn(direction=Direction.IN, text_redacted="งบ 20000"),
+        ],
+    )
+    assert build_messages(req) == [
+        {"role": "user", "content": "มีตู้เย็นไหม"},
+        {"role": "assistant", "content": "มีค่ะ\nสินค้าแนะนำ: A, B"},
+        {"role": "user", "content": "งบ 20000"},
+        {"role": "user", "content": "เอาสีดำ"},
+    ]
+    assert build_messages(AiRequest(text_redacted="x"), "กติกา") == [
+        {"role": "system", "content": "กติกา"},
+        {"role": "user", "content": "x"},
+    ]
+
+
+@respx.mock
+async def test_system_prompt_file_prepended(http, fake_time, logger, tmp_path):
+    prompt = tmp_path / "system.md"
+    prompt.write_text("  ตอบสั้นๆ  \n", encoding="utf-8")
+    route = respx.post(AI_URL).mock(return_value=ok())
+    await make_client(http, fake_time, ai_system_prompt_file=prompt).call(request(), 50)
+    messages = json.loads(route.calls[0].request.content)["messages"]
+    assert messages[0] == {"role": "system", "content": "ตอบสั้นๆ"}
+    assert messages[-1] == {"role": "user", "content": REDACTED_TEXT}
+
+
+def test_missing_system_prompt_file_fails_at_start(tmp_path):
+    with pytest.raises(FileNotFoundError):
+        HttpAiClient(settings(ai_system_prompt_file=tmp_path / "nope.md"))
+
+
+@respx.mock
+async def test_model_and_temperature_from_settings(http, fake_time, logger):
+    route = respx.post(AI_URL).mock(return_value=ok())
+    await make_client(http, fake_time, ai_model="other-model", ai_temperature=0).call(request(), 50)
+    body = json.loads(route.calls[0].request.content)
+    assert (body["model"], body["temperature"]) == ("other-model", 0)
+
+
+def test_make_parser_follows_setting():
+    assert isinstance(make_parser(settings()), MarkdownParser)
+    assert isinstance(make_parser(settings(ai_response_format="json")), JsonParser)
+    with pytest.raises(ValueError):
+        settings(ai_response_format="xml")
 
 
 @respx.mock
@@ -545,11 +684,6 @@ def test_json_parser_error_does_not_echo_values():
         JsonParser().parse(body, latency_ms=3, attempts=1)
     assert "0812345678" not in str(ei.value)
     assert ei.value.latency_ms == 3
-
-
-def test_markdown_parser_is_stub_waiting_for_answer():
-    with pytest.raises(NotImplementedError, match="รอคำตอบ"):
-        MarkdownParser().parse("**สินค้า**", latency_ms=1, attempts=1)
 
 
 # --- Stub / factory ---
