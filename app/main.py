@@ -8,6 +8,8 @@
  - เปิด/ปิด connection pool ของ Postgres (และคิว procrastinate บน pool เดียวกัน) ตอน startup/shutdown
  - ห้ามมี dev routes ใน production
  - รันด้วย uvicorn (คำสั่งอยู่ใน docker-compose.yml)
+ - รันบน Windows (เครื่อง dev): เพิ่ม `--loop asyncio:SelectorEventLoop` เพราะ uvicorn บน Windows ใช้
+   ProactorEventLoop ซึ่ง psycopg async ใช้ไม่ได้ (Linux container ไม่ต้องใช้)
 
 ข้อตัดสินในงาน 8:
  - api/fast_path ไม่มี route ของตัวเอง (webhook เรียกเป็น BackgroundTask)
