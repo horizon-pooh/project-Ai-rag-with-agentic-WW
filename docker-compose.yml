@@ -84,6 +84,16 @@ services:
       minio:
         condition: service_started
 
+  watchdog:
+    # เฝ้าคิวจากนอก worker (D-012): worker ตายทั้งหมด / คิวไม่เดิน / ต่อ DB ไม่ได้ -> แจ้งผู้ดูแล (ALERT_CHANNEL)
+    # ไม่รอ postgres healthy / migrate: ต้องรายงานได้แม้ DB ไม่ขึ้น (นับเป็น db_unreachable)
+    build: .
+    command: ["python", "-m", "app.worker.watchdog"]
+    restart: unless-stopped
+    env_file: .env
+    depends_on:
+      - postgres
+
   postgres:
     image: postgres:16
     restart: unless-stopped

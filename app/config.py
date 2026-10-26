@@ -117,6 +117,28 @@ class Settings(BaseSettings):
     log_level: str = "INFO"
     sentry_dsn: SecretStr | None = None
 
+    # --- watchdog (D-012): แจ้งคนเมื่อ worker ตายทั้งหมด / คิวไม่เดิน — service แยก `python -m app.worker.watchdog` ---
+    # ช่องทาง: ว่าง/log = log + Sentry; email = log + Sentry + อีเมลผ่าน SMTP (รอคำตอบ: SMTP ของบริษัท)
+    alert_channel: str | None = None
+    # ผู้รับ คั่นด้วย , (เช่น dev@x.co,lead@x.co)
+    alert_email_to: str | None = None
+    alert_email_from: str | None = None
+    smtp_host: str | None = None
+    smtp_port: int = Field(default=587, ge=1, le=65535)
+    smtp_user: str | None = None
+    smtp_password: SecretStr | None = None
+    smtp_starttls: bool = True
+    # ตรวจทุกเท่านี้ (วินาที)
+    watchdog_interval_s: float = Field(default=60, gt=0)
+    # ปัญหาต้องอยู่ต่อเนื่องนานเท่านี้ก่อนแจ้ง (deploy / restart worker ปกติมีช่วงไม่มี worker สั้นๆ)
+    watchdog_grace_s: float = Field(default=180, ge=0)
+    # heartbeat ล่าสุดของ worker เก่ากว่านี้ = ตายทั้งหมด (procrastinate ส่ง heartbeat ทุก 10 วิ)
+    watchdog_heartbeat_stale_s: float = Field(default=120, gt=0)
+    # raw event pending เก่ากว่านี้ = คิวไม่เดิน (requeue_pending ใส่คิวซ้ำที่ 2 นาทีอยู่แล้ว)
+    watchdog_pending_stale_s: float = Field(default=600, gt=0)
+    # ปัญหายังไม่หาย -> แจ้งซ้ำทุกเท่านี้
+    watchdog_repeat_s: float = Field(default=3600, gt=0)
+
     # --- ไฟล์กฎ ---
     rules_dir: Path = Path("prompts/rules")
 

@@ -129,6 +129,7 @@ KILL_SWITCH=false
 | 12 | `docker compose exec worker python -m app.worker.admin kill-switch on` แล้วส่ง `ตู้เย็น` | พิมพ์ `kill-switch effective=on env=off db=on`; ลูกค้า **ไม่ได้คำตอบ**; log `send.dropped` decision `dropped_kill_switch` |
 | 13 | `... admin kill-switch off` แล้วส่ง `ตู้เย็น` | พิมพ์ `kill-switch effective=off env=off db=off`; ได้คำตอบโหมดทดสอบตามข้อ 4 (ข้อความที่ถูกทิ้งตอนเปิด ไม่ถูกส่งย้อนหลัง) |
 | 14 | ส่งรูป | ตอบ `ต้องการให้ช่วยหาสินค้าอะไรคะ` (รูปยังไม่ส่งให้ AI — รอคำตอบเรื่อง AI API); รูปถูกเก็บ: ดูข้อ 5.1 |
+| 15 | `docker compose stop worker` รอ 4 นาที แล้ว `docker compose logs watchdog \| grep ops_alert` | เห็น `ops_alert` subject `ระบบตอบแชทมีปัญหา: no_worker` (ตั้ง `ALERT_CHANNEL=email` แล้วได้อีเมลด้วย); `docker compose start worker` รอ 1–2 นาที -> `หายแล้ว: no_worker` |
 
 `... admin kill-switch status` ดูสถานะได้ตลอด; ถ้า `env=on` (KILL_SWITCH=true ใน `.env`) ปิดด้วยคำสั่งนี้ไม่ได้
 

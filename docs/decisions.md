@@ -199,7 +199,9 @@
   anonymize `messages` และ `ai_steps` ตาม `TRACE_RETENTION_MONTHS`, push ใช้ `X-Line-Retry-Key`, 409 = ส่งไปแล้ว
 - **ยังไม่ทำ (เรียงตามความสำคัญ):**
   1. ซ้อมกู้จริงบน VM ครั้งแรก + เลือกเครื่องปลายทางนอก VM (**รอคำตอบ**)
-  2. แจ้งเตือนคนเมื่อ worker ตายทั้งหมด — `retry_stalled_jobs` ต้องมี worker อย่างน้อยหนึ่งตัวรันอยู่ (LINE Notify ปิดแล้ว มี.ค. 2025 ใช้อีเมลหรือ push แทน)
+  2. ~~แจ้งเตือนคนเมื่อ worker ตายทั้งหมด~~ **ทำแล้ว 2026-10-26**: service `watchdog` (`app/worker/watchdog.py`) ตรวจทุกนาที
+     ไม่มี worker / heartbeat เก่า / pending ค้าง / DB ล่ม → แจ้งเมื่อพ้น grace 3 นาที ซ้ำทุกชั่วโมง แจ้งหาย;
+     ช่องทาง `services/alert.py` = log + Sentry [+ อีเมล] ไม่ใช้ LINE (ต้องผ่าน sendGuard, LINE Notify ปิดแล้ว) — **รอคำตอบ**: SMTP + ผู้รับ
   3. บันทึกการลบตาม PDPA (hash ของ user, เวลา) ให้เล่นซ้ำหลังกู้ backup ได้ — ตอนนี้กู้แล้วลูกค้าที่ลบไปจะกลับมา
   4. ย้ายลูกค้าที่ค้าง ESCALATED จาก line_ เข้า line_prod ตอนเปลี่ยนระบบ (ไม่งั้น AI แทรกวันแรก)
   5. MinIO → โฟลเดอร์บนดิสก์ + `attachments.storage_key` (ลด service; community edition ของ MinIO ถูกลดฟีเจอร์ปี 2025 — **ยังไม่ได้ตรวจสอบเอง**)

@@ -39,6 +39,7 @@
 - `app/worker/__main__.py` — `python -m app.worker` เริ่ม worker (คำสั่งใน docker-compose.yml)
 - `app/worker/tasks.py` — process_event(raw_event_id): งานหลักต่อ event + enqueue_event (lock ต่อ user, queueing_lock ต่อ raw event)
 - `app/worker/cron.py` — งานเบื้องหลังตามเวลา (requeue/release_stuck/handoff_timeout/retry_stalled_jobs, retention: raw 90 วัน / รูป / anonymize / reply token หมดอายุ)
+- `app/worker/watchdog.py` — service แยก `python -m app.worker.watchdog`: เฝ้าคิวจากนอก worker (ไม่มี worker / heartbeat เก่า / pending ค้าง / DB ล่ม) แจ้งผู้ดูแลหลังพ้น grace + แจ้งหาย (D-012) / แตะเมื่อเพิ่มการตรวจ
 - `app/worker/admin.py` — คำสั่งผู้ดูแล `python -m app.worker.admin` pdpa-delete / kill-switch / close-link / conversations
 - `app/worker/deps.py` — ประกอบ Deps จาก Settings ครั้งเดียว (ใช้ร่วม worker และ api)
 - `app/pipeline/` — ลำดับขั้นตัดสินใจ (ไม่เรียก LINE ไม่เขียน SQL)
@@ -63,7 +64,7 @@
 - `app/repositories/` — ที่เดียวที่เขียน SQL (หนึ่งไฟล์ต่อกลุ่มตาราง)
 - `app/repositories/db.py` — เปิด/ปิด pool Postgres (psycopg 3 async) fail fast
 - `app/repositories/flags.py` — ops_flags (เช่น kill_switch)
-- `app/repositories/health.py` — ตรวจต่อ Postgres ได้ (/health/ready)
+- `app/repositories/health.py` — ตรวจต่อ Postgres ได้ (/health/ready) + queue_health ให้ watchdog (อ่าน procrastinate_workers / pending)
 - `app/repositories/raw_events.py` — line_raw_events
 - `app/repositories/users.py` — line_users, line_consents, ลบตาม PDPA (delete_user)
 - `app/repositories/conversations.py` — conversations
@@ -78,6 +79,7 @@
 - `app/services/ai_parsers.py` — แปลงคำตอบดิบ AI เป็น AiResult (MarkdownParser ตั้งต้น / JsonParser)
 - `app/services/flex_builder.py` — สร้างข้อความ LINE ด้วยโค้ด (ไม่ใช่ AI)
 - `app/services/kill_switch.py` — ปิดบอทให้ call center รับทั้งหมด ไม่ต้อง deploy
+- `app/services/alert.py` — แจ้งผู้ดูแลระบบ (ALERT_CHANNEL: log + Sentry / email ผ่าน SMTP) ไม่ใช่ LINE / แตะเมื่อเพิ่มช่องทาง
 - `app/services/notify.py` — แจ้ง call center เมื่อส่งต่อ/คืน AI, เวลาทำการ
 - `app/services/storage.py` — เก็บ/ลบรูปใน MinIO
 
