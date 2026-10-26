@@ -115,3 +115,4 @@
 - `dev/` — แบบเก่า: debug routes และ stubs
 - `test/` — แบบเก่า: เทสต์ JS
 - `deploy/` — แบบเก่า: pm2 ecosystem.config.js
+- `deploy/backup/` — สำรอง/ซ้อมกู้ Postgres (D-012): `pg_backup.sh` (cron ทุกคืน, gpg, ส่งออกนอก VM), `restore_drill.sh`, README วิธีตั้งและกู้จริง / แตะเมื่อเปลี่ยนวิธีสำรอง

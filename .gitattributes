@@ -1,0 +1,2 @@
+# สคริปต์ shell รันบน VM Linux — CRLF ทำให้ bash พัง (core.autocrlf=true บนเครื่อง dev Windows)
+*.sh text eol=lf
