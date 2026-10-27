@@ -32,10 +32,14 @@ export interface CategoryGroupResolution {
   equivalent_root_ids: string[];
   candidate_total: number;
 }
+export interface SelectorIssue { path: string; reason: string; candidates: Array<{id: string; label: string}> }
+
 export interface CategoryResolution {
-  status: "resolved" | "needs_clarification";
-  resolver_version: "category-lexical-v1";
-  source_path: "/filters/category_query";
+  status: "resolved" | "needs_clarification" | "constraint_conflict";
+  resolver_version: "category-lexical-v1" | "category-selectors-v1";
+  source_path: "/filters/category_query" | "/filters/category_ids";
+  input_category_ids?: string[];
+  selector_issues?: SelectorIssue[];
   query: string;
   groups: CategoryGroupResolution[];
   category_ids: string[];

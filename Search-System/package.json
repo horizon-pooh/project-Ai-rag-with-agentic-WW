@@ -16,7 +16,8 @@
     "db:check-access": "tsx src/scripts/check-database-access.ts",
     "db:check-metadata": "tsx src/scripts/check-metadata.ts",
     "db:check-categories": "tsx src/scripts/check-categories.ts",
-    "db:check-filters": "tsx src/scripts/check-filters.ts"
+    "db:check-filters": "tsx src/scripts/check-filters.ts",
+    "db:check-selector-ids": "tsx src/scripts/check-selector-ids.ts"
   },
   "keywords": [
     "search-engine"

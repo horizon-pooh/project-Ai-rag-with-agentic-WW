@@ -1,0 +1,14 @@
+{
+  "version": "1",
+  "query": "ทีวี",
+  "semantic_query": "ทีวีสำหรับดูหนัง",
+  "filters": {
+    "category_ids": ["TV0108"],
+    "feature_ids_all": ["FT0023"],
+    "price": {"max": 25000, "currency": "THB"},
+    "specs": [{"attribute_id": "AT0048", "op": "eq", "value": 55, "unit": "นิ้ว"}]
+  },
+  "page": 1,
+  "limit": 5,
+  "sort": "relevance"
+}

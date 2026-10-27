@@ -3,7 +3,7 @@ import { searchRequestSchema } from "../schemas/search-request.schema.js";
 import { searchResponseSchema } from "../schemas/search-response.schema.js";
 import type { ContractIssue, NormalizedToolSearchRequest, ToolSearchRequest, ToolSearchResponse, ValidationResult } from "../types/tool-search.types.js";
 
-/** Reuse these options when wiring Fastify in Commit 16. Never mutate caller JSON. */
+/** Reuse these options when wiring Fastify in Commit 17. Never mutate caller JSON. */
 export const TOOL_AJV_OPTIONS = {
     strict: true,
     allErrors: true,
@@ -47,8 +47,8 @@ export function parseToolSearchRequest(input: unknown): ValidationResult<Normali
     }
     if (price) price.currency ??= "THB";
     const filters = request.filters;
-    const hasConstraint = Boolean(filters.category_query || filters.brand_queries?.length ||
-        filters.feature_queries_all?.length || filters.specs?.length ||
+    const hasConstraint = Boolean(filters.category_query || filters.category_ids?.length || filters.brand_queries?.length ||
+        filters.feature_queries_all?.length || filters.feature_ids_all?.length || filters.specs?.length ||
         price?.min != null || price?.max != null || request.exact);
     if (!request.query.trim() && !request.semantic_query?.trim() && !hasConstraint) {
         issues.push(issue("/", "empty_search", "Supply a query, semantic query, exact selector or filter"));

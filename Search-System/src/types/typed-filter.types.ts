@@ -35,7 +35,8 @@ export interface TypedFilterBranch {
   price: {min: string | null; max: string | null; currency: "THB"};
 }
 export interface TypedFilterResolution {
-  resolver_version: "typed-filters-v1";
+  resolver_version: "typed-filters-v1" | "typed-filters-ids-v1";
+  selector_issues?: FilterDiagnostic[];
   status: "resolved" | "needs_clarification" | "constraint_conflict";
   all_requested_filters_applied: boolean;
   branches: TypedFilterBranch[];

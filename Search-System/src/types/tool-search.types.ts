@@ -1,15 +1,21 @@
 import type { FactValue, ProductFacts } from "./product-facts.types.js";
 
-export type SpecConstraint =
-  | { attribute_query: string; op: "eq" | "gte" | "lte"; value: number; unit?: string }
-  | { attribute_query: string; op: "eq"; value: string | boolean };
+type AttributeSelector =
+  | { attribute_query: string; attribute_id?: string }
+  | { attribute_id: string; attribute_query?: string };
+export type SpecConstraint = AttributeSelector & (
+  | { op: "eq" | "gte" | "lte"; value: number; unit?: string }
+  | { op: "eq"; value: string | boolean }
+);
 
 export interface ToolSearchFilters {
   category_query?: string;
+  category_ids?: string[];
   brand_queries?: string[];
   price?: { min?: number | null; max?: number | null; currency?: "THB" };
   specs?: SpecConstraint[];
   feature_queries_all?: string[];
+  feature_ids_all?: string[];
 }
 
 export interface ToolSearchRequest {
