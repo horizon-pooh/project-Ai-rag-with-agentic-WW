@@ -19,7 +19,9 @@
     "db:check-filters": "tsx src/scripts/check-filters.ts",
     "db:check-selector-ids": "tsx src/scripts/check-selector-ids.ts",
     "db:check-keyword": "tsx src/scripts/check-keyword-search.ts",
-    "db:check-catalog": "tsx src/scripts/check-catalog-repository.ts"
+    "db:check-catalog": "tsx src/scripts/check-catalog-repository.ts",
+    "api:configure": "tsx src/scripts/configure-tool-api.ts",
+    "api:check": "tsx src/scripts/check-tool-api.ts"
   },
   "keywords": [
     "search-engine"

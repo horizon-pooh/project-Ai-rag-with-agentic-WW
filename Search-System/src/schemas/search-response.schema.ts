@@ -106,3 +106,6 @@ export const searchResponseSchema = {
         objectSchema({ ...base, status: { enum: ["invalid_request", "constraint_conflict", "search_unavailable"] }, issues: list(issue, 1) }),
     ],
 };
+
+/** Reused by the details endpoint; the search v1 shape remains unchanged. */
+export { product as productFactsSchema };
