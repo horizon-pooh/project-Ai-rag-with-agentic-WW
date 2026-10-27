@@ -1,0 +1,43 @@
+import {resolveCategoryFilters} from "../services/category-selector.service.js";
+import {parseToolSearchRequest} from "../validation/tool-search.validation.js";
+import {CatalogInputError,CatalogDataError,type CatalogPool,type CatalogClient,type CatalogSearchSnapshot} from "../types/catalog-read.types.js";
+import type {KeywordSearchEnvelope} from "../types/keyword-search.types.js";
+import {assertArticle,createProductFactsRepository} from "./product-facts.repository.js";
+
+/** One checked-out client, one snapshot; the caller owns pool creation, identity check and shutdown. */
+export function createPostgresCatalogRepository(pool: CatalogPool) {
+  async function read<T>(action:(client:CatalogClient)=>Promise<T>):Promise<T> {
+    const client=await pool.connect();let destroy=false;
+    try {
+      await client.query("BEGIN ISOLATION LEVEL REPEATABLE READ READ ONLY");
+      const value=await action(client);
+      await client.query("COMMIT");return value;
+    } catch(error) {
+      try { await client.query("ROLLBACK"); } catch { destroy=true; }
+      throw error;
+    } finally { client.release(destroy); }
+  }
+  return {
+    async search(input:unknown):Promise<CatalogSearchSnapshot> {
+      const parsed=parseToolSearchRequest(input);if(!parsed.valid)throw new CatalogInputError(parsed.issues);
+      return read(async client=>{
+        const category_resolution=await resolveCategoryFilters(client,parsed.value.filters);
+        if(category_resolution.status!=="resolved")return {request:parsed.value,category_resolution,search:null,products:[]};
+        const search=(await client.query<{result:KeywordSearchEnvelope}>(
+          "SELECT catalog_search.search_products_keyword($1::text[],$2::jsonb) AS result",
+          [category_resolution.category_ids,JSON.stringify(parsed.value)])).rows[0]?.result;
+        if(!search || !Array.isArray(search.results) || search.results.length>parsed.value.limit)throw new CatalogDataError();
+        const ids=search.results.map(hit=>hit.article_id);
+        if(new Set(ids).size!==ids.length)throw new CatalogDataError();
+        const products=await createProductFactsRepository(client).findMany(ids);
+        // Same snapshot: a missing published fact is corruption, not permission to drop/reorder results.
+        if(products.length!==ids.length || products.some((p,index)=>p.article_id!==ids[index] ||
+          p.category_id!==search.results[index]!.category_id || p.is_mock!==search.results[index]!.is_mock))throw new CatalogDataError();
+        return {request:parsed.value,category_resolution,search,products};
+      });
+    },
+    async findDetails(article: number) {
+      assertArticle(article);return read(client=>createProductFactsRepository(client).findDetails(article));
+    },
+  };
+}
