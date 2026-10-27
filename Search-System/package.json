@@ -25,7 +25,10 @@
     "embedding:check": "node --import tsx src/scripts/check-embedding-provider.ts",
     "embedding:serve": "bash scripts/start-embedding-server.sh",
     "embedding:serve:remote": "bash scripts/start-embedding-remote.sh",
-    "embedding:tunnel": "bash scripts/tunnel-embedding.sh"
+    "embedding:tunnel": "bash scripts/tunnel-embedding.sh",
+    "db:check-embedding-storage": "node --import tsx src/scripts/check-embedding-storage.ts",
+    "db:check-embedding-worker": "node --import tsx src/scripts/check-embedding-worker.ts",
+    "test:embedding-storage:native": "EMBEDDING_STORAGE_TEST_MODE=native node --import tsx --test tests/embedding-storage.test.ts"
   },
   "keywords": [
     "search-engine"
@@ -35,6 +38,7 @@
   "type": "module",
   "devDependencies": {
     "@electric-sql/pglite": "0.5.8",
+    "@electric-sql/pglite-pgvector": "0.0.9",
     "@types/node": "^26.6.2",
     "@types/pg": "8.23.1",
     "node-pg-migrate": "9.0.0",
