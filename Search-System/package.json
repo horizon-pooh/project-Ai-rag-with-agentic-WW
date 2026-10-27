@@ -21,7 +21,11 @@
     "db:check-keyword": "tsx src/scripts/check-keyword-search.ts",
     "db:check-catalog": "tsx src/scripts/check-catalog-repository.ts",
     "api:configure": "tsx src/scripts/configure-tool-api.ts",
-    "api:check": "tsx src/scripts/check-tool-api.ts"
+    "api:check": "tsx src/scripts/check-tool-api.ts",
+    "embedding:check": "node --import tsx src/scripts/check-embedding-provider.ts",
+    "embedding:serve": "bash scripts/start-embedding-server.sh",
+    "embedding:serve:remote": "bash scripts/start-embedding-remote.sh",
+    "embedding:tunnel": "bash scripts/tunnel-embedding.sh"
   },
   "keywords": [
     "search-engine"
