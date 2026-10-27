@@ -14,7 +14,8 @@
     "db:migrate:up": "tsx src/scripts/migrate-database.ts up",
     "db:migrate:down": "tsx src/scripts/migrate-database.ts down",
     "db:check-access": "tsx src/scripts/check-database-access.ts",
-    "db:check-metadata": "tsx src/scripts/check-metadata.ts"
+    "db:check-metadata": "tsx src/scripts/check-metadata.ts",
+    "db:check-categories": "tsx src/scripts/check-categories.ts"
   },
   "keywords": [
     "search-engine"
