@@ -26,7 +26,7 @@ from app.pipeline.orchestrator import TurnOutcome
 from app.pipeline.schemas import ProcessStatus
 from app.repositories import Repos
 from app.worker import app as worker_app
-from app.worker import tasks
+from app.worker import cron, tasks
 from tests.fakes import make_deps
 from tests.repositories.conftest import Db
 
@@ -139,6 +139,31 @@ async def test_queueing_lock_dedupes_on_postgres(pool: AsyncConnectionPool, db: 
     ]
     # ไม่มี line_user_id ตัวจริงในตารางของ procrastinate
     assert all("U1" not in str(r["lock"]) for r in rows)
+
+
+async def test_retry_stalled_job_superseded_by_requeue_releases_user_lock(
+    pool: AsyncConnectionPool, db: Db
+) -> None:
+    """เคสที่เจอจริง 2026-10-28: งานค้าง doing (worker ตาย) + requeue_pending ใส่งาน todo ของ raw event เดิมไว้แล้ว
+    -> retry ชน queueing_lock ทุกรอบ lock ของ user ไม่ถูกปล่อย ข้อความถัดไปของ user นั้นค้างทั้งหมด"""
+    async with worker_app.open_queue(pool) as queue:
+        jm = queue.job_manager
+        assert await tasks.enqueue_event(queue, 1, "U1") is True
+        dead = await jm.register_worker()
+        stalled = await jm.fetch_job(queues=None, worker_id=dead)
+        assert stalled is not None
+        # งานเดิมเป็น doing แล้ว -> queueing_lock ไม่กัน ใส่งานของ raw event เดิมได้อีกตัว
+        assert await tasks.enqueue_event(queue, 1, "U1") is True
+        await db.fetch(
+            "UPDATE procrastinate_workers SET last_heartbeat = now() - interval '1 minute' WHERE id = %s",
+            (dead,),
+        )
+
+        assert await cron.retry_stalled_jobs(jm) == 1
+
+    rows = await db.fetch("SELECT id, status::text AS status FROM procrastinate_jobs ORDER BY id")
+    assert [r["status"] for r in rows] == ["failed", "todo"]
+    assert rows[0]["id"] == stalled.id
 
 
 async def test_end_to_end_events_of_one_user_never_overlap(

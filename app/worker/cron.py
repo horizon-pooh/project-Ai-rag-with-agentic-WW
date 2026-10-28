@@ -30,6 +30,9 @@
  - retry_stalled_jobs (ทุกนาที): งาน doing ของ worker ที่หยุดส่ง heartbeat (ตายกลางทาง) -> retry ตามเอกสาร
    procrastinate (howto/production/retry_stalled_jobs) — สำคัญ: งานที่ค้าง doing ยังถือ lock ของ user ไว้
    งานถัดไปของ user นั้นรอจนกว่าจะ retry; release_stuck + requeue_pending ยังเป็นตาข่ายฝั่งแถว line_raw_events
+ - retry ชน queueing_lock (requeue_pending ใส่งาน todo ของ raw event เดียวกันไว้แล้วระหว่างที่งานเดิมค้าง doing)
+   -> retry ไม่ได้ทุกรอบ lock ของ user ค้างตลอด (เจอจริง 2026-10-28) จึงปิดงานเดิมเป็น failed ให้ปล่อย lock
+   ส่วน event นั้นงาน todo ตัวใหม่ทำแทน
  - retention ลบ reply_tokens ที่หมดอายุแล้วด้วย (replyToken ย้ายจาก Redis มา Postgres)
 
 แนวคิดจาก: src/jobs/, src/ops/dailyReport.js (แบบเก่า)
@@ -44,6 +47,9 @@ from datetime import datetime, timedelta
 from typing import TYPE_CHECKING, Protocol
 
 import structlog
+from procrastinate.exceptions import UniqueViolation
+from procrastinate.jobs import Status
+from procrastinate.manager import QUEUEING_LOCK_CONSTRAINT
 
 from app.pipeline import handoff, replies
 from app.pipeline.ports import Deps
@@ -169,23 +175,35 @@ async def release_stuck(deps: Deps, queue: App) -> int:
 
 
 async def retry_stalled_jobs(job_manager: JobManager) -> int:
-    """งาน doing ของ worker ที่ไม่ส่ง heartbeat เกิน STALLED_HEARTBEAT_S -> retry (กลับเป็น todo) คืนจำนวน
+    """งาน doing ของ worker ที่ไม่ส่ง heartbeat เกิน STALLED_HEARTBEAT_S -> retry (กลับเป็น todo)
+    คืนจำนวนงานที่ปล่อย lock ได้ (retry + ปิดเพราะมีงานใหม่แทน)
 
     ตามเอกสาร procrastinate howto/production/retry_stalled_jobs; งานที่ retry รันซ้ำได้ปลอดภัย (claim ใน DB)
     แถว line_raw_events ที่ค้าง processing จากงานนั้น release_stuck ปล่อยให้ตามเวลา
+    retry ชน queueing_lock = มีงาน todo ของ raw event เดียวกันรออยู่แล้ว -> ปิดงานเดิมเป็น failed (ดูหัวไฟล์)
     """
     stalled = list(await job_manager.get_stalled_jobs(seconds_since_heartbeat=STALLED_HEARTBEAT_S))
     retried = 0
+    superseded = 0
     for job in stalled:
         try:
             await job_manager.retry_job(job)
             retried += 1
+        except UniqueViolation as e:
+            if e.constraint_name != QUEUEING_LOCK_CONSTRAINT:
+                log.exception("retry_stalled_job_failed", job_id=job.id)
+                continue
+            try:
+                await job_manager.finish_job(job, status=Status.FAILED, delete_job=False)
+                superseded += 1
+            except Exception:
+                log.exception("stalled_job_supersede_failed", job_id=job.id)
         except Exception:
             # เช่น worker อื่น retry ไปก่อน (สถานะไม่ใช่ doing แล้ว)
             log.exception("retry_stalled_job_failed", job_id=job.id)
     if stalled:
-        log.warning("stalled_jobs_found", count=len(stalled), retried=retried)
-    return retried
+        log.warning("stalled_jobs_found", count=len(stalled), retried=retried, superseded=superseded)
+    return retried + superseded
 
 
 async def handoff_timeout(deps: Deps) -> int:

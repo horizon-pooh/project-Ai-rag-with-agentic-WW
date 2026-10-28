@@ -376,3 +376,53 @@ async def test_retry_stalled_jobs_only_dead_workers() -> None:
     assert await cron.retry_stalled_jobs(jm) == 1
     assert connector.jobs[job_dead.id]["status"] == "todo"
     assert connector.jobs[job_alive.id]["status"] == "doing"
+
+
+class _RetryConflictJobManager:
+    """job manager ที่ retry_job ชน unique constraint (InMemoryConnector ไม่เช็ค queueing_lock ตอน retry)"""
+
+    def __init__(self, jm: Any, constraint_name: str) -> None:
+        self._jm = jm
+        self._constraint_name = constraint_name
+
+    async def get_stalled_jobs(self, **kwargs: Any) -> Any:
+        return await self._jm.get_stalled_jobs(**kwargs)
+
+    async def retry_job(self, job: Any) -> None:
+        from procrastinate.exceptions import UniqueViolation
+
+        raise UniqueViolation(constraint_name=self._constraint_name, queueing_lock="raw:1")
+
+    async def finish_job(self, job: Any, status: Any, delete_job: bool) -> None:
+        await self._jm.finish_job(job, status=status, delete_job=delete_job)
+
+
+async def _stalled_job(queue: Any, connector: Any) -> Any:
+    jm = queue.job_manager
+    await queue.configure_task("process_event", lock="user:a").defer_async(raw_event_id=1)
+    dead = await jm.register_worker()
+    job = await jm.fetch_job(queues=None, worker_id=dead)
+    assert job is not None
+    connector.workers[dead] = datetime.now(UTC) - timedelta(seconds=cron.STALLED_HEARTBEAT_S + 5)
+    return job
+
+
+async def test_retry_stalled_jobs_closes_job_superseded_by_requeue() -> None:
+    from procrastinate.manager import QUEUEING_LOCK_CONSTRAINT
+
+    queue, connector = make_queue()
+    job = await _stalled_job(queue, connector)
+    jm = _RetryConflictJobManager(queue.job_manager, QUEUEING_LOCK_CONSTRAINT)
+
+    # มีงาน todo ของ raw event เดียวกันแล้ว -> retry ไม่ได้ ปิดงานเดิมเป็น failed เพื่อปล่อย lock ของ user
+    assert await cron.retry_stalled_jobs(jm) == 1
+    assert connector.jobs[job.id]["status"] == "failed"
+
+
+async def test_retry_stalled_jobs_leaves_job_on_other_unique_violation() -> None:
+    queue, connector = make_queue()
+    job = await _stalled_job(queue, connector)
+    jm = _RetryConflictJobManager(queue.job_manager, "some_other_constraint")
+
+    assert await cron.retry_stalled_jobs(jm) == 0
+    assert connector.jobs[job.id]["status"] == "doing"
