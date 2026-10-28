@@ -1,31 +1,23 @@
-# Native storage tests (isolated PostgreSQL18.6 + pgvector0.8.2 only)
+# ทดสอบกับ PostgreSQL แยก
 
-The default npm test suite is self-contained PGlite. Additional native verification uses the same storage test
-file over pg.Client, with real vector0.8.2/crypto/trigram and native roles/RLS/migrations.
-It must use a NEW DISPOSABLE PostgreSQL cluster, never the live BPLUTONIX catalog instance.
-Fixtures create global test roles, catalog tables and model/vector samples. Do not grant a test administrator
-on the production cluster merely to run these tests.
+`npm test` ใช้ PGlite เป็นหลัก การทดสอบ native ใช้ PostgreSQL 18.6 พร้อม pgvector 0.8.2, pgcrypto และ pg_trgm ใน cluster ทดสอบใหม่เท่านั้น มีการสร้าง role และแก้ตาราง fixture จึงไม่ใช้ฐานสินค้าจริง
 
-Install PostgreSQL18.6 and extensions pgvector0.8.2, pgcrypto and pg_trgm in the TEST installation.
-Create a fresh private cluster with administrator catalog_test_admin and database catalog_embedding_test_c19.
-The harness checks exact database/user/superuser/PostgreSQL version before fixture mutation. Use only loopback
-or a /tmp or /private/tmp socket directory. Worker/source role names must not already exist in this cluster.
-Tests do not automatically drop existing roles or a database to force rerun; recreate the disposable cluster
-between native runs. Native tests are additional to npm test, not a substitute.
+ผู้ดูแลทดสอบชื่อ `catalog_test_admin` ฐานแต่ละชุดแยกดังนี้:
 
-Example once the separate fresh cluster and extensions are installed:
+| ชุดทดสอบ | ฐาน |
+|---|---|
+| ตารางและสิทธิ์เวกเตอร์ | `catalog_embedding_test_c19` |
+| สร้างเวกเตอร์เป็นชุด | `catalog_embedding_test_c20` |
+| หาหมวดด้วยเวกเตอร์ | `catalog_category_test_c21` |
+
+ตัวอย่างชุดตาราง ใช้ socket ส่วนตัวใน `/private/tmp` และพอร์ตของ cluster ทดสอบ:
 
 ```bash
-EMBEDDING_STORAGE_TEST_HOST=/private/tmp/your-test-socket \
-EMBEDDING_STORAGE_TEST_PORT=55439 \
-npm run test:embedding-storage:native
+EMBEDDING_STORAGE_TEST_HOST=/private/tmp/your-test-socket EMBEDDING_STORAGE_TEST_PORT=55439 npm run test:embedding-storage:native
 ```
 
-A loopback test server may instead use host127.0.0.1 and a private
-EMBEDDING_STORAGE_TEST_PASSWORD environment value for catalog_test_admin. Never put a password in Git or a
-command transcript. The target database/user remain fixed to their isolated test names.
-After testing, stop/remove that disposable cluster according to its test runbook.
+ชุด backfill ใช้ `EMBEDDING_BACKFILL_TEST_MODE=native` กับตัวแปร host/port เดียวกัน แล้วรัน `tests/embedding-backfill.test.ts` ผ่าน `node --import tsx --test`
 
-Preparation evidence: native PostgreSQL18.6/vector0.8.2 passed54/54 tests; default full suite661/661 passed.
-The prepared native instance used a private Unix socket with no TCP listener and was stopped afterwards.
-These results do not mean migration0007 or worker bootstrap was applied to supabase_db_product.
+ชุดหมวดใช้ `CATEGORY_SEMANTIC_TEST_MODE=native`, `CATEGORY_SEMANTIC_TEST_HOST` และ `CATEGORY_SEMANTIC_TEST_PORT` แล้วรัน `tests/category-semantic.test.ts`
+
+เริ่มจาก cluster/ฐานและ role ทดสอบใหม่ก่อนแต่ละรอบ รหัสผ่านทดสอบถ้ามีเก็บใน environment ไม่เข้า Git ปิด cluster เมื่อจบ การผ่าน fixture ไม่ได้ยืนยันคุณภาพผลค้นหรือความเร็วของข้อมูลจริง
