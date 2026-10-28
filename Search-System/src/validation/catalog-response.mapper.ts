@@ -75,7 +75,7 @@ export function mapCatalogSearchResponse(snapshot:CatalogSearchSnapshot,requestI
   const unique=[...new Map(unapplied_filters.map(i=>[JSON.stringify(i),i])).values()];
   if(search.meta.all_requested_filters_applied!==(unique.length===0))throw new CatalogDataError();
   return checked({...base,status:search.status,query:request.query,semantic_available:false,
-    resolved_categories:search.resolved_categories??[],applied_filters,unapplied_filters:unique,warnings:search.warnings,
+    resolved_categories:search.resolved_categories??[],applied_filters,unapplied_filters:unique,warnings:[...search.warnings,...(category.semantic_warnings??[])],
     meta:{...search.meta},results:search.results.map((hit,index)=>{
       const product=snapshot.products[index]!;if(product.article_id!==hit.article_id)throw new CatalogDataError();
       return {product,match_type:hit.match_type,unmet_filters:hit.unmet_filters.map(difference),unknown_filters:hit.unknown_filters.map(difference)};

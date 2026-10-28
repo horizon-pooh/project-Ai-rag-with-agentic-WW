@@ -30,7 +30,9 @@
     "db:check-embedding-worker": "node --import tsx src/scripts/check-embedding-worker.ts",
     "test:embedding-storage:native": "EMBEDDING_STORAGE_TEST_MODE=native node --import tsx --test tests/embedding-storage.test.ts",
     "embedding:register": "node --import tsx src/scripts/register-embedding-model.ts",
-    "embedding:backfill": "node --import tsx src/scripts/backfill-embeddings.ts"
+    "embedding:backfill": "node --import tsx src/scripts/backfill-embeddings.ts",
+    "db:check-category-semantic": "node --import tsx src/scripts/check-category-semantic.ts",
+    "dev:semantic": "node --env-file=.env --env-file=.env.embedding.local --env-file=.env.category-semantic.local --import tsx src/server.ts"
   },
   "keywords": [
     "search-engine"
