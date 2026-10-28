@@ -53,7 +53,7 @@ export function createLlamaEmbeddingProvider(options:{profile:EmbeddingProfile;b
  if(options.apiKey!==undefined && (typeof options.apiKey!=="string" || !/^[\x21-\x7e]{1,512}$/.test(options.apiKey)))throw new EmbeddingError("invalid_configuration");
  const apiKey=options.apiKey,configurationHash=embeddingConfigurationHash(profile);
  const runtime:EmbeddingRuntime={fetch:globalThis.fetch,now:()=>performance.now(),random:Math.random,sleep,...options.runtime};
- return {async embed(input:{texts:readonly string[];purpose:EmbeddingPurpose;signal?:AbortSignal}):Promise<EmbeddingResult> {
+ async function run(input:{texts:readonly string[];purpose:EmbeddingPurpose;signal?:AbortSignal},inspectOnly=false):Promise<EmbeddingResult> {
   if(!input || !["query","document"].includes(input.purpose) || !Array.isArray(input.texts) || input.texts.length<1 || input.texts.length>bounds.maxBatchSize ||
     Array.from(input.texts).some(t=>typeof t!=="string" || !t.trim()) || (input.signal!==undefined && !(input.signal instanceof AbortSignal)))throw new EmbeddingError("invalid_input");
   const signal=input.signal;const purpose=input.purpose;const settings=profile[purpose];const texts=input.texts.map(t=>settings.prefix+t);
@@ -90,8 +90,10 @@ export function createLlamaEmbeddingProvider(options:{profile:EmbeddingProfile;b
      for(const text of texts){
       const result=await request(baseUrl.replace(/\/v1$/,"")+"/tokenize",{content:text,add_special:true,parse_special:true,with_pieces:false});
       if(!record(result) || !Array.isArray(result.tokens) || result.tokens.length<1 || !result.tokens.every(t=>typeof t==="number" && Number.isSafeInteger(t) && t>=0))throw new EmbeddingError("invalid_response");
-      if(result.tokens.length>profile.contextTokens)throw new EmbeddingError("input_too_long");tokenCounts.push(result.tokens.length);
+      if(!inspectOnly && result.tokens.length>profile.contextTokens)throw new EmbeddingError("input_too_long");tokenCounts.push(result.tokens.length);
      }
+     // Inspection calls the real tokenizer, never the embeddings endpoint; oversize counts are reported.
+     if(inspectOnly)return {vectors:[],usage:{promptTokens:0,totalTokens:0},tokenCounts};
      const decoded=decode(await request(baseUrl+"/embeddings",body),texts.length,profile);
      if(decoded.usage.promptTokens!==tokenCounts.reduce((sum,n)=>sum+n,0))throw new EmbeddingError("invalid_response");
      return {...decoded,tokenCounts};
@@ -120,5 +122,13 @@ export function createLlamaEmbeddingProvider(options:{profile:EmbeddingProfile;b
    }finally{clearTimeout(timer);if(abort)signal?.removeEventListener("abort",abort);controller.abort();}
   }
   throw new EmbeddingError("deadline_exceeded",attempts);
- }};
+ }
+ return {
+  embed:(input:{texts:readonly string[];purpose:EmbeddingPurpose;signal?:AbortSignal})=>run(input),
+  async inspect(input:{texts:readonly string[];purpose:EmbeddingPurpose;signal?:AbortSignal}) {
+   const result=await run(input,true);
+   return {tokenCounts:result.tokenCounts,configurationHash,attempts:result.attempts,
+    contextTokens:profile.contextTokens,embeddingCalls:0 as const};
+  }
+ };
 }

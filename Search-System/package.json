@@ -28,7 +28,9 @@
     "embedding:tunnel": "bash scripts/tunnel-embedding.sh",
     "db:check-embedding-storage": "node --import tsx src/scripts/check-embedding-storage.ts",
     "db:check-embedding-worker": "node --import tsx src/scripts/check-embedding-worker.ts",
-    "test:embedding-storage:native": "EMBEDDING_STORAGE_TEST_MODE=native node --import tsx --test tests/embedding-storage.test.ts"
+    "test:embedding-storage:native": "EMBEDDING_STORAGE_TEST_MODE=native node --import tsx --test tests/embedding-storage.test.ts",
+    "embedding:register": "node --import tsx src/scripts/register-embedding-model.ts",
+    "embedding:backfill": "node --import tsx src/scripts/backfill-embeddings.ts"
   },
   "keywords": [
     "search-engine"
