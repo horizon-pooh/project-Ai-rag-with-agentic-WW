@@ -1,0 +1,106 @@
+{
+  "version": 1,
+  "id": "search-benchmark-v1",
+  "corpus_id": "published-six-categories-20261029-f5cdccf1b84f0dce",
+  "probes": [
+    {
+      "id": "leaf-keyword",
+      "kind": "search",
+      "request": {
+        "query": "เครื่องซักผ้าฝาหน้า",
+        "filters": {
+          "category_ids": [
+            "AP0101"
+          ]
+        },
+        "limit": 5
+      },
+      "expected_status": "ok"
+    },
+    {
+      "id": "capacity-ranking",
+      "kind": "search",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "AP0101"
+          ]
+        },
+        "limit": 5,
+        "query": "เครื่องซักผ้าฝาหน้า",
+        "semantic_query": "เครื่องซักผ้าฝาหน้า ความจุซัก 7 kg"
+      },
+      "expected_status": "ok"
+    },
+    {
+      "id": "price-alternatives",
+      "kind": "search",
+      "request": {
+        "query": "เครื่องซักผ้า",
+        "semantic_query": "ซักเสื้อผ้าทุกวัน",
+        "filters": {
+          "category_ids": [
+            "AP0101"
+          ],
+          "price": {
+            "max": 1
+          }
+        },
+        "limit": 5
+      },
+      "expected_status": "ok"
+    },
+    {
+      "id": "parent-category",
+      "kind": "search",
+      "request": {
+        "query": "ทีวี",
+        "filters": {
+          "category_ids": [
+            "TV0100"
+          ]
+        },
+        "limit": 5
+      },
+      "expected_status": "ok"
+    },
+    {
+      "id": "identity",
+      "kind": "search",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "AP0101"
+          ]
+        },
+        "exact": {
+          "article_id": 100003
+        },
+        "limit": 5
+      },
+      "expected_status": "ok"
+    },
+    {
+      "id": "details",
+      "kind": "details",
+      "article_id": 100003,
+      "expected_status": "ok"
+    },
+    {
+      "id": "draft-details",
+      "kind": "details",
+      "article_id": 106045,
+      "expected_status": "not_found"
+    },
+    {
+      "id": "clarification",
+      "kind": "search",
+      "request": {
+        "semantic_query": "อยากดูหนัง"
+      },
+      "expected_status": "needs_clarification"
+    }
+  ]
+}

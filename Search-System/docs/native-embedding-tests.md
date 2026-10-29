@@ -13,6 +13,7 @@
 | จัดอันดับ alternatives | `catalog_alternatives_test_c23` |
 | แคชและข้อมูลล่าสุด | `catalog_cache_test_c24` |
 | ประเมินคำค้น | `catalog_evaluation_test_c25` |
+| query plan และ timeout | `catalog_plan_test_c26` |
 
 ตัวอย่างชุดตาราง ใช้ socket ส่วนตัวใน `/private/tmp` และพอร์ตของ cluster ทดสอบ:
 
@@ -31,3 +32,5 @@ EMBEDDING_STORAGE_TEST_HOST=/private/tmp/your-test-socket EMBEDDING_STORAGE_TEST
 ชุดแคชใช้ `QUERY_CACHE_TEST_MODE=native`, `QUERY_CACHE_TEST_HOST` และ `QUERY_CACHE_TEST_PORT` แล้วรัน `tests/query-cache-integration.test.ts` ใน cluster ใหม่ผ่าน socket ส่วนตัว บัญชีและฐานต้องตรงกับชื่อข้างต้น
 
 ชุดประเมินใช้ `SEARCH_EVALUATION_TEST_MODE=native`, `SEARCH_EVALUATION_TEST_HOST` และ `SEARCH_EVALUATION_TEST_PORT` แล้วรัน `tests/search-evaluation-integration.test.ts` ใน cluster ใหม่ เวกเตอร์ fixture ใช้ตรวจสูตร ไม่ใช้รายงานคุณภาพโมเดลจริง
+
+ชุด plan ใช้ `SEARCH_PLAN_TEST_MODE=native`, `SEARCH_PLAN_TEST_HOST` และ `SEARCH_PLAN_TEST_PORT` แล้วรัน `tests/search-plan-audit.test.ts` บน cluster ใหม่ ชุดนี้ยืนยัน timeout จริงด้วย native ส่วน PGlite ต้องแสดง review_required แทนการอ้างว่ายกเลิก query ได้แล้ว

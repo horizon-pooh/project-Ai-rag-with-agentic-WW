@@ -39,6 +39,8 @@ npm run dev
 - [แคชคำค้นและ fallback](docs/query-embedding-cache.md)
 - [ประเมินผลค้นหา](docs/search-evaluation.md)
 - [ผลประเมินชุดปัจจุบัน](docs/search-evaluation-results.md)
+- [วัดความเร็วและตรวจสิทธิ์](docs/search-performance.md)
+- [ผลวัดรอบปัจจุบัน](docs/search-performance-results.md)
 
 ## ตรวจโค้ด
 

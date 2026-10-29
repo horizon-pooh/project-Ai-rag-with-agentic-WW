@@ -1,0 +1,34 @@
+{
+  "version": 1,
+  "id": "search-benchmark-broad-v1",
+  "corpus_id": "published-six-categories-20261029-f5cdccf1b84f0dce",
+  "probes": [
+    {
+      "id": "appliance-root",
+      "kind": "search",
+      "request": {
+        "filters": {
+          "category_ids": [
+            "AP0000"
+          ]
+        },
+        "limit": 5
+      },
+      "expected_status": "ok"
+    },
+    {
+      "id": "appliance-deep-page",
+      "kind": "search",
+      "request": {
+        "filters": {
+          "category_ids": [
+            "AP0000"
+          ]
+        },
+        "page": 200,
+        "limit": 5
+      },
+      "expected_status": "ok"
+    }
+  ]
+}
