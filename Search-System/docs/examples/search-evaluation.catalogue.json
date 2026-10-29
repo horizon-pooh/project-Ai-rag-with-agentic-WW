@@ -1,0 +1,4752 @@
+{
+  "version": 1,
+  "id": "catalogue-capacity-20261029",
+  "target": "catalogue",
+  "corpus_id": "published-six-categories-20261029-f5cdccf1b84f0dce",
+  "label_source": "ป้ายข้อเท็จจริงจาก SELECT published 90 รายการใน6หมวด; qrels3=ความจุตรง 1=ระยะความจุใกล้สุดถัดไป 0=อื่น เป็นการประเมินเจตนาตัวเลข ไม่ใช่ human judgement ของทุกการใช้งาน",
+  "reviewed_by": "catalogue-facts-and-capacity-rule-v1",
+  "forbidden_articles": [],
+  "cases": [
+    {
+      "id": "L001",
+      "tags": [
+        "catalogue-category"
+      ],
+      "split": "development",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_query": "เครื่องซักผ้าฝาหน้า"
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "AP0101"
+        ],
+        "strict_ids": [
+          100003,
+          100004,
+          100005,
+          100042,
+          100043,
+          100044,
+          100045,
+          100046,
+          100047,
+          100048,
+          100049,
+          100050,
+          100051,
+          100052,
+          100053
+        ]
+      }
+    },
+    {
+      "id": "L002",
+      "tags": [
+        "catalogue-spec"
+      ],
+      "split": "development",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "AP0101"
+          ],
+          "specs": [
+            {
+              "attribute_id": "AT0017",
+              "op": "eq",
+              "value": 7
+            }
+          ]
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "AP0101"
+        ],
+        "strict_ids": [
+          100003,
+          100042,
+          100045,
+          100048,
+          100051
+        ],
+        "applied": [
+          {
+            "path": "/filters/specs/0",
+            "resolved_id": "AT0017",
+            "value": 7,
+            "unit": "kg"
+          }
+        ]
+      }
+    },
+    {
+      "id": "L003",
+      "tags": [
+        "catalogue-spec"
+      ],
+      "split": "development",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "AP0101"
+          ],
+          "specs": [
+            {
+              "attribute_id": "AT0017",
+              "op": "gte",
+              "value": 7
+            }
+          ]
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "AP0101"
+        ],
+        "strict_ids": [
+          100003,
+          100004,
+          100005,
+          100042,
+          100043,
+          100044,
+          100045,
+          100046,
+          100047,
+          100048,
+          100049,
+          100050,
+          100051,
+          100052,
+          100053
+        ],
+        "applied": [
+          {
+            "path": "/filters/specs/0",
+            "resolved_id": "AT0017",
+            "value": 7,
+            "unit": "kg"
+          }
+        ]
+      }
+    },
+    {
+      "id": "L004",
+      "tags": [
+        "catalogue-spec"
+      ],
+      "split": "development",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "AP0101"
+          ],
+          "specs": [
+            {
+              "attribute_id": "AT0017",
+              "op": "lte",
+              "value": 7
+            }
+          ]
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "AP0101"
+        ],
+        "strict_ids": [
+          100003,
+          100042,
+          100045,
+          100048,
+          100051
+        ],
+        "applied": [
+          {
+            "path": "/filters/specs/0",
+            "resolved_id": "AT0017",
+            "value": 7,
+            "unit": "kg"
+          }
+        ]
+      }
+    },
+    {
+      "id": "L005",
+      "tags": [
+        "catalogue-spec"
+      ],
+      "split": "development",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "AP0101"
+          ],
+          "specs": [
+            {
+              "attribute_id": "AT0017",
+              "op": "eq",
+              "value": 9
+            }
+          ]
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "AP0101"
+        ],
+        "strict_ids": [
+          100004,
+          100043,
+          100046,
+          100049,
+          100052
+        ],
+        "applied": [
+          {
+            "path": "/filters/specs/0",
+            "resolved_id": "AT0017",
+            "value": 9,
+            "unit": "kg"
+          }
+        ]
+      }
+    },
+    {
+      "id": "L006",
+      "tags": [
+        "catalogue-spec"
+      ],
+      "split": "development",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "AP0101"
+          ],
+          "specs": [
+            {
+              "attribute_id": "AT0017",
+              "op": "gte",
+              "value": 9
+            }
+          ]
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "AP0101"
+        ],
+        "strict_ids": [
+          100004,
+          100005,
+          100043,
+          100044,
+          100046,
+          100047,
+          100049,
+          100050,
+          100052,
+          100053
+        ],
+        "applied": [
+          {
+            "path": "/filters/specs/0",
+            "resolved_id": "AT0017",
+            "value": 9,
+            "unit": "kg"
+          }
+        ]
+      }
+    },
+    {
+      "id": "L007",
+      "tags": [
+        "catalogue-spec"
+      ],
+      "split": "development",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "AP0101"
+          ],
+          "specs": [
+            {
+              "attribute_id": "AT0017",
+              "op": "lte",
+              "value": 9
+            }
+          ]
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "AP0101"
+        ],
+        "strict_ids": [
+          100003,
+          100004,
+          100042,
+          100043,
+          100045,
+          100046,
+          100048,
+          100049,
+          100051,
+          100052
+        ],
+        "applied": [
+          {
+            "path": "/filters/specs/0",
+            "resolved_id": "AT0017",
+            "value": 9,
+            "unit": "kg"
+          }
+        ]
+      }
+    },
+    {
+      "id": "L008",
+      "tags": [
+        "catalogue-spec"
+      ],
+      "split": "development",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "AP0101"
+          ],
+          "specs": [
+            {
+              "attribute_id": "AT0017",
+              "op": "eq",
+              "value": 11
+            }
+          ]
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "AP0101"
+        ],
+        "strict_ids": [
+          100005,
+          100044,
+          100047,
+          100050,
+          100053
+        ],
+        "applied": [
+          {
+            "path": "/filters/specs/0",
+            "resolved_id": "AT0017",
+            "value": 11,
+            "unit": "kg"
+          }
+        ]
+      }
+    },
+    {
+      "id": "L009",
+      "tags": [
+        "catalogue-spec"
+      ],
+      "split": "development",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "AP0101"
+          ],
+          "specs": [
+            {
+              "attribute_id": "AT0017",
+              "op": "gte",
+              "value": 11
+            }
+          ]
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "AP0101"
+        ],
+        "strict_ids": [
+          100005,
+          100044,
+          100047,
+          100050,
+          100053
+        ],
+        "applied": [
+          {
+            "path": "/filters/specs/0",
+            "resolved_id": "AT0017",
+            "value": 11,
+            "unit": "kg"
+          }
+        ]
+      }
+    },
+    {
+      "id": "L010",
+      "tags": [
+        "catalogue-spec"
+      ],
+      "split": "development",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "AP0101"
+          ],
+          "specs": [
+            {
+              "attribute_id": "AT0017",
+              "op": "lte",
+              "value": 11
+            }
+          ]
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "AP0101"
+        ],
+        "strict_ids": [
+          100003,
+          100004,
+          100005,
+          100042,
+          100043,
+          100044,
+          100045,
+          100046,
+          100047,
+          100048,
+          100049,
+          100050,
+          100051,
+          100052,
+          100053
+        ],
+        "applied": [
+          {
+            "path": "/filters/specs/0",
+            "resolved_id": "AT0017",
+            "value": 11,
+            "unit": "kg"
+          }
+        ]
+      }
+    },
+    {
+      "id": "L011",
+      "tags": [
+        "catalogue-boolean"
+      ],
+      "split": "development",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "AP0101"
+          ],
+          "specs": [
+            {
+              "attribute_id": "AT0082",
+              "op": "eq",
+              "value": true
+            }
+          ]
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "AP0101"
+        ],
+        "strict_ids": [
+          100004,
+          100005,
+          100043,
+          100044,
+          100046,
+          100047,
+          100049,
+          100050,
+          100052,
+          100053
+        ],
+        "applied": [
+          {
+            "path": "/filters/specs/0",
+            "resolved_id": "AT0082",
+            "value": true,
+            "unit": null
+          }
+        ]
+      }
+    },
+    {
+      "id": "L012",
+      "tags": [
+        "catalogue-boolean"
+      ],
+      "split": "development",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "AP0101"
+          ],
+          "specs": [
+            {
+              "attribute_id": "AT0082",
+              "op": "eq",
+              "value": false
+            }
+          ]
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "AP0101"
+        ],
+        "strict_ids": [
+          100003,
+          100042,
+          100045,
+          100048,
+          100051
+        ],
+        "applied": [
+          {
+            "path": "/filters/specs/0",
+            "resolved_id": "AT0082",
+            "value": false,
+            "unit": null
+          }
+        ]
+      }
+    },
+    {
+      "id": "L013",
+      "tags": [
+        "catalogue-price"
+      ],
+      "split": "development",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "AP0101"
+          ],
+          "price": {
+            "max": 8990.0
+          }
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "AP0101"
+        ],
+        "strict_ids": [
+          100003
+        ],
+        "applied": [
+          {
+            "path": "/filters/price/max",
+            "resolved_id": null,
+            "value": 8990.0,
+            "unit": "THB"
+          }
+        ]
+      }
+    },
+    {
+      "id": "L014",
+      "tags": [
+        "catalogue-price"
+      ],
+      "split": "development",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "AP0101"
+          ],
+          "price": {
+            "max": 9090.0
+          }
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "AP0101"
+        ],
+        "strict_ids": [
+          100003,
+          100042
+        ],
+        "applied": [
+          {
+            "path": "/filters/price/max",
+            "resolved_id": null,
+            "value": 9090.0,
+            "unit": "THB"
+          }
+        ]
+      }
+    },
+    {
+      "id": "L015",
+      "tags": [
+        "catalogue-price"
+      ],
+      "split": "development",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "AP0101"
+          ],
+          "price": {
+            "max": 9190.0
+          }
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "AP0101"
+        ],
+        "strict_ids": [
+          100003,
+          100042,
+          100045
+        ],
+        "applied": [
+          {
+            "path": "/filters/price/max",
+            "resolved_id": null,
+            "value": 9190.0,
+            "unit": "THB"
+          }
+        ]
+      }
+    },
+    {
+      "id": "L016",
+      "tags": [
+        "catalogue-capacity-ranking"
+      ],
+      "split": "development",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "AP0101"
+          ]
+        },
+        "limit": 5,
+        "query": "เครื่องซักผ้าฝาหน้า",
+        "semantic_query": "เครื่องซักผ้าฝาหน้า ความจุซัก 7 kg"
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "AP0101"
+        ],
+        "ranking": {
+          "complete": true,
+          "grades": {
+            "100003": 3,
+            "100004": 1,
+            "100005": 0,
+            "100042": 3,
+            "100043": 1,
+            "100044": 0,
+            "100045": 3,
+            "100046": 1,
+            "100047": 0,
+            "100048": 3,
+            "100049": 1,
+            "100050": 0,
+            "100051": 3,
+            "100052": 1,
+            "100053": 0
+          }
+        }
+      }
+    },
+    {
+      "id": "L017",
+      "tags": [
+        "catalogue-capacity-ranking"
+      ],
+      "split": "development",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "AP0101"
+          ]
+        },
+        "limit": 5,
+        "query": "เครื่องซักผ้าฝาหน้า",
+        "semantic_query": "เครื่องซักผ้าฝาหน้า ความจุซัก 9 kg"
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "AP0101"
+        ],
+        "ranking": {
+          "complete": true,
+          "grades": {
+            "100003": 1,
+            "100004": 3,
+            "100005": 1,
+            "100042": 1,
+            "100043": 3,
+            "100044": 1,
+            "100045": 1,
+            "100046": 3,
+            "100047": 1,
+            "100048": 1,
+            "100049": 3,
+            "100050": 1,
+            "100051": 1,
+            "100052": 3,
+            "100053": 1
+          }
+        }
+      }
+    },
+    {
+      "id": "L018",
+      "tags": [
+        "catalogue-capacity-ranking"
+      ],
+      "split": "development",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "AP0101"
+          ]
+        },
+        "limit": 5,
+        "query": "เครื่องซักผ้าฝาหน้า",
+        "semantic_query": "เครื่องซักผ้าฝาหน้า ความจุซัก 11 kg"
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "AP0101"
+        ],
+        "ranking": {
+          "complete": true,
+          "grades": {
+            "100003": 0,
+            "100004": 1,
+            "100005": 3,
+            "100042": 0,
+            "100043": 1,
+            "100044": 3,
+            "100045": 0,
+            "100046": 1,
+            "100047": 3,
+            "100048": 0,
+            "100049": 1,
+            "100050": 3,
+            "100051": 0,
+            "100052": 1,
+            "100053": 3
+          }
+        }
+      }
+    },
+    {
+      "id": "L019",
+      "tags": [
+        "catalogue-category"
+      ],
+      "split": "development",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_query": "หม้อหุงข้าว ดิจิตอล"
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "AP0201"
+        ],
+        "strict_ids": [
+          100006,
+          100007,
+          100008,
+          100054,
+          100055,
+          100056,
+          100057,
+          100058,
+          100059,
+          100060,
+          100061,
+          100062,
+          100063,
+          100064,
+          100065
+        ]
+      }
+    },
+    {
+      "id": "L020",
+      "tags": [
+        "catalogue-spec"
+      ],
+      "split": "development",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "AP0201"
+          ],
+          "specs": [
+            {
+              "attribute_id": "AT0022",
+              "op": "eq",
+              "value": 1
+            }
+          ]
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "AP0201"
+        ],
+        "strict_ids": [
+          100006,
+          100054,
+          100057,
+          100060,
+          100063
+        ],
+        "applied": [
+          {
+            "path": "/filters/specs/0",
+            "resolved_id": "AT0022",
+            "value": 1,
+            "unit": "L"
+          }
+        ]
+      }
+    },
+    {
+      "id": "L021",
+      "tags": [
+        "catalogue-spec"
+      ],
+      "split": "development",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "AP0201"
+          ],
+          "specs": [
+            {
+              "attribute_id": "AT0022",
+              "op": "gte",
+              "value": 1
+            }
+          ]
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "AP0201"
+        ],
+        "strict_ids": [
+          100006,
+          100007,
+          100008,
+          100054,
+          100055,
+          100056,
+          100057,
+          100058,
+          100059,
+          100060,
+          100061,
+          100062,
+          100063,
+          100064,
+          100065
+        ],
+        "applied": [
+          {
+            "path": "/filters/specs/0",
+            "resolved_id": "AT0022",
+            "value": 1,
+            "unit": "L"
+          }
+        ]
+      }
+    },
+    {
+      "id": "L022",
+      "tags": [
+        "catalogue-spec"
+      ],
+      "split": "development",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "AP0201"
+          ],
+          "specs": [
+            {
+              "attribute_id": "AT0022",
+              "op": "lte",
+              "value": 1
+            }
+          ]
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "AP0201"
+        ],
+        "strict_ids": [
+          100006,
+          100054,
+          100057,
+          100060,
+          100063
+        ],
+        "applied": [
+          {
+            "path": "/filters/specs/0",
+            "resolved_id": "AT0022",
+            "value": 1,
+            "unit": "L"
+          }
+        ]
+      }
+    },
+    {
+      "id": "L023",
+      "tags": [
+        "catalogue-spec"
+      ],
+      "split": "development",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "AP0201"
+          ],
+          "specs": [
+            {
+              "attribute_id": "AT0022",
+              "op": "eq",
+              "value": 1.5
+            }
+          ]
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "AP0201"
+        ],
+        "strict_ids": [
+          100007,
+          100055,
+          100058,
+          100061,
+          100064
+        ],
+        "applied": [
+          {
+            "path": "/filters/specs/0",
+            "resolved_id": "AT0022",
+            "value": 1.5,
+            "unit": "L"
+          }
+        ]
+      }
+    },
+    {
+      "id": "L024",
+      "tags": [
+        "catalogue-spec"
+      ],
+      "split": "development",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "AP0201"
+          ],
+          "specs": [
+            {
+              "attribute_id": "AT0022",
+              "op": "gte",
+              "value": 1.5
+            }
+          ]
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "AP0201"
+        ],
+        "strict_ids": [
+          100007,
+          100008,
+          100055,
+          100056,
+          100058,
+          100059,
+          100061,
+          100062,
+          100064,
+          100065
+        ],
+        "applied": [
+          {
+            "path": "/filters/specs/0",
+            "resolved_id": "AT0022",
+            "value": 1.5,
+            "unit": "L"
+          }
+        ]
+      }
+    },
+    {
+      "id": "L025",
+      "tags": [
+        "catalogue-spec"
+      ],
+      "split": "development",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "AP0201"
+          ],
+          "specs": [
+            {
+              "attribute_id": "AT0022",
+              "op": "lte",
+              "value": 1.5
+            }
+          ]
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "AP0201"
+        ],
+        "strict_ids": [
+          100006,
+          100007,
+          100054,
+          100055,
+          100057,
+          100058,
+          100060,
+          100061,
+          100063,
+          100064
+        ],
+        "applied": [
+          {
+            "path": "/filters/specs/0",
+            "resolved_id": "AT0022",
+            "value": 1.5,
+            "unit": "L"
+          }
+        ]
+      }
+    },
+    {
+      "id": "L026",
+      "tags": [
+        "catalogue-spec"
+      ],
+      "split": "development",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "AP0201"
+          ],
+          "specs": [
+            {
+              "attribute_id": "AT0022",
+              "op": "eq",
+              "value": 1.8
+            }
+          ]
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "AP0201"
+        ],
+        "strict_ids": [
+          100008,
+          100056,
+          100059,
+          100062,
+          100065
+        ],
+        "applied": [
+          {
+            "path": "/filters/specs/0",
+            "resolved_id": "AT0022",
+            "value": 1.8,
+            "unit": "L"
+          }
+        ]
+      }
+    },
+    {
+      "id": "L027",
+      "tags": [
+        "catalogue-spec"
+      ],
+      "split": "development",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "AP0201"
+          ],
+          "specs": [
+            {
+              "attribute_id": "AT0022",
+              "op": "gte",
+              "value": 1.8
+            }
+          ]
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "AP0201"
+        ],
+        "strict_ids": [
+          100008,
+          100056,
+          100059,
+          100062,
+          100065
+        ],
+        "applied": [
+          {
+            "path": "/filters/specs/0",
+            "resolved_id": "AT0022",
+            "value": 1.8,
+            "unit": "L"
+          }
+        ]
+      }
+    },
+    {
+      "id": "L028",
+      "tags": [
+        "catalogue-spec"
+      ],
+      "split": "development",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "AP0201"
+          ],
+          "specs": [
+            {
+              "attribute_id": "AT0022",
+              "op": "lte",
+              "value": 1.8
+            }
+          ]
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "AP0201"
+        ],
+        "strict_ids": [
+          100006,
+          100007,
+          100008,
+          100054,
+          100055,
+          100056,
+          100057,
+          100058,
+          100059,
+          100060,
+          100061,
+          100062,
+          100063,
+          100064,
+          100065
+        ],
+        "applied": [
+          {
+            "path": "/filters/specs/0",
+            "resolved_id": "AT0022",
+            "value": 1.8,
+            "unit": "L"
+          }
+        ]
+      }
+    },
+    {
+      "id": "L029",
+      "tags": [
+        "catalogue-boolean"
+      ],
+      "split": "development",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "AP0201"
+          ],
+          "specs": [
+            {
+              "attribute_id": "AT0083",
+              "op": "eq",
+              "value": true
+            }
+          ]
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "AP0201"
+        ],
+        "strict_ids": [
+          100007,
+          100008,
+          100055,
+          100056,
+          100058,
+          100059,
+          100061,
+          100062,
+          100064,
+          100065
+        ],
+        "applied": [
+          {
+            "path": "/filters/specs/0",
+            "resolved_id": "AT0083",
+            "value": true,
+            "unit": null
+          }
+        ]
+      }
+    },
+    {
+      "id": "L030",
+      "tags": [
+        "catalogue-boolean"
+      ],
+      "split": "development",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "AP0201"
+          ],
+          "specs": [
+            {
+              "attribute_id": "AT0083",
+              "op": "eq",
+              "value": false
+            }
+          ]
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "AP0201"
+        ],
+        "strict_ids": [
+          100006,
+          100054,
+          100057,
+          100060,
+          100063
+        ],
+        "applied": [
+          {
+            "path": "/filters/specs/0",
+            "resolved_id": "AT0083",
+            "value": false,
+            "unit": null
+          }
+        ]
+      }
+    },
+    {
+      "id": "L031",
+      "tags": [
+        "catalogue-price"
+      ],
+      "split": "development",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "AP0201"
+          ],
+          "price": {
+            "max": 990.0
+          }
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "AP0201"
+        ],
+        "strict_ids": [
+          100006
+        ],
+        "applied": [
+          {
+            "path": "/filters/price/max",
+            "resolved_id": null,
+            "value": 990.0,
+            "unit": "THB"
+          }
+        ]
+      }
+    },
+    {
+      "id": "L032",
+      "tags": [
+        "catalogue-price"
+      ],
+      "split": "development",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "AP0201"
+          ],
+          "price": {
+            "max": 1090.0
+          }
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "AP0201"
+        ],
+        "strict_ids": [
+          100006,
+          100054
+        ],
+        "applied": [
+          {
+            "path": "/filters/price/max",
+            "resolved_id": null,
+            "value": 1090.0,
+            "unit": "THB"
+          }
+        ]
+      }
+    },
+    {
+      "id": "L033",
+      "tags": [
+        "catalogue-price"
+      ],
+      "split": "development",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "AP0201"
+          ],
+          "price": {
+            "max": 1190.0
+          }
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "AP0201"
+        ],
+        "strict_ids": [
+          100006,
+          100054,
+          100057
+        ],
+        "applied": [
+          {
+            "path": "/filters/price/max",
+            "resolved_id": null,
+            "value": 1190.0,
+            "unit": "THB"
+          }
+        ]
+      }
+    },
+    {
+      "id": "L034",
+      "tags": [
+        "catalogue-capacity-ranking"
+      ],
+      "split": "development",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "AP0201"
+          ]
+        },
+        "limit": 5,
+        "query": "หม้อหุงข้าว ดิจิตอล",
+        "semantic_query": "หม้อหุงข้าว ความจุหม้อ 1 L"
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "AP0201"
+        ],
+        "ranking": {
+          "complete": true,
+          "grades": {
+            "100006": 3,
+            "100007": 1,
+            "100008": 0,
+            "100054": 3,
+            "100055": 1,
+            "100056": 0,
+            "100057": 3,
+            "100058": 1,
+            "100059": 0,
+            "100060": 3,
+            "100061": 1,
+            "100062": 0,
+            "100063": 3,
+            "100064": 1,
+            "100065": 0
+          }
+        }
+      }
+    },
+    {
+      "id": "L035",
+      "tags": [
+        "catalogue-capacity-ranking"
+      ],
+      "split": "development",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "AP0201"
+          ]
+        },
+        "limit": 5,
+        "query": "หม้อหุงข้าว ดิจิตอล",
+        "semantic_query": "หม้อหุงข้าว ความจุหม้อ 1.5 L"
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "AP0201"
+        ],
+        "ranking": {
+          "complete": true,
+          "grades": {
+            "100006": 0,
+            "100007": 3,
+            "100008": 1,
+            "100054": 0,
+            "100055": 3,
+            "100056": 1,
+            "100057": 0,
+            "100058": 3,
+            "100059": 1,
+            "100060": 0,
+            "100061": 3,
+            "100062": 1,
+            "100063": 0,
+            "100064": 3,
+            "100065": 1
+          }
+        }
+      }
+    },
+    {
+      "id": "L036",
+      "tags": [
+        "catalogue-capacity-ranking"
+      ],
+      "split": "development",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "AP0201"
+          ]
+        },
+        "limit": 5,
+        "query": "หม้อหุงข้าว ดิจิตอล",
+        "semantic_query": "หม้อหุงข้าว ความจุหม้อ 1.8 L"
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "AP0201"
+        ],
+        "ranking": {
+          "complete": true,
+          "grades": {
+            "100006": 0,
+            "100007": 1,
+            "100008": 3,
+            "100054": 0,
+            "100055": 1,
+            "100056": 3,
+            "100057": 0,
+            "100058": 1,
+            "100059": 3,
+            "100060": 0,
+            "100061": 1,
+            "100062": 3,
+            "100063": 0,
+            "100064": 1,
+            "100065": 3
+          }
+        }
+      }
+    },
+    {
+      "id": "L037",
+      "tags": [
+        "catalogue-category"
+      ],
+      "split": "development",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_query": "กาต้มน้ำไฟฟ้า"
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "AP0203"
+        ],
+        "strict_ids": [
+          100150,
+          100151,
+          100152,
+          100153,
+          100154,
+          100155,
+          100156,
+          100157,
+          100158,
+          100159,
+          100160,
+          100161,
+          100162,
+          100163,
+          100164
+        ]
+      }
+    },
+    {
+      "id": "L038",
+      "tags": [
+        "catalogue-spec"
+      ],
+      "split": "development",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "AP0203"
+          ],
+          "specs": [
+            {
+              "attribute_id": "AT0052",
+              "op": "eq",
+              "value": 1
+            }
+          ]
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "AP0203"
+        ],
+        "strict_ids": [
+          100150,
+          100153,
+          100156,
+          100159,
+          100162
+        ],
+        "applied": [
+          {
+            "path": "/filters/specs/0",
+            "resolved_id": "AT0052",
+            "value": 1,
+            "unit": "L"
+          }
+        ]
+      }
+    },
+    {
+      "id": "L039",
+      "tags": [
+        "catalogue-spec"
+      ],
+      "split": "development",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "AP0203"
+          ],
+          "specs": [
+            {
+              "attribute_id": "AT0052",
+              "op": "gte",
+              "value": 1
+            }
+          ]
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "AP0203"
+        ],
+        "strict_ids": [
+          100150,
+          100151,
+          100152,
+          100153,
+          100154,
+          100155,
+          100156,
+          100157,
+          100158,
+          100159,
+          100160,
+          100161,
+          100162,
+          100163,
+          100164
+        ],
+        "applied": [
+          {
+            "path": "/filters/specs/0",
+            "resolved_id": "AT0052",
+            "value": 1,
+            "unit": "L"
+          }
+        ]
+      }
+    },
+    {
+      "id": "L040",
+      "tags": [
+        "catalogue-spec"
+      ],
+      "split": "development",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "AP0203"
+          ],
+          "specs": [
+            {
+              "attribute_id": "AT0052",
+              "op": "lte",
+              "value": 1
+            }
+          ]
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "AP0203"
+        ],
+        "strict_ids": [
+          100150,
+          100153,
+          100156,
+          100159,
+          100162
+        ],
+        "applied": [
+          {
+            "path": "/filters/specs/0",
+            "resolved_id": "AT0052",
+            "value": 1,
+            "unit": "L"
+          }
+        ]
+      }
+    },
+    {
+      "id": "L041",
+      "tags": [
+        "catalogue-spec"
+      ],
+      "split": "development",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "AP0203"
+          ],
+          "specs": [
+            {
+              "attribute_id": "AT0052",
+              "op": "eq",
+              "value": 1.4
+            }
+          ]
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "AP0203"
+        ],
+        "strict_ids": [
+          100151,
+          100154,
+          100157,
+          100160,
+          100163
+        ],
+        "applied": [
+          {
+            "path": "/filters/specs/0",
+            "resolved_id": "AT0052",
+            "value": 1.4,
+            "unit": "L"
+          }
+        ]
+      }
+    },
+    {
+      "id": "L042",
+      "tags": [
+        "catalogue-spec"
+      ],
+      "split": "development",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "AP0203"
+          ],
+          "specs": [
+            {
+              "attribute_id": "AT0052",
+              "op": "gte",
+              "value": 1.4
+            }
+          ]
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "AP0203"
+        ],
+        "strict_ids": [
+          100151,
+          100152,
+          100154,
+          100155,
+          100157,
+          100158,
+          100160,
+          100161,
+          100163,
+          100164
+        ],
+        "applied": [
+          {
+            "path": "/filters/specs/0",
+            "resolved_id": "AT0052",
+            "value": 1.4,
+            "unit": "L"
+          }
+        ]
+      }
+    },
+    {
+      "id": "L043",
+      "tags": [
+        "catalogue-spec"
+      ],
+      "split": "development",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "AP0203"
+          ],
+          "specs": [
+            {
+              "attribute_id": "AT0052",
+              "op": "lte",
+              "value": 1.4
+            }
+          ]
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "AP0203"
+        ],
+        "strict_ids": [
+          100150,
+          100151,
+          100153,
+          100154,
+          100156,
+          100157,
+          100159,
+          100160,
+          100162,
+          100163
+        ],
+        "applied": [
+          {
+            "path": "/filters/specs/0",
+            "resolved_id": "AT0052",
+            "value": 1.4,
+            "unit": "L"
+          }
+        ]
+      }
+    },
+    {
+      "id": "L044",
+      "tags": [
+        "catalogue-spec"
+      ],
+      "split": "development",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "AP0203"
+          ],
+          "specs": [
+            {
+              "attribute_id": "AT0052",
+              "op": "eq",
+              "value": 1.8
+            }
+          ]
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "AP0203"
+        ],
+        "strict_ids": [
+          100152,
+          100155,
+          100158,
+          100161,
+          100164
+        ],
+        "applied": [
+          {
+            "path": "/filters/specs/0",
+            "resolved_id": "AT0052",
+            "value": 1.8,
+            "unit": "L"
+          }
+        ]
+      }
+    },
+    {
+      "id": "L045",
+      "tags": [
+        "catalogue-spec"
+      ],
+      "split": "development",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "AP0203"
+          ],
+          "specs": [
+            {
+              "attribute_id": "AT0052",
+              "op": "gte",
+              "value": 1.8
+            }
+          ]
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "AP0203"
+        ],
+        "strict_ids": [
+          100152,
+          100155,
+          100158,
+          100161,
+          100164
+        ],
+        "applied": [
+          {
+            "path": "/filters/specs/0",
+            "resolved_id": "AT0052",
+            "value": 1.8,
+            "unit": "L"
+          }
+        ]
+      }
+    },
+    {
+      "id": "L046",
+      "tags": [
+        "catalogue-spec"
+      ],
+      "split": "development",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "AP0203"
+          ],
+          "specs": [
+            {
+              "attribute_id": "AT0052",
+              "op": "lte",
+              "value": 1.8
+            }
+          ]
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "AP0203"
+        ],
+        "strict_ids": [
+          100150,
+          100151,
+          100152,
+          100153,
+          100154,
+          100155,
+          100156,
+          100157,
+          100158,
+          100159,
+          100160,
+          100161,
+          100162,
+          100163,
+          100164
+        ],
+        "applied": [
+          {
+            "path": "/filters/specs/0",
+            "resolved_id": "AT0052",
+            "value": 1.8,
+            "unit": "L"
+          }
+        ]
+      }
+    },
+    {
+      "id": "L047",
+      "tags": [
+        "catalogue-boolean"
+      ],
+      "split": "development",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "AP0203"
+          ],
+          "specs": [
+            {
+              "attribute_id": "AT0098",
+              "op": "eq",
+              "value": true
+            }
+          ]
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "AP0203"
+        ],
+        "strict_ids": [
+          100151,
+          100152,
+          100154,
+          100155,
+          100157,
+          100158,
+          100160,
+          100161,
+          100163,
+          100164
+        ],
+        "applied": [
+          {
+            "path": "/filters/specs/0",
+            "resolved_id": "AT0098",
+            "value": true,
+            "unit": null
+          }
+        ]
+      }
+    },
+    {
+      "id": "L048",
+      "tags": [
+        "catalogue-boolean"
+      ],
+      "split": "development",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "AP0203"
+          ],
+          "specs": [
+            {
+              "attribute_id": "AT0098",
+              "op": "eq",
+              "value": false
+            }
+          ]
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "AP0203"
+        ],
+        "strict_ids": [
+          100150,
+          100153,
+          100156,
+          100159,
+          100162
+        ],
+        "applied": [
+          {
+            "path": "/filters/specs/0",
+            "resolved_id": "AT0098",
+            "value": false,
+            "unit": null
+          }
+        ]
+      }
+    },
+    {
+      "id": "L049",
+      "tags": [
+        "catalogue-price"
+      ],
+      "split": "development",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "AP0203"
+          ],
+          "price": {
+            "max": 690.0
+          }
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "AP0203"
+        ],
+        "strict_ids": [
+          100150
+        ],
+        "applied": [
+          {
+            "path": "/filters/price/max",
+            "resolved_id": null,
+            "value": 690.0,
+            "unit": "THB"
+          }
+        ]
+      }
+    },
+    {
+      "id": "L050",
+      "tags": [
+        "catalogue-price"
+      ],
+      "split": "development",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "AP0203"
+          ],
+          "price": {
+            "max": 790.0
+          }
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "AP0203"
+        ],
+        "strict_ids": [
+          100150,
+          100153
+        ],
+        "applied": [
+          {
+            "path": "/filters/price/max",
+            "resolved_id": null,
+            "value": 790.0,
+            "unit": "THB"
+          }
+        ]
+      }
+    },
+    {
+      "id": "L051",
+      "tags": [
+        "catalogue-price"
+      ],
+      "split": "development",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "AP0203"
+          ],
+          "price": {
+            "max": 890.0
+          }
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "AP0203"
+        ],
+        "strict_ids": [
+          100150,
+          100153,
+          100156
+        ],
+        "applied": [
+          {
+            "path": "/filters/price/max",
+            "resolved_id": null,
+            "value": 890.0,
+            "unit": "THB"
+          }
+        ]
+      }
+    },
+    {
+      "id": "L052",
+      "tags": [
+        "catalogue-capacity-ranking"
+      ],
+      "split": "development",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "AP0203"
+          ]
+        },
+        "limit": 5,
+        "query": "กาต้มน้ำไฟฟ้า",
+        "semantic_query": "กาต้มน้ำไฟฟ้า ความจุน้ำ 1 L"
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "AP0203"
+        ],
+        "ranking": {
+          "complete": true,
+          "grades": {
+            "100150": 3,
+            "100151": 1,
+            "100152": 0,
+            "100153": 3,
+            "100154": 1,
+            "100155": 0,
+            "100156": 3,
+            "100157": 1,
+            "100158": 0,
+            "100159": 3,
+            "100160": 1,
+            "100161": 0,
+            "100162": 3,
+            "100163": 1,
+            "100164": 0
+          }
+        }
+      }
+    },
+    {
+      "id": "L053",
+      "tags": [
+        "catalogue-capacity-ranking"
+      ],
+      "split": "development",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "AP0203"
+          ]
+        },
+        "limit": 5,
+        "query": "กาต้มน้ำไฟฟ้า",
+        "semantic_query": "กาต้มน้ำไฟฟ้า ความจุน้ำ 1.4 L"
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "AP0203"
+        ],
+        "ranking": {
+          "complete": true,
+          "grades": {
+            "100150": 1,
+            "100151": 3,
+            "100152": 0,
+            "100153": 1,
+            "100154": 3,
+            "100155": 0,
+            "100156": 1,
+            "100157": 3,
+            "100158": 0,
+            "100159": 1,
+            "100160": 3,
+            "100161": 0,
+            "100162": 1,
+            "100163": 3,
+            "100164": 0
+          }
+        }
+      }
+    },
+    {
+      "id": "L054",
+      "tags": [
+        "catalogue-capacity-ranking"
+      ],
+      "split": "development",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "AP0203"
+          ]
+        },
+        "limit": 5,
+        "query": "กาต้มน้ำไฟฟ้า",
+        "semantic_query": "กาต้มน้ำไฟฟ้า ความจุน้ำ 1.8 L"
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "AP0203"
+        ],
+        "ranking": {
+          "complete": true,
+          "grades": {
+            "100150": 0,
+            "100151": 1,
+            "100152": 3,
+            "100153": 0,
+            "100154": 1,
+            "100155": 3,
+            "100156": 0,
+            "100157": 1,
+            "100158": 3,
+            "100159": 0,
+            "100160": 1,
+            "100161": 3,
+            "100162": 0,
+            "100163": 1,
+            "100164": 3
+          }
+        }
+      }
+    },
+    {
+      "id": "L055",
+      "tags": [
+        "catalogue-category"
+      ],
+      "split": "holdout",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_query": "ตู้เย็น 2 ประตู"
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "AP0210"
+        ],
+        "strict_ids": [
+          100180,
+          100181,
+          100182,
+          100183,
+          100184,
+          100185,
+          100186,
+          100187,
+          100188,
+          100189,
+          100190,
+          100191,
+          100192,
+          100193,
+          100194
+        ]
+      }
+    },
+    {
+      "id": "L056",
+      "tags": [
+        "catalogue-spec"
+      ],
+      "split": "holdout",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "AP0210"
+          ],
+          "specs": [
+            {
+              "attribute_id": "AT0056",
+              "op": "eq",
+              "value": 210
+            }
+          ]
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "AP0210"
+        ],
+        "strict_ids": [
+          100180,
+          100183,
+          100186,
+          100189,
+          100192
+        ],
+        "applied": [
+          {
+            "path": "/filters/specs/0",
+            "resolved_id": "AT0056",
+            "value": 210,
+            "unit": "L"
+          }
+        ]
+      }
+    },
+    {
+      "id": "L057",
+      "tags": [
+        "catalogue-spec"
+      ],
+      "split": "holdout",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "AP0210"
+          ],
+          "specs": [
+            {
+              "attribute_id": "AT0056",
+              "op": "gte",
+              "value": 210
+            }
+          ]
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "AP0210"
+        ],
+        "strict_ids": [
+          100180,
+          100181,
+          100182,
+          100183,
+          100184,
+          100185,
+          100186,
+          100187,
+          100188,
+          100189,
+          100190,
+          100191,
+          100192,
+          100193,
+          100194
+        ],
+        "applied": [
+          {
+            "path": "/filters/specs/0",
+            "resolved_id": "AT0056",
+            "value": 210,
+            "unit": "L"
+          }
+        ]
+      }
+    },
+    {
+      "id": "L058",
+      "tags": [
+        "catalogue-spec"
+      ],
+      "split": "holdout",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "AP0210"
+          ],
+          "specs": [
+            {
+              "attribute_id": "AT0056",
+              "op": "lte",
+              "value": 210
+            }
+          ]
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "AP0210"
+        ],
+        "strict_ids": [
+          100180,
+          100183,
+          100186,
+          100189,
+          100192
+        ],
+        "applied": [
+          {
+            "path": "/filters/specs/0",
+            "resolved_id": "AT0056",
+            "value": 210,
+            "unit": "L"
+          }
+        ]
+      }
+    },
+    {
+      "id": "L059",
+      "tags": [
+        "catalogue-spec"
+      ],
+      "split": "holdout",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "AP0210"
+          ],
+          "specs": [
+            {
+              "attribute_id": "AT0056",
+              "op": "eq",
+              "value": 270
+            }
+          ]
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "AP0210"
+        ],
+        "strict_ids": [
+          100181,
+          100184,
+          100187,
+          100190,
+          100193
+        ],
+        "applied": [
+          {
+            "path": "/filters/specs/0",
+            "resolved_id": "AT0056",
+            "value": 270,
+            "unit": "L"
+          }
+        ]
+      }
+    },
+    {
+      "id": "L060",
+      "tags": [
+        "catalogue-spec"
+      ],
+      "split": "holdout",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "AP0210"
+          ],
+          "specs": [
+            {
+              "attribute_id": "AT0056",
+              "op": "gte",
+              "value": 270
+            }
+          ]
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "AP0210"
+        ],
+        "strict_ids": [
+          100181,
+          100182,
+          100184,
+          100185,
+          100187,
+          100188,
+          100190,
+          100191,
+          100193,
+          100194
+        ],
+        "applied": [
+          {
+            "path": "/filters/specs/0",
+            "resolved_id": "AT0056",
+            "value": 270,
+            "unit": "L"
+          }
+        ]
+      }
+    },
+    {
+      "id": "L061",
+      "tags": [
+        "catalogue-spec"
+      ],
+      "split": "holdout",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "AP0210"
+          ],
+          "specs": [
+            {
+              "attribute_id": "AT0056",
+              "op": "lte",
+              "value": 270
+            }
+          ]
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "AP0210"
+        ],
+        "strict_ids": [
+          100180,
+          100181,
+          100183,
+          100184,
+          100186,
+          100187,
+          100189,
+          100190,
+          100192,
+          100193
+        ],
+        "applied": [
+          {
+            "path": "/filters/specs/0",
+            "resolved_id": "AT0056",
+            "value": 270,
+            "unit": "L"
+          }
+        ]
+      }
+    },
+    {
+      "id": "L062",
+      "tags": [
+        "catalogue-spec"
+      ],
+      "split": "holdout",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "AP0210"
+          ],
+          "specs": [
+            {
+              "attribute_id": "AT0056",
+              "op": "eq",
+              "value": 330
+            }
+          ]
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "AP0210"
+        ],
+        "strict_ids": [
+          100182,
+          100185,
+          100188,
+          100191,
+          100194
+        ],
+        "applied": [
+          {
+            "path": "/filters/specs/0",
+            "resolved_id": "AT0056",
+            "value": 330,
+            "unit": "L"
+          }
+        ]
+      }
+    },
+    {
+      "id": "L063",
+      "tags": [
+        "catalogue-spec"
+      ],
+      "split": "holdout",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "AP0210"
+          ],
+          "specs": [
+            {
+              "attribute_id": "AT0056",
+              "op": "gte",
+              "value": 330
+            }
+          ]
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "AP0210"
+        ],
+        "strict_ids": [
+          100182,
+          100185,
+          100188,
+          100191,
+          100194
+        ],
+        "applied": [
+          {
+            "path": "/filters/specs/0",
+            "resolved_id": "AT0056",
+            "value": 330,
+            "unit": "L"
+          }
+        ]
+      }
+    },
+    {
+      "id": "L064",
+      "tags": [
+        "catalogue-spec"
+      ],
+      "split": "holdout",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "AP0210"
+          ],
+          "specs": [
+            {
+              "attribute_id": "AT0056",
+              "op": "lte",
+              "value": 330
+            }
+          ]
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "AP0210"
+        ],
+        "strict_ids": [
+          100180,
+          100181,
+          100182,
+          100183,
+          100184,
+          100185,
+          100186,
+          100187,
+          100188,
+          100189,
+          100190,
+          100191,
+          100192,
+          100193,
+          100194
+        ],
+        "applied": [
+          {
+            "path": "/filters/specs/0",
+            "resolved_id": "AT0056",
+            "value": 330,
+            "unit": "L"
+          }
+        ]
+      }
+    },
+    {
+      "id": "L065",
+      "tags": [
+        "catalogue-boolean"
+      ],
+      "split": "holdout",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "AP0210"
+          ],
+          "specs": [
+            {
+              "attribute_id": "AT0102",
+              "op": "eq",
+              "value": true
+            }
+          ]
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "AP0210"
+        ],
+        "strict_ids": [],
+        "applied": [
+          {
+            "path": "/filters/specs/0",
+            "resolved_id": "AT0102",
+            "value": true,
+            "unit": null
+          }
+        ]
+      }
+    },
+    {
+      "id": "L066",
+      "tags": [
+        "catalogue-boolean"
+      ],
+      "split": "holdout",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "AP0210"
+          ],
+          "specs": [
+            {
+              "attribute_id": "AT0102",
+              "op": "eq",
+              "value": false
+            }
+          ]
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "AP0210"
+        ],
+        "strict_ids": [
+          100180,
+          100181,
+          100182,
+          100183,
+          100184,
+          100185,
+          100186,
+          100187,
+          100188,
+          100189,
+          100190,
+          100191,
+          100192,
+          100193,
+          100194
+        ],
+        "applied": [
+          {
+            "path": "/filters/specs/0",
+            "resolved_id": "AT0102",
+            "value": false,
+            "unit": null
+          }
+        ]
+      }
+    },
+    {
+      "id": "L067",
+      "tags": [
+        "catalogue-price"
+      ],
+      "split": "holdout",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "AP0210"
+          ],
+          "price": {
+            "max": 8990.0
+          }
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "AP0210"
+        ],
+        "strict_ids": [
+          100180
+        ],
+        "applied": [
+          {
+            "path": "/filters/price/max",
+            "resolved_id": null,
+            "value": 8990.0,
+            "unit": "THB"
+          }
+        ]
+      }
+    },
+    {
+      "id": "L068",
+      "tags": [
+        "catalogue-price"
+      ],
+      "split": "holdout",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "AP0210"
+          ],
+          "price": {
+            "max": 9090.0
+          }
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "AP0210"
+        ],
+        "strict_ids": [
+          100180,
+          100183
+        ],
+        "applied": [
+          {
+            "path": "/filters/price/max",
+            "resolved_id": null,
+            "value": 9090.0,
+            "unit": "THB"
+          }
+        ]
+      }
+    },
+    {
+      "id": "L069",
+      "tags": [
+        "catalogue-price"
+      ],
+      "split": "holdout",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "AP0210"
+          ],
+          "price": {
+            "max": 9190.0
+          }
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "AP0210"
+        ],
+        "strict_ids": [
+          100180,
+          100183,
+          100186
+        ],
+        "applied": [
+          {
+            "path": "/filters/price/max",
+            "resolved_id": null,
+            "value": 9190.0,
+            "unit": "THB"
+          }
+        ]
+      }
+    },
+    {
+      "id": "L070",
+      "tags": [
+        "catalogue-capacity-ranking"
+      ],
+      "split": "holdout",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "AP0210"
+          ]
+        },
+        "limit": 5,
+        "query": "ตู้เย็น 2 ประตู",
+        "semantic_query": "ตู้เย็น 2 ประตู ความจุรวม 210 L"
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "AP0210"
+        ],
+        "ranking": {
+          "complete": true,
+          "grades": {
+            "100180": 3,
+            "100181": 1,
+            "100182": 0,
+            "100183": 3,
+            "100184": 1,
+            "100185": 0,
+            "100186": 3,
+            "100187": 1,
+            "100188": 0,
+            "100189": 3,
+            "100190": 1,
+            "100191": 0,
+            "100192": 3,
+            "100193": 1,
+            "100194": 0
+          }
+        }
+      }
+    },
+    {
+      "id": "L071",
+      "tags": [
+        "catalogue-capacity-ranking"
+      ],
+      "split": "holdout",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "AP0210"
+          ]
+        },
+        "limit": 5,
+        "query": "ตู้เย็น 2 ประตู",
+        "semantic_query": "ตู้เย็น 2 ประตู ความจุรวม 270 L"
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "AP0210"
+        ],
+        "ranking": {
+          "complete": true,
+          "grades": {
+            "100180": 1,
+            "100181": 3,
+            "100182": 1,
+            "100183": 1,
+            "100184": 3,
+            "100185": 1,
+            "100186": 1,
+            "100187": 3,
+            "100188": 1,
+            "100189": 1,
+            "100190": 3,
+            "100191": 1,
+            "100192": 1,
+            "100193": 3,
+            "100194": 1
+          }
+        }
+      }
+    },
+    {
+      "id": "L072",
+      "tags": [
+        "catalogue-capacity-ranking"
+      ],
+      "split": "holdout",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "AP0210"
+          ]
+        },
+        "limit": 5,
+        "query": "ตู้เย็น 2 ประตู",
+        "semantic_query": "ตู้เย็น 2 ประตู ความจุรวม 330 L"
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "AP0210"
+        ],
+        "ranking": {
+          "complete": true,
+          "grades": {
+            "100180": 0,
+            "100181": 1,
+            "100182": 3,
+            "100183": 0,
+            "100184": 1,
+            "100185": 3,
+            "100186": 0,
+            "100187": 1,
+            "100188": 3,
+            "100189": 0,
+            "100190": 1,
+            "100191": 3,
+            "100192": 0,
+            "100193": 1,
+            "100194": 3
+          }
+        }
+      }
+    },
+    {
+      "id": "L073",
+      "tags": [
+        "catalogue-category"
+      ],
+      "split": "development",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_query": "เครื่องปิ้งขนมปัง"
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "AP0260"
+        ],
+        "strict_ids": [
+          100165,
+          100166,
+          100167,
+          100168,
+          100169,
+          100170,
+          100171,
+          100172,
+          100173,
+          100174,
+          100175,
+          100176,
+          100177,
+          100178,
+          100179
+        ]
+      }
+    },
+    {
+      "id": "L074",
+      "tags": [
+        "catalogue-spec"
+      ],
+      "split": "development",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "AP0260"
+          ],
+          "specs": [
+            {
+              "attribute_id": "AT0054",
+              "op": "eq",
+              "value": 2
+            }
+          ]
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "AP0260"
+        ],
+        "strict_ids": [
+          100165,
+          100166,
+          100167,
+          100168,
+          100169,
+          100170,
+          100171,
+          100172,
+          100173,
+          100174,
+          100175,
+          100176,
+          100177,
+          100178,
+          100179
+        ],
+        "applied": [
+          {
+            "path": "/filters/specs/0",
+            "resolved_id": "AT0054",
+            "value": 2,
+            "unit": "slot"
+          }
+        ]
+      }
+    },
+    {
+      "id": "L075",
+      "tags": [
+        "catalogue-spec"
+      ],
+      "split": "development",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "AP0260"
+          ],
+          "specs": [
+            {
+              "attribute_id": "AT0054",
+              "op": "gte",
+              "value": 2
+            }
+          ]
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "AP0260"
+        ],
+        "strict_ids": [
+          100165,
+          100166,
+          100167,
+          100168,
+          100169,
+          100170,
+          100171,
+          100172,
+          100173,
+          100174,
+          100175,
+          100176,
+          100177,
+          100178,
+          100179
+        ],
+        "applied": [
+          {
+            "path": "/filters/specs/0",
+            "resolved_id": "AT0054",
+            "value": 2,
+            "unit": "slot"
+          }
+        ]
+      }
+    },
+    {
+      "id": "L076",
+      "tags": [
+        "catalogue-spec"
+      ],
+      "split": "development",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "AP0260"
+          ],
+          "specs": [
+            {
+              "attribute_id": "AT0054",
+              "op": "lte",
+              "value": 2
+            }
+          ]
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "AP0260"
+        ],
+        "strict_ids": [
+          100165,
+          100166,
+          100167,
+          100168,
+          100169,
+          100170,
+          100171,
+          100172,
+          100173,
+          100174,
+          100175,
+          100176,
+          100177,
+          100178,
+          100179
+        ],
+        "applied": [
+          {
+            "path": "/filters/specs/0",
+            "resolved_id": "AT0054",
+            "value": 2,
+            "unit": "slot"
+          }
+        ]
+      }
+    },
+    {
+      "id": "L077",
+      "tags": [
+        "catalogue-boolean"
+      ],
+      "split": "development",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "AP0260"
+          ],
+          "specs": [
+            {
+              "attribute_id": "AT0099",
+              "op": "eq",
+              "value": true
+            }
+          ]
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "AP0260"
+        ],
+        "strict_ids": [
+          100166,
+          100167,
+          100169,
+          100170,
+          100172,
+          100173,
+          100175,
+          100176,
+          100178,
+          100179
+        ],
+        "applied": [
+          {
+            "path": "/filters/specs/0",
+            "resolved_id": "AT0099",
+            "value": true,
+            "unit": null
+          }
+        ]
+      }
+    },
+    {
+      "id": "L078",
+      "tags": [
+        "catalogue-boolean"
+      ],
+      "split": "development",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "AP0260"
+          ],
+          "specs": [
+            {
+              "attribute_id": "AT0099",
+              "op": "eq",
+              "value": false
+            }
+          ]
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "AP0260"
+        ],
+        "strict_ids": [
+          100165,
+          100168,
+          100171,
+          100174,
+          100177
+        ],
+        "applied": [
+          {
+            "path": "/filters/specs/0",
+            "resolved_id": "AT0099",
+            "value": false,
+            "unit": null
+          }
+        ]
+      }
+    },
+    {
+      "id": "L079",
+      "tags": [
+        "catalogue-price"
+      ],
+      "split": "development",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "AP0260"
+          ],
+          "price": {
+            "max": 790.0
+          }
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "AP0260"
+        ],
+        "strict_ids": [
+          100165
+        ],
+        "applied": [
+          {
+            "path": "/filters/price/max",
+            "resolved_id": null,
+            "value": 790.0,
+            "unit": "THB"
+          }
+        ]
+      }
+    },
+    {
+      "id": "L080",
+      "tags": [
+        "catalogue-price"
+      ],
+      "split": "development",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "AP0260"
+          ],
+          "price": {
+            "max": 890.0
+          }
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "AP0260"
+        ],
+        "strict_ids": [
+          100165,
+          100168
+        ],
+        "applied": [
+          {
+            "path": "/filters/price/max",
+            "resolved_id": null,
+            "value": 890.0,
+            "unit": "THB"
+          }
+        ]
+      }
+    },
+    {
+      "id": "L081",
+      "tags": [
+        "catalogue-price"
+      ],
+      "split": "development",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "AP0260"
+          ],
+          "price": {
+            "max": 990.0
+          }
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "AP0260"
+        ],
+        "strict_ids": [
+          100165,
+          100168,
+          100171
+        ],
+        "applied": [
+          {
+            "path": "/filters/price/max",
+            "resolved_id": null,
+            "value": 990.0,
+            "unit": "THB"
+          }
+        ]
+      }
+    },
+    {
+      "id": "L082",
+      "tags": [
+        "catalogue-capacity-ranking"
+      ],
+      "split": "development",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "AP0260"
+          ]
+        },
+        "limit": 5,
+        "query": "เครื่องปิ้งขนมปัง",
+        "semantic_query": "เครื่องปิ้งขนมปัง จำนวนช่องปิ้ง 2 slot"
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "AP0260"
+        ],
+        "ranking": {
+          "complete": true,
+          "grades": {
+            "100165": 3,
+            "100166": 3,
+            "100167": 3,
+            "100168": 3,
+            "100169": 3,
+            "100170": 3,
+            "100171": 3,
+            "100172": 3,
+            "100173": 3,
+            "100174": 3,
+            "100175": 3,
+            "100176": 3,
+            "100177": 3,
+            "100178": 3,
+            "100179": 3
+          }
+        }
+      }
+    },
+    {
+      "id": "L083",
+      "tags": [
+        "catalogue-category"
+      ],
+      "split": "holdout",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_query": "เครื่องฟอกอากาศในบ้าน"
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "AP0301"
+        ],
+        "strict_ids": [
+          100009,
+          100010,
+          100011,
+          100066,
+          100067,
+          100068,
+          100069,
+          100070,
+          100071,
+          100072,
+          100073,
+          100074,
+          100075,
+          100076,
+          100077
+        ]
+      }
+    },
+    {
+      "id": "L084",
+      "tags": [
+        "catalogue-spec"
+      ],
+      "split": "holdout",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "AP0301"
+          ],
+          "specs": [
+            {
+              "attribute_id": "AT0023",
+              "op": "eq",
+              "value": 18
+            }
+          ]
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "AP0301"
+        ],
+        "strict_ids": [
+          100009,
+          100066,
+          100069,
+          100072,
+          100075
+        ],
+        "applied": [
+          {
+            "path": "/filters/specs/0",
+            "resolved_id": "AT0023",
+            "value": 18,
+            "unit": "m2"
+          }
+        ]
+      }
+    },
+    {
+      "id": "L085",
+      "tags": [
+        "catalogue-spec"
+      ],
+      "split": "holdout",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "AP0301"
+          ],
+          "specs": [
+            {
+              "attribute_id": "AT0023",
+              "op": "gte",
+              "value": 18
+            }
+          ]
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "AP0301"
+        ],
+        "strict_ids": [
+          100009,
+          100010,
+          100011,
+          100066,
+          100067,
+          100068,
+          100069,
+          100070,
+          100071,
+          100072,
+          100073,
+          100074,
+          100075,
+          100076,
+          100077
+        ],
+        "applied": [
+          {
+            "path": "/filters/specs/0",
+            "resolved_id": "AT0023",
+            "value": 18,
+            "unit": "m2"
+          }
+        ]
+      }
+    },
+    {
+      "id": "L086",
+      "tags": [
+        "catalogue-spec"
+      ],
+      "split": "holdout",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "AP0301"
+          ],
+          "specs": [
+            {
+              "attribute_id": "AT0023",
+              "op": "lte",
+              "value": 18
+            }
+          ]
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "AP0301"
+        ],
+        "strict_ids": [
+          100009,
+          100066,
+          100069,
+          100072,
+          100075
+        ],
+        "applied": [
+          {
+            "path": "/filters/specs/0",
+            "resolved_id": "AT0023",
+            "value": 18,
+            "unit": "m2"
+          }
+        ]
+      }
+    },
+    {
+      "id": "L087",
+      "tags": [
+        "catalogue-spec"
+      ],
+      "split": "holdout",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "AP0301"
+          ],
+          "specs": [
+            {
+              "attribute_id": "AT0023",
+              "op": "eq",
+              "value": 30
+            }
+          ]
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "AP0301"
+        ],
+        "strict_ids": [
+          100010,
+          100067,
+          100070,
+          100073,
+          100076
+        ],
+        "applied": [
+          {
+            "path": "/filters/specs/0",
+            "resolved_id": "AT0023",
+            "value": 30,
+            "unit": "m2"
+          }
+        ]
+      }
+    },
+    {
+      "id": "L088",
+      "tags": [
+        "catalogue-spec"
+      ],
+      "split": "holdout",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "AP0301"
+          ],
+          "specs": [
+            {
+              "attribute_id": "AT0023",
+              "op": "gte",
+              "value": 30
+            }
+          ]
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "AP0301"
+        ],
+        "strict_ids": [
+          100010,
+          100011,
+          100067,
+          100068,
+          100070,
+          100071,
+          100073,
+          100074,
+          100076,
+          100077
+        ],
+        "applied": [
+          {
+            "path": "/filters/specs/0",
+            "resolved_id": "AT0023",
+            "value": 30,
+            "unit": "m2"
+          }
+        ]
+      }
+    },
+    {
+      "id": "L089",
+      "tags": [
+        "catalogue-spec"
+      ],
+      "split": "holdout",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "AP0301"
+          ],
+          "specs": [
+            {
+              "attribute_id": "AT0023",
+              "op": "lte",
+              "value": 30
+            }
+          ]
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "AP0301"
+        ],
+        "strict_ids": [
+          100009,
+          100010,
+          100066,
+          100067,
+          100069,
+          100070,
+          100072,
+          100073,
+          100075,
+          100076
+        ],
+        "applied": [
+          {
+            "path": "/filters/specs/0",
+            "resolved_id": "AT0023",
+            "value": 30,
+            "unit": "m2"
+          }
+        ]
+      }
+    },
+    {
+      "id": "L090",
+      "tags": [
+        "catalogue-spec"
+      ],
+      "split": "holdout",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "AP0301"
+          ],
+          "specs": [
+            {
+              "attribute_id": "AT0023",
+              "op": "eq",
+              "value": 45
+            }
+          ]
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "AP0301"
+        ],
+        "strict_ids": [
+          100011,
+          100068,
+          100071,
+          100074,
+          100077
+        ],
+        "applied": [
+          {
+            "path": "/filters/specs/0",
+            "resolved_id": "AT0023",
+            "value": 45,
+            "unit": "m2"
+          }
+        ]
+      }
+    },
+    {
+      "id": "L091",
+      "tags": [
+        "catalogue-spec"
+      ],
+      "split": "holdout",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "AP0301"
+          ],
+          "specs": [
+            {
+              "attribute_id": "AT0023",
+              "op": "gte",
+              "value": 45
+            }
+          ]
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "AP0301"
+        ],
+        "strict_ids": [
+          100011,
+          100068,
+          100071,
+          100074,
+          100077
+        ],
+        "applied": [
+          {
+            "path": "/filters/specs/0",
+            "resolved_id": "AT0023",
+            "value": 45,
+            "unit": "m2"
+          }
+        ]
+      }
+    },
+    {
+      "id": "L092",
+      "tags": [
+        "catalogue-spec"
+      ],
+      "split": "holdout",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "AP0301"
+          ],
+          "specs": [
+            {
+              "attribute_id": "AT0023",
+              "op": "lte",
+              "value": 45
+            }
+          ]
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "AP0301"
+        ],
+        "strict_ids": [
+          100009,
+          100010,
+          100011,
+          100066,
+          100067,
+          100068,
+          100069,
+          100070,
+          100071,
+          100072,
+          100073,
+          100074,
+          100075,
+          100076,
+          100077
+        ],
+        "applied": [
+          {
+            "path": "/filters/specs/0",
+            "resolved_id": "AT0023",
+            "value": 45,
+            "unit": "m2"
+          }
+        ]
+      }
+    },
+    {
+      "id": "L093",
+      "tags": [
+        "catalogue-boolean"
+      ],
+      "split": "holdout",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "AP0301"
+          ],
+          "specs": [
+            {
+              "attribute_id": "AT0084",
+              "op": "eq",
+              "value": true
+            }
+          ]
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "AP0301"
+        ],
+        "strict_ids": [
+          100010,
+          100011,
+          100067,
+          100068,
+          100070,
+          100071,
+          100073,
+          100074,
+          100076,
+          100077
+        ],
+        "applied": [
+          {
+            "path": "/filters/specs/0",
+            "resolved_id": "AT0084",
+            "value": true,
+            "unit": null
+          }
+        ]
+      }
+    },
+    {
+      "id": "L094",
+      "tags": [
+        "catalogue-boolean"
+      ],
+      "split": "holdout",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "AP0301"
+          ],
+          "specs": [
+            {
+              "attribute_id": "AT0084",
+              "op": "eq",
+              "value": false
+            }
+          ]
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "AP0301"
+        ],
+        "strict_ids": [
+          100009,
+          100066,
+          100069,
+          100072,
+          100075
+        ],
+        "applied": [
+          {
+            "path": "/filters/specs/0",
+            "resolved_id": "AT0084",
+            "value": false,
+            "unit": null
+          }
+        ]
+      }
+    },
+    {
+      "id": "L095",
+      "tags": [
+        "catalogue-price"
+      ],
+      "split": "holdout",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "AP0301"
+          ],
+          "price": {
+            "max": 2490.0
+          }
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "AP0301"
+        ],
+        "strict_ids": [
+          100009
+        ],
+        "applied": [
+          {
+            "path": "/filters/price/max",
+            "resolved_id": null,
+            "value": 2490.0,
+            "unit": "THB"
+          }
+        ]
+      }
+    },
+    {
+      "id": "L096",
+      "tags": [
+        "catalogue-price"
+      ],
+      "split": "holdout",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "AP0301"
+          ],
+          "price": {
+            "max": 2590.0
+          }
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "AP0301"
+        ],
+        "strict_ids": [
+          100009,
+          100066
+        ],
+        "applied": [
+          {
+            "path": "/filters/price/max",
+            "resolved_id": null,
+            "value": 2590.0,
+            "unit": "THB"
+          }
+        ]
+      }
+    },
+    {
+      "id": "L097",
+      "tags": [
+        "catalogue-price"
+      ],
+      "split": "holdout",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "AP0301"
+          ],
+          "price": {
+            "max": 2690.0
+          }
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "AP0301"
+        ],
+        "strict_ids": [
+          100009,
+          100066,
+          100069
+        ],
+        "applied": [
+          {
+            "path": "/filters/price/max",
+            "resolved_id": null,
+            "value": 2690.0,
+            "unit": "THB"
+          }
+        ]
+      }
+    },
+    {
+      "id": "L098",
+      "tags": [
+        "catalogue-capacity-ranking"
+      ],
+      "split": "holdout",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "AP0301"
+          ]
+        },
+        "limit": 5,
+        "query": "เครื่องฟอกอากาศในบ้าน",
+        "semantic_query": "เครื่องฟอกอากาศ สำหรับห้องขนาด 18 m2"
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "AP0301"
+        ],
+        "ranking": {
+          "complete": true,
+          "grades": {
+            "100009": 3,
+            "100010": 1,
+            "100011": 0,
+            "100066": 3,
+            "100067": 1,
+            "100068": 0,
+            "100069": 3,
+            "100070": 1,
+            "100071": 0,
+            "100072": 3,
+            "100073": 1,
+            "100074": 0,
+            "100075": 3,
+            "100076": 1,
+            "100077": 0
+          }
+        }
+      }
+    },
+    {
+      "id": "L099",
+      "tags": [
+        "catalogue-capacity-ranking"
+      ],
+      "split": "holdout",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "AP0301"
+          ]
+        },
+        "limit": 5,
+        "query": "เครื่องฟอกอากาศในบ้าน",
+        "semantic_query": "เครื่องฟอกอากาศ สำหรับห้องขนาด 30 m2"
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "AP0301"
+        ],
+        "ranking": {
+          "complete": true,
+          "grades": {
+            "100009": 1,
+            "100010": 3,
+            "100011": 0,
+            "100066": 1,
+            "100067": 3,
+            "100068": 0,
+            "100069": 1,
+            "100070": 3,
+            "100071": 0,
+            "100072": 1,
+            "100073": 3,
+            "100074": 0,
+            "100075": 1,
+            "100076": 3,
+            "100077": 0
+          }
+        }
+      }
+    },
+    {
+      "id": "L100",
+      "tags": [
+        "catalogue-capacity-ranking"
+      ],
+      "split": "holdout",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "AP0301"
+          ]
+        },
+        "limit": 5,
+        "query": "เครื่องฟอกอากาศในบ้าน",
+        "semantic_query": "เครื่องฟอกอากาศ สำหรับห้องขนาด 45 m2"
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "AP0301"
+        ],
+        "ranking": {
+          "complete": true,
+          "grades": {
+            "100009": 0,
+            "100010": 1,
+            "100011": 3,
+            "100066": 0,
+            "100067": 1,
+            "100068": 3,
+            "100069": 0,
+            "100070": 1,
+            "100071": 3,
+            "100072": 0,
+            "100073": 1,
+            "100074": 3,
+            "100075": 0,
+            "100076": 1,
+            "100077": 3
+          }
+        }
+      }
+    },
+    {
+      "id": "L101",
+      "tags": [
+        "catalogue-identity"
+      ],
+      "split": "development",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "AP0101"
+          ]
+        },
+        "exact": {
+          "article_id": 100003
+        },
+        "limit": 5
+      },
+      "expected": {
+        "status": "ok",
+        "strict_ids": [
+          100003
+        ]
+      }
+    },
+    {
+      "id": "L102",
+      "tags": [
+        "catalogue-identity"
+      ],
+      "split": "development",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "AP0101"
+          ]
+        },
+        "exact": {
+          "article_id": 100004
+        },
+        "limit": 5
+      },
+      "expected": {
+        "status": "ok",
+        "strict_ids": [
+          100004
+        ]
+      }
+    },
+    {
+      "id": "L103",
+      "tags": [
+        "catalogue-identity"
+      ],
+      "split": "development",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "AP0101"
+          ]
+        },
+        "exact": {
+          "article_id": 100005
+        },
+        "limit": 5
+      },
+      "expected": {
+        "status": "ok",
+        "strict_ids": [
+          100005
+        ]
+      }
+    },
+    {
+      "id": "L104",
+      "tags": [
+        "catalogue-identity"
+      ],
+      "split": "development",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "AP0101"
+          ]
+        },
+        "exact": {
+          "article_id": 100042
+        },
+        "limit": 5
+      },
+      "expected": {
+        "status": "ok",
+        "strict_ids": [
+          100042
+        ]
+      }
+    },
+    {
+      "id": "L105",
+      "tags": [
+        "catalogue-identity"
+      ],
+      "split": "development",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "AP0101"
+          ]
+        },
+        "exact": {
+          "article_id": 100043
+        },
+        "limit": 5
+      },
+      "expected": {
+        "status": "ok",
+        "strict_ids": [
+          100043
+        ]
+      }
+    },
+    {
+      "id": "L106",
+      "tags": [
+        "catalogue-identity"
+      ],
+      "split": "development",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "AP0101"
+          ]
+        },
+        "exact": {
+          "article_id": 100044
+        },
+        "limit": 5
+      },
+      "expected": {
+        "status": "ok",
+        "strict_ids": [
+          100044
+        ]
+      }
+    },
+    {
+      "id": "L107",
+      "tags": [
+        "catalogue-identity"
+      ],
+      "split": "development",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "AP0101"
+          ]
+        },
+        "exact": {
+          "article_id": 100045
+        },
+        "limit": 5
+      },
+      "expected": {
+        "status": "ok",
+        "strict_ids": [
+          100045
+        ]
+      }
+    },
+    {
+      "id": "L108",
+      "tags": [
+        "catalogue-identity"
+      ],
+      "split": "development",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "AP0101"
+          ]
+        },
+        "exact": {
+          "article_id": 100046
+        },
+        "limit": 5
+      },
+      "expected": {
+        "status": "ok",
+        "strict_ids": [
+          100046
+        ]
+      }
+    },
+    {
+      "id": "L109",
+      "tags": [
+        "catalogue-identity"
+      ],
+      "split": "development",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "AP0101"
+          ]
+        },
+        "exact": {
+          "article_id": 100047
+        },
+        "limit": 5
+      },
+      "expected": {
+        "status": "ok",
+        "strict_ids": [
+          100047
+        ]
+      }
+    },
+    {
+      "id": "L110",
+      "tags": [
+        "catalogue-identity"
+      ],
+      "split": "development",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "AP0101"
+          ]
+        },
+        "exact": {
+          "article_id": 100048
+        },
+        "limit": 5
+      },
+      "expected": {
+        "status": "ok",
+        "strict_ids": [
+          100048
+        ]
+      }
+    },
+    {
+      "id": "L111",
+      "tags": [
+        "catalogue-identity"
+      ],
+      "split": "development",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "AP0101"
+          ]
+        },
+        "exact": {
+          "article_id": 100049
+        },
+        "limit": 5
+      },
+      "expected": {
+        "status": "ok",
+        "strict_ids": [
+          100049
+        ]
+      }
+    },
+    {
+      "id": "L112",
+      "tags": [
+        "catalogue-identity"
+      ],
+      "split": "development",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "AP0101"
+          ]
+        },
+        "exact": {
+          "article_id": 100050
+        },
+        "limit": 5
+      },
+      "expected": {
+        "status": "ok",
+        "strict_ids": [
+          100050
+        ]
+      }
+    }
+  ]
+}

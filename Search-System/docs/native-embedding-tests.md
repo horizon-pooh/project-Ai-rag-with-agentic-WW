@@ -12,6 +12,7 @@
 | รวมอันดับสินค้า | `catalog_product_test_c22` |
 | จัดอันดับ alternatives | `catalog_alternatives_test_c23` |
 | แคชและข้อมูลล่าสุด | `catalog_cache_test_c24` |
+| ประเมินคำค้น | `catalog_evaluation_test_c25` |
 
 ตัวอย่างชุดตาราง ใช้ socket ส่วนตัวใน `/private/tmp` และพอร์ตของ cluster ทดสอบ:
 
@@ -28,3 +29,5 @@ EMBEDDING_STORAGE_TEST_HOST=/private/tmp/your-test-socket EMBEDDING_STORAGE_TEST
 ชุด alternatives ใช้ `HYBRID_ALTERNATIVES_TEST_MODE=native`, `HYBRID_ALTERNATIVES_TEST_HOST` และ `HYBRID_ALTERNATIVES_TEST_PORT` แล้วรัน `tests/hybrid-alternatives.test.ts` ผ่าน `node --import tsx --test` ใน cluster ใหม่เท่านั้น
 
 ชุดแคชใช้ `QUERY_CACHE_TEST_MODE=native`, `QUERY_CACHE_TEST_HOST` และ `QUERY_CACHE_TEST_PORT` แล้วรัน `tests/query-cache-integration.test.ts` ใน cluster ใหม่ผ่าน socket ส่วนตัว บัญชีและฐานต้องตรงกับชื่อข้างต้น
+
+ชุดประเมินใช้ `SEARCH_EVALUATION_TEST_MODE=native`, `SEARCH_EVALUATION_TEST_HOST` และ `SEARCH_EVALUATION_TEST_PORT` แล้วรัน `tests/search-evaluation-integration.test.ts` ใน cluster ใหม่ เวกเตอร์ fixture ใช้ตรวจสูตร ไม่ใช้รายงานคุณภาพโมเดลจริง

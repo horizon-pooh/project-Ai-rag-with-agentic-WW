@@ -37,6 +37,8 @@ npm run dev
 - [ใช้เวกเตอร์ช่วยหาหมวด](docs/category-semantic-resolution.md)
 - [รวมอันดับสินค้าแบบ RRF](docs/product-hybrid-search.md)
 - [แคชคำค้นและ fallback](docs/query-embedding-cache.md)
+- [ประเมินผลค้นหา](docs/search-evaluation.md)
+- [ผลประเมินชุดปัจจุบัน](docs/search-evaluation-results.md)
 
 ## ตรวจโค้ด
 

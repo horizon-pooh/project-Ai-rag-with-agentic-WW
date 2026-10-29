@@ -1,0 +1,4418 @@
+{
+  "version": 1,
+  "id": "search-fixture-v1",
+  "target": "fixture",
+  "corpus_id": "metadata-fixtures-v1+migrations-0010",
+  "label_source": "กำหนดจากข้อเท็จจริงใน fixture และเจตนาของแต่ละกรณี ไม่ใช้ผลค้นสร้างเฉลย; qrels ใช้วัดสูตรใน fixture เท่านั้น",
+  "reviewed_by": "fixture-specification",
+  "forbidden_articles": [
+    106045,
+    106046
+  ],
+  "cases": [
+    {
+      "id": "Q001",
+      "tags": [
+        "category",
+        "ชื่อและขอบเขต"
+      ],
+      "split": "development",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_query": "ทีวี"
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "TV0107",
+          "TV0108",
+          "TV0109"
+        ]
+      }
+    },
+    {
+      "id": "Q002",
+      "tags": [
+        "category",
+        "ชื่อและขอบเขต"
+      ],
+      "split": "development",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_query": "TV"
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "TV0107",
+          "TV0108",
+          "TV0109"
+        ]
+      }
+    },
+    {
+      "id": "Q003",
+      "tags": [
+        "category",
+        "ชื่อและขอบเขต"
+      ],
+      "split": "development",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_query": "โทรทัศน์"
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "TV0107",
+          "TV0108",
+          "TV0109"
+        ]
+      }
+    },
+    {
+      "id": "Q004",
+      "tags": [
+        "category",
+        "ชื่อและขอบเขต"
+      ],
+      "split": "development",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_query": "Televisions"
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "TV0107",
+          "TV0108",
+          "TV0109"
+        ]
+      }
+    },
+    {
+      "id": "Q005",
+      "tags": [
+        "category",
+        "ชื่อและขอบเขต"
+      ],
+      "split": "holdout",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_query": "TV0100"
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "TV0107",
+          "TV0108",
+          "TV0109"
+        ]
+      }
+    },
+    {
+      "id": "Q006",
+      "tags": [
+        "category",
+        "ชื่อและขอบเขต"
+      ],
+      "split": "development",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_query": "OLED"
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "TV0108"
+        ]
+      }
+    },
+    {
+      "id": "Q007",
+      "tags": [
+        "category",
+        "ชื่อและขอบเขต"
+      ],
+      "split": "development",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_query": "OLED TV"
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "TV0108"
+        ]
+      }
+    },
+    {
+      "id": "Q008",
+      "tags": [
+        "category",
+        "ชื่อและขอบเขต"
+      ],
+      "split": "development",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_query": "oled television"
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "TV0108"
+        ]
+      }
+    },
+    {
+      "id": "Q009",
+      "tags": [
+        "category",
+        "ชื่อและขอบเขต"
+      ],
+      "split": "development",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_query": "ทีวี OLED"
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "TV0108"
+        ]
+      }
+    },
+    {
+      "id": "Q010",
+      "tags": [
+        "category",
+        "ชื่อและขอบเขต"
+      ],
+      "split": "holdout",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_query": "ทีวีOLED"
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "TV0108"
+        ]
+      }
+    },
+    {
+      "id": "Q011",
+      "tags": [
+        "category",
+        "ชื่อและขอบเขต"
+      ],
+      "split": "development",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_query": "TV0108"
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "TV0108"
+        ]
+      }
+    },
+    {
+      "id": "Q012",
+      "tags": [
+        "category",
+        "ชื่อและขอบเขต"
+      ],
+      "split": "development",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_query": "QLED"
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "TV0109"
+        ]
+      }
+    },
+    {
+      "id": "Q013",
+      "tags": [
+        "category",
+        "ชื่อและขอบเขต"
+      ],
+      "split": "development",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_query": "NEO QLED"
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "no_matches",
+        "category_ids": [
+          "TV0107"
+        ]
+      }
+    },
+    {
+      "id": "Q014",
+      "tags": [
+        "category",
+        "ชื่อและขอบเขต"
+      ],
+      "split": "development",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_query": "ขาแขวนทีวี"
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "no_matches",
+        "category_ids": [
+          "TV0201"
+        ]
+      }
+    },
+    {
+      "id": "Q015",
+      "tags": [
+        "category",
+        "ชื่อและขอบเขต"
+      ],
+      "split": "holdout",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_query": "อุปกรณ์เสริมทีวี"
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "no_matches",
+        "category_ids": [
+          "TV0201",
+          "TV0202"
+        ]
+      }
+    },
+    {
+      "id": "Q016",
+      "tags": [
+        "category",
+        "ชื่อและขอบเขต"
+      ],
+      "split": "development",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_query": "เครื่องซักผ้า"
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "AP0101"
+        ]
+      }
+    },
+    {
+      "id": "Q017",
+      "tags": [
+        "category",
+        "ชื่อและขอบเขต"
+      ],
+      "split": "development",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_query": "เครื่องอบผ้า"
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "AP0102"
+        ]
+      }
+    },
+    {
+      "id": "Q018",
+      "tags": [
+        "category",
+        "ชื่อและขอบเขต"
+      ],
+      "split": "development",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_query": "น้ำดื่ม"
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "no_matches",
+        "category_ids": [
+          "FO0101"
+        ]
+      }
+    },
+    {
+      "id": "Q019",
+      "tags": [
+        "category",
+        "ชื่อและขอบเขต"
+      ],
+      "split": "development",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_query": "OLED or QLED"
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "TV0108",
+          "TV0109"
+        ]
+      }
+    },
+    {
+      "id": "Q020",
+      "tags": [
+        "category",
+        "ชื่อและขอบเขต"
+      ],
+      "split": "holdout",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_query": "OLED | เครื่องซักผ้า"
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "AP0101",
+          "TV0108"
+        ]
+      }
+    },
+    {
+      "id": "Q021",
+      "tags": [
+        "category",
+        "คำผิดหรือกำกวม"
+      ],
+      "split": "development",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_query": "Televsions"
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "needs_clarification"
+      }
+    },
+    {
+      "id": "Q022",
+      "tags": [
+        "category",
+        "คำผิดหรือกำกวม"
+      ],
+      "split": "development",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_query": "OELD TV"
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "needs_clarification"
+      }
+    },
+    {
+      "id": "Q023",
+      "tags": [
+        "category",
+        "คำผิดหรือกำกวม"
+      ],
+      "split": "development",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_query": "ทีวี OELD"
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "needs_clarification"
+      }
+    },
+    {
+      "id": "Q024",
+      "tags": [
+        "category",
+        "คำผิดหรือกำกวม"
+      ],
+      "split": "development",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_query": "ZX9999"
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "needs_clarification"
+      }
+    },
+    {
+      "id": "Q025",
+      "tags": [
+        "category",
+        "คำผิดหรือกำกวม"
+      ],
+      "split": "holdout",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_query": "xyzzyxnomatch"
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "needs_clarification"
+      }
+    },
+    {
+      "id": "Q026",
+      "tags": [
+        "category",
+        "คำผิดหรือกำกวม"
+      ],
+      "split": "development",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_query": "OLED/QLED"
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "needs_clarification"
+      }
+    },
+    {
+      "id": "Q027",
+      "tags": [
+        "category",
+        "คำผิดหรือกำกวม"
+      ],
+      "split": "development",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_query": "ทีวี OLED 55 นิ้ว"
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "needs_clarification"
+      }
+    },
+    {
+      "id": "Q028",
+      "tags": [
+        "category",
+        "คำผิดหรือกำกวม"
+      ],
+      "split": "development",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_query": "OLED | xyzzyxnomatch"
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "needs_clarification"
+      }
+    },
+    {
+      "id": "Q029",
+      "tags": [
+        "category",
+        "คำผิดหรือกำกวม"
+      ],
+      "split": "development",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_query": "จอพิเศษ"
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "needs_clarification"
+      }
+    },
+    {
+      "id": "Q030",
+      "tags": [
+        "category",
+        "รหัสและระดับแม่"
+      ],
+      "split": "holdout",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "TV0108"
+          ]
+        },
+        "limit": 100,
+        "sort": "id"
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "TV0108"
+        ]
+      }
+    },
+    {
+      "id": "Q031",
+      "tags": [
+        "category",
+        "รหัสและระดับแม่"
+      ],
+      "split": "development",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "TV0109"
+          ]
+        },
+        "limit": 100,
+        "sort": "id"
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "TV0109"
+        ]
+      }
+    },
+    {
+      "id": "Q032",
+      "tags": [
+        "category",
+        "รหัสและระดับแม่"
+      ],
+      "split": "development",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "TV0100"
+          ]
+        },
+        "limit": 100,
+        "sort": "id"
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "TV0107",
+          "TV0108",
+          "TV0109"
+        ]
+      }
+    },
+    {
+      "id": "Q033",
+      "tags": [
+        "category",
+        "รหัสและระดับแม่"
+      ],
+      "split": "development",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "AP0100"
+          ]
+        },
+        "limit": 100,
+        "sort": "id"
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "AP0101",
+          "AP0102"
+        ]
+      }
+    },
+    {
+      "id": "Q034",
+      "tags": [
+        "category",
+        "รหัสและระดับแม่"
+      ],
+      "split": "development",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "TV0200"
+          ]
+        },
+        "limit": 100,
+        "sort": "id"
+      },
+      "expected": {
+        "status": "no_matches",
+        "category_ids": [
+          "TV0201",
+          "TV0202"
+        ]
+      }
+    },
+    {
+      "id": "Q035",
+      "tags": [
+        "filter",
+        "ราคาและขอบเขต"
+      ],
+      "split": "holdout",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "TV0108"
+          ],
+          "price": {
+            "max": 0
+          }
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "TV0108"
+        ],
+        "strict_ids": [
+          100007
+        ],
+        "applied": [
+          {
+            "path": "/filters/price/max",
+            "resolved_id": null,
+            "value": 0,
+            "unit": "THB"
+          }
+        ]
+      }
+    },
+    {
+      "id": "Q036",
+      "tags": [
+        "filter",
+        "ราคาและขอบเขต"
+      ],
+      "split": "development",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "TV0108"
+          ],
+          "price": {
+            "max": 14999
+          }
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "TV0108"
+        ],
+        "strict_ids": [
+          100007
+        ],
+        "applied": [
+          {
+            "path": "/filters/price/max",
+            "resolved_id": null,
+            "value": 14999,
+            "unit": "THB"
+          }
+        ]
+      }
+    },
+    {
+      "id": "Q037",
+      "tags": [
+        "filter",
+        "ราคาและขอบเขต"
+      ],
+      "split": "development",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "TV0108"
+          ],
+          "price": {
+            "max": 15000
+          }
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "TV0108"
+        ],
+        "strict_ids": [
+          100002,
+          100007
+        ],
+        "applied": [
+          {
+            "path": "/filters/price/max",
+            "resolved_id": null,
+            "value": 15000,
+            "unit": "THB"
+          }
+        ]
+      }
+    },
+    {
+      "id": "Q038",
+      "tags": [
+        "filter",
+        "ราคาและขอบเขต"
+      ],
+      "split": "development",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "TV0108"
+          ],
+          "price": {
+            "max": 20000
+          }
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "TV0108"
+        ],
+        "strict_ids": [
+          100000,
+          100002,
+          100007
+        ],
+        "applied": [
+          {
+            "path": "/filters/price/max",
+            "resolved_id": null,
+            "value": 20000,
+            "unit": "THB"
+          }
+        ]
+      }
+    },
+    {
+      "id": "Q039",
+      "tags": [
+        "filter",
+        "ราคาและขอบเขต"
+      ],
+      "split": "development",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "TV0108"
+          ],
+          "price": {
+            "max": 22000
+          }
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "TV0108"
+        ],
+        "strict_ids": [
+          100000,
+          100002,
+          100003,
+          100007,
+          100008
+        ],
+        "applied": [
+          {
+            "path": "/filters/price/max",
+            "resolved_id": null,
+            "value": 22000,
+            "unit": "THB"
+          }
+        ]
+      }
+    },
+    {
+      "id": "Q040",
+      "tags": [
+        "filter",
+        "ราคาและขอบเขต"
+      ],
+      "split": "holdout",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "TV0108"
+          ],
+          "price": {
+            "max": 25000
+          }
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "TV0108"
+        ],
+        "strict_ids": [
+          100000,
+          100002,
+          100003,
+          100004,
+          100005,
+          100006,
+          100007,
+          100008
+        ],
+        "applied": [
+          {
+            "path": "/filters/price/max",
+            "resolved_id": null,
+            "value": 25000,
+            "unit": "THB"
+          }
+        ]
+      }
+    },
+    {
+      "id": "Q041",
+      "tags": [
+        "filter",
+        "ราคาและขอบเขต"
+      ],
+      "split": "development",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "TV0108"
+          ],
+          "price": {
+            "max": 30000
+          }
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "TV0108"
+        ],
+        "strict_ids": [
+          100000,
+          100001,
+          100002,
+          100003,
+          100004,
+          100005,
+          100006,
+          100007,
+          100008,
+          100009,
+          100010
+        ],
+        "applied": [
+          {
+            "path": "/filters/price/max",
+            "resolved_id": null,
+            "value": 30000,
+            "unit": "THB"
+          }
+        ]
+      }
+    },
+    {
+      "id": "Q042",
+      "tags": [
+        "filter",
+        "ราคาและขอบเขต"
+      ],
+      "split": "development",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "TV0108"
+          ],
+          "price": {
+            "min": 0
+          }
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "TV0108"
+        ],
+        "strict_ids": [
+          100000,
+          100001,
+          100002,
+          100003,
+          100004,
+          100005,
+          100006,
+          100007,
+          100008,
+          100009,
+          100010
+        ],
+        "applied": [
+          {
+            "path": "/filters/price/min",
+            "resolved_id": null,
+            "value": 0,
+            "unit": "THB"
+          }
+        ]
+      }
+    },
+    {
+      "id": "Q043",
+      "tags": [
+        "filter",
+        "ราคาและขอบเขต"
+      ],
+      "split": "development",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "TV0108"
+          ],
+          "price": {
+            "min": 1
+          }
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "TV0108"
+        ],
+        "strict_ids": [
+          100000,
+          100001,
+          100002,
+          100003,
+          100004,
+          100005,
+          100006,
+          100008,
+          100009,
+          100010
+        ],
+        "applied": [
+          {
+            "path": "/filters/price/min",
+            "resolved_id": null,
+            "value": 1,
+            "unit": "THB"
+          }
+        ]
+      }
+    },
+    {
+      "id": "Q044",
+      "tags": [
+        "filter",
+        "ราคาและขอบเขต"
+      ],
+      "split": "development",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "TV0108"
+          ],
+          "price": {
+            "min": 15000
+          }
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "TV0108"
+        ],
+        "strict_ids": [
+          100000,
+          100001,
+          100002,
+          100003,
+          100004,
+          100005,
+          100006,
+          100008,
+          100009,
+          100010
+        ],
+        "applied": [
+          {
+            "path": "/filters/price/min",
+            "resolved_id": null,
+            "value": 15000,
+            "unit": "THB"
+          }
+        ]
+      }
+    },
+    {
+      "id": "Q045",
+      "tags": [
+        "filter",
+        "ราคาและขอบเขต"
+      ],
+      "split": "holdout",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "TV0108"
+          ],
+          "price": {
+            "min": 20000
+          }
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "TV0108"
+        ],
+        "strict_ids": [
+          100000,
+          100001,
+          100003,
+          100004,
+          100005,
+          100006,
+          100008,
+          100009,
+          100010
+        ],
+        "applied": [
+          {
+            "path": "/filters/price/min",
+            "resolved_id": null,
+            "value": 20000,
+            "unit": "THB"
+          }
+        ]
+      }
+    },
+    {
+      "id": "Q046",
+      "tags": [
+        "filter",
+        "ราคาและขอบเขต"
+      ],
+      "split": "development",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "TV0108"
+          ],
+          "price": {
+            "min": 25000
+          }
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "TV0108"
+        ],
+        "strict_ids": [
+          100001,
+          100006,
+          100009,
+          100010
+        ],
+        "applied": [
+          {
+            "path": "/filters/price/min",
+            "resolved_id": null,
+            "value": 25000,
+            "unit": "THB"
+          }
+        ]
+      }
+    },
+    {
+      "id": "Q047",
+      "tags": [
+        "filter",
+        "ราคาและขอบเขต"
+      ],
+      "split": "development",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "TV0108"
+          ],
+          "price": {
+            "min": 30001
+          }
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "TV0108"
+        ],
+        "strict_ids": [],
+        "applied": [
+          {
+            "path": "/filters/price/min",
+            "resolved_id": null,
+            "value": 30001,
+            "unit": "THB"
+          }
+        ]
+      }
+    },
+    {
+      "id": "Q048",
+      "tags": [
+        "filter",
+        "ช่วงราคา"
+      ],
+      "split": "development",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "TV0108"
+          ],
+          "price": {
+            "min": 0,
+            "max": 0
+          }
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "TV0108"
+        ],
+        "strict_ids": [
+          100007
+        ]
+      }
+    },
+    {
+      "id": "Q049",
+      "tags": [
+        "filter",
+        "ช่วงราคา"
+      ],
+      "split": "development",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "TV0108"
+          ],
+          "price": {
+            "min": 15000,
+            "max": 25000
+          }
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "TV0108"
+        ],
+        "strict_ids": [
+          100000,
+          100002,
+          100003,
+          100004,
+          100005,
+          100006,
+          100008
+        ]
+      }
+    },
+    {
+      "id": "Q050",
+      "tags": [
+        "filter",
+        "ช่วงราคา"
+      ],
+      "split": "holdout",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "TV0108"
+          ],
+          "price": {
+            "min": 21000,
+            "max": 24000
+          }
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "TV0108"
+        ],
+        "strict_ids": [
+          100003,
+          100004,
+          100005,
+          100008
+        ]
+      }
+    },
+    {
+      "id": "Q051",
+      "tags": [
+        "filter",
+        "ช่วงราคา"
+      ],
+      "split": "development",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "TV0108"
+          ],
+          "price": {
+            "min": 30001,
+            "max": 40000
+          }
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "TV0108"
+        ],
+        "strict_ids": []
+      }
+    },
+    {
+      "id": "Q052",
+      "tags": [
+        "filter",
+        "ขนาดจอ"
+      ],
+      "split": "development",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "TV0108"
+          ],
+          "specs": [
+            {
+              "attribute_id": "AT0048",
+              "op": "eq",
+              "value": 42,
+              "unit": "นิ้ว"
+            }
+          ]
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "TV0108"
+        ],
+        "strict_ids": [
+          100007
+        ],
+        "applied": [
+          {
+            "path": "/filters/specs/0",
+            "resolved_id": "AT0048",
+            "value": 42,
+            "unit": "inch"
+          }
+        ]
+      }
+    },
+    {
+      "id": "Q053",
+      "tags": [
+        "filter",
+        "ขนาดจอ"
+      ],
+      "split": "development",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "TV0108"
+          ],
+          "specs": [
+            {
+              "attribute_id": "AT0048",
+              "op": "eq",
+              "value": 55,
+              "unit": "นิ้ว"
+            }
+          ]
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "TV0108"
+        ],
+        "strict_ids": [
+          100000,
+          100002,
+          100004,
+          100005,
+          100006,
+          100008
+        ],
+        "applied": [
+          {
+            "path": "/filters/specs/0",
+            "resolved_id": "AT0048",
+            "value": 55,
+            "unit": "inch"
+          }
+        ]
+      }
+    },
+    {
+      "id": "Q054",
+      "tags": [
+        "filter",
+        "ขนาดจอ"
+      ],
+      "split": "development",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "TV0108"
+          ],
+          "specs": [
+            {
+              "attribute_id": "AT0048",
+              "op": "eq",
+              "value": 65,
+              "unit": "นิ้ว"
+            }
+          ]
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "TV0108"
+        ],
+        "strict_ids": [
+          100001
+        ],
+        "applied": [
+          {
+            "path": "/filters/specs/0",
+            "resolved_id": "AT0048",
+            "value": 65,
+            "unit": "inch"
+          }
+        ]
+      }
+    },
+    {
+      "id": "Q055",
+      "tags": [
+        "filter",
+        "ขนาดจอ"
+      ],
+      "split": "holdout",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "TV0108"
+          ],
+          "specs": [
+            {
+              "attribute_id": "AT0048",
+              "op": "gte",
+              "value": 55,
+              "unit": "นิ้ว"
+            }
+          ]
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "TV0108"
+        ],
+        "strict_ids": [
+          100000,
+          100001,
+          100002,
+          100004,
+          100005,
+          100006,
+          100008
+        ],
+        "applied": [
+          {
+            "path": "/filters/specs/0",
+            "resolved_id": "AT0048",
+            "value": 55,
+            "unit": "inch"
+          }
+        ]
+      }
+    },
+    {
+      "id": "Q056",
+      "tags": [
+        "filter",
+        "ขนาดจอ"
+      ],
+      "split": "development",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "TV0108"
+          ],
+          "specs": [
+            {
+              "attribute_id": "AT0048",
+              "op": "gte",
+              "value": 65,
+              "unit": "นิ้ว"
+            }
+          ]
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "TV0108"
+        ],
+        "strict_ids": [
+          100001
+        ],
+        "applied": [
+          {
+            "path": "/filters/specs/0",
+            "resolved_id": "AT0048",
+            "value": 65,
+            "unit": "inch"
+          }
+        ]
+      }
+    },
+    {
+      "id": "Q057",
+      "tags": [
+        "filter",
+        "ขนาดจอ"
+      ],
+      "split": "development",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "TV0108"
+          ],
+          "specs": [
+            {
+              "attribute_id": "AT0048",
+              "op": "lte",
+              "value": 55,
+              "unit": "นิ้ว"
+            }
+          ]
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "TV0108"
+        ],
+        "strict_ids": [
+          100000,
+          100002,
+          100004,
+          100005,
+          100006,
+          100007,
+          100008
+        ],
+        "applied": [
+          {
+            "path": "/filters/specs/0",
+            "resolved_id": "AT0048",
+            "value": 55,
+            "unit": "inch"
+          }
+        ]
+      }
+    },
+    {
+      "id": "Q058",
+      "tags": [
+        "filter",
+        "ขนาดจอ"
+      ],
+      "split": "development",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "TV0108"
+          ],
+          "specs": [
+            {
+              "attribute_id": "AT0048",
+              "op": "lte",
+              "value": 42,
+              "unit": "นิ้ว"
+            }
+          ]
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "TV0108"
+        ],
+        "strict_ids": [
+          100007
+        ],
+        "applied": [
+          {
+            "path": "/filters/specs/0",
+            "resolved_id": "AT0048",
+            "value": 42,
+            "unit": "inch"
+          }
+        ]
+      }
+    },
+    {
+      "id": "Q059",
+      "tags": [
+        "filter",
+        "ขนาดจอ"
+      ],
+      "split": "development",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "TV0108"
+          ],
+          "specs": [
+            {
+              "attribute_query": "ขนาดหน้าจอ",
+              "op": "eq",
+              "value": 42,
+              "unit": "นิ้ว"
+            }
+          ]
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "TV0108"
+        ],
+        "strict_ids": [
+          100007
+        ],
+        "applied": [
+          {
+            "path": "/filters/specs/0",
+            "resolved_id": "AT0048",
+            "value": 42,
+            "unit": "inch"
+          }
+        ]
+      }
+    },
+    {
+      "id": "Q060",
+      "tags": [
+        "filter",
+        "ขนาดจอ"
+      ],
+      "split": "holdout",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "TV0108"
+          ],
+          "specs": [
+            {
+              "attribute_query": "ขนาดหน้าจอ",
+              "op": "eq",
+              "value": 55,
+              "unit": "นิ้ว"
+            }
+          ]
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "TV0108"
+        ],
+        "strict_ids": [
+          100000,
+          100002,
+          100004,
+          100005,
+          100006,
+          100008
+        ],
+        "applied": [
+          {
+            "path": "/filters/specs/0",
+            "resolved_id": "AT0048",
+            "value": 55,
+            "unit": "inch"
+          }
+        ]
+      }
+    },
+    {
+      "id": "Q061",
+      "tags": [
+        "filter",
+        "ขนาดจอ"
+      ],
+      "split": "development",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "TV0108"
+          ],
+          "specs": [
+            {
+              "attribute_query": "ขนาดหน้าจอ",
+              "op": "eq",
+              "value": 65,
+              "unit": "นิ้ว"
+            }
+          ]
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "TV0108"
+        ],
+        "strict_ids": [
+          100001
+        ],
+        "applied": [
+          {
+            "path": "/filters/specs/0",
+            "resolved_id": "AT0048",
+            "value": 65,
+            "unit": "inch"
+          }
+        ]
+      }
+    },
+    {
+      "id": "Q062",
+      "tags": [
+        "filter",
+        "ขนาดจอ"
+      ],
+      "split": "development",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "TV0108"
+          ],
+          "specs": [
+            {
+              "attribute_query": "ขนาดหน้าจอ",
+              "op": "gte",
+              "value": 55,
+              "unit": "นิ้ว"
+            }
+          ]
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "TV0108"
+        ],
+        "strict_ids": [
+          100000,
+          100001,
+          100002,
+          100004,
+          100005,
+          100006,
+          100008
+        ],
+        "applied": [
+          {
+            "path": "/filters/specs/0",
+            "resolved_id": "AT0048",
+            "value": 55,
+            "unit": "inch"
+          }
+        ]
+      }
+    },
+    {
+      "id": "Q063",
+      "tags": [
+        "filter",
+        "ขนาดจอ"
+      ],
+      "split": "development",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "TV0108"
+          ],
+          "specs": [
+            {
+              "attribute_query": "ขนาดหน้าจอ",
+              "op": "gte",
+              "value": 65,
+              "unit": "นิ้ว"
+            }
+          ]
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "TV0108"
+        ],
+        "strict_ids": [
+          100001
+        ],
+        "applied": [
+          {
+            "path": "/filters/specs/0",
+            "resolved_id": "AT0048",
+            "value": 65,
+            "unit": "inch"
+          }
+        ]
+      }
+    },
+    {
+      "id": "Q064",
+      "tags": [
+        "filter",
+        "ขนาดจอ"
+      ],
+      "split": "development",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "TV0108"
+          ],
+          "specs": [
+            {
+              "attribute_query": "ขนาดหน้าจอ",
+              "op": "lte",
+              "value": 55,
+              "unit": "นิ้ว"
+            }
+          ]
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "TV0108"
+        ],
+        "strict_ids": [
+          100000,
+          100002,
+          100004,
+          100005,
+          100006,
+          100007,
+          100008
+        ],
+        "applied": [
+          {
+            "path": "/filters/specs/0",
+            "resolved_id": "AT0048",
+            "value": 55,
+            "unit": "inch"
+          }
+        ]
+      }
+    },
+    {
+      "id": "Q065",
+      "tags": [
+        "filter",
+        "ขนาดจอ"
+      ],
+      "split": "holdout",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "TV0108"
+          ],
+          "specs": [
+            {
+              "attribute_query": "ขนาดหน้าจอ",
+              "op": "lte",
+              "value": 42,
+              "unit": "นิ้ว"
+            }
+          ]
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "TV0108"
+        ],
+        "strict_ids": [
+          100007
+        ],
+        "applied": [
+          {
+            "path": "/filters/specs/0",
+            "resolved_id": "AT0048",
+            "value": 42,
+            "unit": "inch"
+          }
+        ]
+      }
+    },
+    {
+      "id": "Q066",
+      "tags": [
+        "filter",
+        "ความกว้างและหน่วย"
+      ],
+      "split": "development",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "TV0108"
+          ],
+          "specs": [
+            {
+              "attribute_id": "AT0006",
+              "op": "eq",
+              "value": 100,
+              "unit": "cm"
+            }
+          ]
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "TV0108"
+        ],
+        "strict_ids": [
+          100000,
+          100003,
+          100005,
+          100006,
+          100008,
+          100009,
+          100010
+        ],
+        "applied": [
+          {
+            "path": "/filters/specs/0",
+            "resolved_id": "AT0006",
+            "value": 100,
+            "unit": "cm"
+          }
+        ]
+      }
+    },
+    {
+      "id": "Q067",
+      "tags": [
+        "filter",
+        "ความกว้างและหน่วย"
+      ],
+      "split": "development",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "TV0108"
+          ],
+          "specs": [
+            {
+              "attribute_id": "AT0006",
+              "op": "eq",
+              "value": 1000,
+              "unit": "mm"
+            }
+          ]
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "TV0108"
+        ],
+        "strict_ids": [
+          100000,
+          100003,
+          100005,
+          100006,
+          100008,
+          100009,
+          100010
+        ],
+        "applied": [
+          {
+            "path": "/filters/specs/0",
+            "resolved_id": "AT0006",
+            "value": 100,
+            "unit": "cm"
+          }
+        ]
+      }
+    },
+    {
+      "id": "Q068",
+      "tags": [
+        "filter",
+        "ความกว้างและหน่วย"
+      ],
+      "split": "development",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "TV0108"
+          ],
+          "specs": [
+            {
+              "attribute_id": "AT0006",
+              "op": "eq",
+              "value": 90,
+              "unit": "cm"
+            }
+          ]
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "TV0108"
+        ],
+        "strict_ids": [
+          100002
+        ],
+        "applied": [
+          {
+            "path": "/filters/specs/0",
+            "resolved_id": "AT0006",
+            "value": 90,
+            "unit": "cm"
+          }
+        ]
+      }
+    },
+    {
+      "id": "Q069",
+      "tags": [
+        "filter",
+        "ความกว้างและหน่วย"
+      ],
+      "split": "development",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "TV0108"
+          ],
+          "specs": [
+            {
+              "attribute_id": "AT0006",
+              "op": "eq",
+              "value": 900,
+              "unit": "mm"
+            }
+          ]
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "TV0108"
+        ],
+        "strict_ids": [
+          100002
+        ],
+        "applied": [
+          {
+            "path": "/filters/specs/0",
+            "resolved_id": "AT0006",
+            "value": 90,
+            "unit": "cm"
+          }
+        ]
+      }
+    },
+    {
+      "id": "Q070",
+      "tags": [
+        "filter",
+        "ความกว้างและหน่วย"
+      ],
+      "split": "holdout",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "TV0108"
+          ],
+          "specs": [
+            {
+              "attribute_id": "AT0006",
+              "op": "eq",
+              "value": 100.5,
+              "unit": "cm"
+            }
+          ]
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "TV0108"
+        ],
+        "strict_ids": [],
+        "applied": [
+          {
+            "path": "/filters/specs/0",
+            "resolved_id": "AT0006",
+            "value": 100.5,
+            "unit": "cm"
+          }
+        ]
+      }
+    },
+    {
+      "id": "Q071",
+      "tags": [
+        "filter",
+        "boolean"
+      ],
+      "split": "development",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "TV0108"
+          ],
+          "specs": [
+            {
+              "attribute_id": "AT0093",
+              "op": "eq",
+              "value": true
+            }
+          ]
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "TV0108"
+        ],
+        "strict_ids": [
+          100005
+        ],
+        "applied": [
+          {
+            "path": "/filters/specs/0",
+            "resolved_id": "AT0093",
+            "value": true,
+            "unit": null
+          }
+        ]
+      }
+    },
+    {
+      "id": "Q072",
+      "tags": [
+        "filter",
+        "boolean"
+      ],
+      "split": "development",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "TV0108"
+          ],
+          "specs": [
+            {
+              "attribute_id": "AT0093",
+              "op": "eq",
+              "value": false
+            }
+          ]
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "TV0108"
+        ],
+        "strict_ids": [
+          100000,
+          100001,
+          100002,
+          100003,
+          100004,
+          100006,
+          100007,
+          100009,
+          100010
+        ],
+        "applied": [
+          {
+            "path": "/filters/specs/0",
+            "resolved_id": "AT0093",
+            "value": false,
+            "unit": null
+          }
+        ]
+      }
+    },
+    {
+      "id": "Q073",
+      "tags": [
+        "filter",
+        "ข้อความ"
+      ],
+      "split": "development",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "TV0108"
+          ],
+          "specs": [
+            {
+              "attribute_id": "AT0014",
+              "op": "eq",
+              "value": "Steel"
+            }
+          ]
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "TV0108"
+        ],
+        "strict_ids": [
+          100002
+        ]
+      }
+    },
+    {
+      "id": "Q074",
+      "tags": [
+        "filter",
+        "ข้อความ"
+      ],
+      "split": "development",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "TV0108"
+          ],
+          "specs": [
+            {
+              "attribute_id": "AT0014",
+              "op": "eq",
+              "value": "Wood"
+            }
+          ]
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "TV0108"
+        ],
+        "strict_ids": [
+          100000,
+          100001,
+          100003,
+          100004,
+          100005,
+          100006,
+          100007,
+          100008,
+          100009,
+          100010
+        ]
+      }
+    },
+    {
+      "id": "Q075",
+      "tags": [
+        "filter",
+        "ข้อความ"
+      ],
+      "split": "holdout",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "TV0108"
+          ],
+          "specs": [
+            {
+              "attribute_id": "AT0014",
+              "op": "eq",
+              "value": "metal"
+            }
+          ]
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "TV0108"
+        ],
+        "strict_ids": []
+      }
+    },
+    {
+      "id": "Q076",
+      "tags": [
+        "filter",
+        "แบรนด์"
+      ],
+      "split": "development",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "TV0108"
+          ],
+          "brand_queries": [
+            "LG"
+          ]
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "TV0108"
+        ],
+        "strict_ids": [
+          100000,
+          100001,
+          100003,
+          100004,
+          100005,
+          100006,
+          100007,
+          100008,
+          100009,
+          100010
+        ]
+      }
+    },
+    {
+      "id": "Q077",
+      "tags": [
+        "filter",
+        "แบรนด์"
+      ],
+      "split": "development",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "TV0108"
+          ],
+          "brand_queries": [
+            "แอลจี"
+          ]
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "TV0108"
+        ],
+        "strict_ids": [
+          100000,
+          100001,
+          100003,
+          100004,
+          100005,
+          100006,
+          100007,
+          100008,
+          100009,
+          100010
+        ]
+      }
+    },
+    {
+      "id": "Q078",
+      "tags": [
+        "filter",
+        "แบรนด์"
+      ],
+      "split": "development",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "TV0108"
+          ],
+          "brand_queries": [
+            "Bosch"
+          ]
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "TV0108"
+        ],
+        "strict_ids": [
+          100002
+        ]
+      }
+    },
+    {
+      "id": "Q079",
+      "tags": [
+        "filter",
+        "แบรนด์"
+      ],
+      "split": "development",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "TV0108"
+          ],
+          "brand_queries": [
+            "บ๊อช"
+          ]
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "TV0108"
+        ],
+        "strict_ids": [
+          100002
+        ]
+      }
+    },
+    {
+      "id": "Q080",
+      "tags": [
+        "filter",
+        "หลายแบรนด์ OR"
+      ],
+      "split": "holdout",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "TV0108"
+          ],
+          "brand_queries": [
+            "LG",
+            "Bosch"
+          ]
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "TV0108"
+        ],
+        "strict_ids": [
+          100000,
+          100001,
+          100002,
+          100003,
+          100004,
+          100005,
+          100006,
+          100007,
+          100008,
+          100009,
+          100010
+        ]
+      }
+    },
+    {
+      "id": "Q081",
+      "tags": [
+        "filter",
+        "หลายฟีเจอร์ AND"
+      ],
+      "split": "development",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "TV0108"
+          ],
+          "feature_ids_all": [
+            "FT0023"
+          ]
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "TV0108"
+        ],
+        "strict_ids": [
+          100000,
+          100001,
+          100002,
+          100004,
+          100005,
+          100006,
+          100008,
+          100009,
+          100010
+        ]
+      }
+    },
+    {
+      "id": "Q082",
+      "tags": [
+        "filter",
+        "หลายฟีเจอร์ AND"
+      ],
+      "split": "development",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "TV0108"
+          ],
+          "feature_ids_all": [
+            "FT0074"
+          ]
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "TV0108"
+        ],
+        "strict_ids": [
+          100000,
+          100005,
+          100006
+        ]
+      }
+    },
+    {
+      "id": "Q083",
+      "tags": [
+        "filter",
+        "หลายฟีเจอร์ AND"
+      ],
+      "split": "development",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "TV0108"
+          ],
+          "feature_ids_all": [
+            "FT0023",
+            "FT0074"
+          ]
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "TV0108"
+        ],
+        "strict_ids": [
+          100000,
+          100005,
+          100006
+        ]
+      }
+    },
+    {
+      "id": "Q084",
+      "tags": [
+        "filter",
+        "ฟีเจอร์ภาษาคน"
+      ],
+      "split": "development",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "TV0108"
+          ],
+          "feature_queries_all": [
+            "HDMI"
+          ]
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "TV0108"
+        ],
+        "strict_ids": [
+          100000,
+          100001,
+          100002,
+          100004,
+          100005,
+          100006,
+          100008,
+          100009,
+          100010
+        ]
+      }
+    },
+    {
+      "id": "Q085",
+      "tags": [
+        "filter",
+        "ฟีเจอร์ภาษาคน"
+      ],
+      "split": "holdout",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "TV0108"
+          ],
+          "feature_queries_all": [
+            "VRR"
+          ]
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "TV0108"
+        ],
+        "strict_ids": [
+          100000,
+          100005,
+          100006
+        ]
+      }
+    },
+    {
+      "id": "Q086",
+      "tags": [
+        "filter",
+        "ฟีเจอร์ภาษาคน"
+      ],
+      "split": "development",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "TV0108"
+          ],
+          "feature_queries_all": [
+            "HDMI",
+            "VRR"
+          ]
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "TV0108"
+        ],
+        "strict_ids": [
+          100000,
+          100005,
+          100006
+        ]
+      }
+    },
+    {
+      "id": "Q087",
+      "tags": [
+        "filter",
+        "ตัวกรองร่วม"
+      ],
+      "split": "development",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "TV0108"
+          ],
+          "price": {
+            "max": 20000
+          },
+          "brand_queries": [
+            "LG"
+          ],
+          "feature_ids_all": [
+            "FT0023"
+          ],
+          "specs": [
+            {
+              "attribute_id": "AT0048",
+              "op": "eq",
+              "value": 55
+            },
+            {
+              "attribute_id": "AT0093",
+              "op": "eq",
+              "value": false
+            }
+          ]
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "TV0108"
+        ],
+        "strict_ids": [
+          100000
+        ]
+      }
+    },
+    {
+      "id": "Q088",
+      "tags": [
+        "filter",
+        "ตัวกรองร่วม"
+      ],
+      "split": "development",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "TV0108"
+          ],
+          "price": {
+            "max": 24000
+          },
+          "brand_queries": [
+            "LG"
+          ],
+          "feature_ids_all": [
+            "FT0023"
+          ],
+          "specs": [
+            {
+              "attribute_id": "AT0048",
+              "op": "eq",
+              "value": 55
+            },
+            {
+              "attribute_id": "AT0093",
+              "op": "eq",
+              "value": false
+            }
+          ]
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "TV0108"
+        ],
+        "strict_ids": [
+          100000,
+          100004
+        ]
+      }
+    },
+    {
+      "id": "Q089",
+      "tags": [
+        "filter",
+        "ตัวกรองร่วม"
+      ],
+      "split": "development",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "TV0108"
+          ],
+          "price": {
+            "max": 25000
+          },
+          "brand_queries": [
+            "LG"
+          ],
+          "feature_ids_all": [
+            "FT0023"
+          ],
+          "specs": [
+            {
+              "attribute_id": "AT0048",
+              "op": "eq",
+              "value": 55
+            },
+            {
+              "attribute_id": "AT0093",
+              "op": "eq",
+              "value": false
+            }
+          ]
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "TV0108"
+        ],
+        "strict_ids": [
+          100000,
+          100004,
+          100006
+        ]
+      }
+    },
+    {
+      "id": "Q090",
+      "tags": [
+        "keyword",
+        "คำใช้งานหรือไม่พบ"
+      ],
+      "split": "holdout",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "TV0108"
+          ]
+        },
+        "limit": 100,
+        "query": "ดูหนัง"
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "TV0108"
+        ],
+        "strict_ids": [
+          100000,
+          100006
+        ]
+      }
+    },
+    {
+      "id": "Q091",
+      "tags": [
+        "keyword",
+        "คำใช้งานหรือไม่พบ"
+      ],
+      "split": "development",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "TV0108"
+          ]
+        },
+        "limit": 100,
+        "query": "LG OLED"
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "TV0108"
+        ],
+        "strict_ids": [
+          100000,
+          100001,
+          100003,
+          100004,
+          100005,
+          100006,
+          100007,
+          100008,
+          100009,
+          100010
+        ]
+      }
+    },
+    {
+      "id": "Q092",
+      "tags": [
+        "keyword",
+        "คำใช้งานหรือไม่พบ"
+      ],
+      "split": "development",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "TV0108"
+          ]
+        },
+        "limit": 100,
+        "query": "คำไม่พบในสินค้า"
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "TV0108"
+        ],
+        "strict_ids": []
+      }
+    },
+    {
+      "id": "Q093",
+      "tags": [
+        "keyword",
+        "คำใช้งานหรือไม่พบ"
+      ],
+      "split": "development",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "TV0108"
+          ]
+        },
+        "limit": 100,
+        "query": "%"
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "TV0108"
+        ],
+        "strict_ids": []
+      }
+    },
+    {
+      "id": "Q094",
+      "tags": [
+        "keyword",
+        "คำใช้งานหรือไม่พบ"
+      ],
+      "split": "development",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "TV0108"
+          ]
+        },
+        "limit": 100,
+        "query": "'; DROP TABLE products; --"
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "TV0108"
+        ],
+        "strict_ids": []
+      }
+    },
+    {
+      "id": "Q095",
+      "tags": [
+        "identity",
+        "Article"
+      ],
+      "split": "holdout",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "TV0108"
+          ]
+        },
+        "exact": {
+          "article_id": 100000
+        },
+        "limit": 5
+      },
+      "expected": {
+        "status": "ok",
+        "strict_ids": [
+          100000
+        ]
+      }
+    },
+    {
+      "id": "Q096",
+      "tags": [
+        "identity",
+        "Article"
+      ],
+      "split": "development",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "TV0108"
+          ]
+        },
+        "exact": {
+          "article_id": 100001
+        },
+        "limit": 5
+      },
+      "expected": {
+        "status": "ok",
+        "strict_ids": [
+          100001
+        ]
+      }
+    },
+    {
+      "id": "Q097",
+      "tags": [
+        "identity",
+        "Article"
+      ],
+      "split": "development",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "AP0101"
+          ]
+        },
+        "exact": {
+          "article_id": 100012
+        },
+        "limit": 5
+      },
+      "expected": {
+        "status": "ok",
+        "strict_ids": [
+          100012
+        ]
+      }
+    },
+    {
+      "id": "Q098",
+      "tags": [
+        "identity",
+        "Article"
+      ],
+      "split": "development",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "AP0102"
+          ]
+        },
+        "exact": {
+          "article_id": 100013
+        },
+        "limit": 5
+      },
+      "expected": {
+        "status": "ok",
+        "strict_ids": [
+          100013
+        ]
+      }
+    },
+    {
+      "id": "Q099",
+      "tags": [
+        "identity",
+        "Article"
+      ],
+      "split": "development",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "TV0108"
+          ]
+        },
+        "exact": {
+          "article_id": 106045
+        },
+        "limit": 5
+      },
+      "expected": {
+        "status": "no_matches",
+        "strict_ids": []
+      }
+    },
+    {
+      "id": "Q100",
+      "tags": [
+        "identity",
+        "Article"
+      ],
+      "split": "holdout",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "TV0109"
+          ]
+        },
+        "exact": {
+          "article_id": 106046
+        },
+        "limit": 5
+      },
+      "expected": {
+        "status": "no_matches",
+        "strict_ids": []
+      }
+    },
+    {
+      "id": "Q101",
+      "tags": [
+        "identity",
+        "Article"
+      ],
+      "split": "development",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "TV0108"
+          ]
+        },
+        "exact": {
+          "article_id": 199999
+        },
+        "limit": 5
+      },
+      "expected": {
+        "status": "no_matches",
+        "strict_ids": []
+      }
+    },
+    {
+      "id": "Q102",
+      "tags": [
+        "identity",
+        "รุ่น"
+      ],
+      "split": "development",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "TV0108"
+          ]
+        },
+        "exact": {
+          "model": "TV0108-001"
+        },
+        "limit": 5
+      },
+      "expected": {
+        "status": "ok",
+        "strict_ids": [
+          100000
+        ]
+      }
+    },
+    {
+      "id": "Q103",
+      "tags": [
+        "identity",
+        "รุ่น"
+      ],
+      "split": "development",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "AP0101"
+          ]
+        },
+        "exact": {
+          "model": "AP0101-001"
+        },
+        "limit": 5
+      },
+      "expected": {
+        "status": "ok",
+        "strict_ids": [
+          100012
+        ]
+      }
+    },
+    {
+      "id": "Q104",
+      "tags": [
+        "identity",
+        "รุ่น"
+      ],
+      "split": "development",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "TV0108"
+          ]
+        },
+        "exact": {
+          "model": "TV0108-900"
+        },
+        "limit": 5
+      },
+      "expected": {
+        "status": "no_matches",
+        "strict_ids": []
+      }
+    },
+    {
+      "id": "Q105",
+      "tags": [
+        "identity",
+        "รุ่น"
+      ],
+      "split": "holdout",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "TV0108"
+          ]
+        },
+        "exact": {
+          "model": "MODEL-NOT-EXISTS"
+        },
+        "limit": 5
+      },
+      "expected": {
+        "status": "no_matches",
+        "strict_ids": []
+      }
+    },
+    {
+      "id": "Q106",
+      "tags": [
+        "diagnostics",
+        "ขอคำชี้แจงหรือขัดกัน"
+      ],
+      "split": "development",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_query": "OLED",
+          "category_ids": [
+            "TV0109"
+          ]
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "constraint_conflict"
+      }
+    },
+    {
+      "id": "Q107",
+      "tags": [
+        "diagnostics",
+        "ขอคำชี้แจงหรือขัดกัน"
+      ],
+      "split": "development",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "TV9999"
+          ]
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "needs_clarification"
+      }
+    },
+    {
+      "id": "Q108",
+      "tags": [
+        "diagnostics",
+        "ขอคำชี้แจงหรือขัดกัน"
+      ],
+      "split": "development",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "TV0108"
+          ],
+          "specs": [
+            {
+              "attribute_query": "ขนาด",
+              "op": "eq",
+              "value": 55
+            }
+          ]
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "needs_clarification"
+      }
+    },
+    {
+      "id": "Q109",
+      "tags": [
+        "diagnostics",
+        "ขอคำชี้แจงหรือขัดกัน"
+      ],
+      "split": "development",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "TV0108"
+          ],
+          "brand_queries": [
+            "แบรนด์ร่วม"
+          ]
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "needs_clarification"
+      }
+    },
+    {
+      "id": "Q110",
+      "tags": [
+        "diagnostics",
+        "ขอคำชี้แจงหรือขัดกัน"
+      ],
+      "split": "holdout",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "TV0108"
+          ],
+          "feature_queries_all": [
+            "ฟีเจอร์ร่วม"
+          ]
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "needs_clarification"
+      }
+    },
+    {
+      "id": "Q111",
+      "tags": [
+        "diagnostics",
+        "ขอคำชี้แจงหรือขัดกัน"
+      ],
+      "split": "development",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "TV0108"
+          ],
+          "feature_ids_all": [
+            "FT0099"
+          ]
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "constraint_conflict"
+      }
+    },
+    {
+      "id": "Q112",
+      "tags": [
+        "diagnostics",
+        "ขอคำชี้แจงหรือขัดกัน"
+      ],
+      "split": "development",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "TV0108"
+          ],
+          "specs": [
+            {
+              "attribute_id": "AT0048",
+              "op": "gte",
+              "value": 65
+            },
+            {
+              "attribute_id": "AT0048",
+              "op": "lte",
+              "value": 42
+            }
+          ]
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "constraint_conflict"
+      }
+    },
+    {
+      "id": "Q113",
+      "tags": [
+        "diagnostics",
+        "ขอคำชี้แจงหรือขัดกัน"
+      ],
+      "split": "development",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "TV0108"
+          ],
+          "specs": [
+            {
+              "attribute_id": "AT0048",
+              "attribute_query": "ความกว้าง",
+              "op": "eq",
+              "value": 55
+            }
+          ]
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "constraint_conflict"
+      }
+    },
+    {
+      "id": "Q114",
+      "tags": [
+        "diagnostics",
+        "ไม่ใช้เงื่อนไขแทนกัน"
+      ],
+      "split": "development",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "TV0108"
+          ],
+          "specs": [
+            {
+              "attribute_query": "screen_size",
+              "op": "eq",
+              "value": 55,
+              "unit": "kg"
+            }
+          ]
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "ok",
+        "unapplied_paths": [
+          "/filters/specs/0"
+        ]
+      }
+    },
+    {
+      "id": "Q115",
+      "tags": [
+        "diagnostics",
+        "ไม่ใช้เงื่อนไขแทนกัน"
+      ],
+      "split": "holdout",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "TV0108"
+          ],
+          "specs": [
+            {
+              "attribute_query": "width",
+              "op": "eq",
+              "value": 55,
+              "unit": "CM"
+            }
+          ]
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "ok",
+        "unapplied_paths": [
+          "/filters/specs/0"
+        ]
+      }
+    },
+    {
+      "id": "Q116",
+      "tags": [
+        "diagnostics",
+        "ไม่ใช้เงื่อนไขแทนกัน"
+      ],
+      "split": "development",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "TV0108"
+          ],
+          "specs": [
+            {
+              "attribute_query": "width",
+              "op": "eq",
+              "value": 55,
+              "unit": "m"
+            }
+          ]
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "ok",
+        "unapplied_paths": [
+          "/filters/specs/0"
+        ]
+      }
+    },
+    {
+      "id": "Q117",
+      "tags": [
+        "diagnostics",
+        "ไม่ใช้เงื่อนไขแทนกัน"
+      ],
+      "split": "development",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "TV0108"
+          ],
+          "specs": [
+            {
+              "attribute_query": "package_width",
+              "op": "eq",
+              "value": 55
+            }
+          ]
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "ok",
+        "unapplied_paths": [
+          "/filters/specs/0"
+        ]
+      }
+    },
+    {
+      "id": "Q118",
+      "tags": [
+        "diagnostics",
+        "ไม่ใช้เงื่อนไขแทนกัน"
+      ],
+      "split": "development",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "TV0108"
+          ],
+          "specs": [
+            {
+              "attribute_query": "attribute-not-found",
+              "op": "eq",
+              "value": 55
+            }
+          ]
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "ok",
+        "unapplied_paths": [
+          "/filters/specs/0"
+        ]
+      }
+    },
+    {
+      "id": "Q119",
+      "tags": [
+        "filter",
+        "ความจุซัก"
+      ],
+      "split": "development",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "AP0101"
+          ],
+          "specs": [
+            {
+              "attribute_query": "ความจุซัก",
+              "op": "eq",
+              "value": 8,
+              "unit": "kg"
+            }
+          ]
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "AP0101"
+        ],
+        "strict_ids": [
+          100012
+        ],
+        "applied": [
+          {
+            "path": "/filters/specs/0",
+            "resolved_id": "AT0099",
+            "value": 8,
+            "unit": "kg"
+          }
+        ]
+      }
+    },
+    {
+      "id": "Q120",
+      "tags": [
+        "filter",
+        "ความจุซัก"
+      ],
+      "split": "holdout",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "AP0101"
+          ],
+          "specs": [
+            {
+              "attribute_query": "ความจุซัก",
+              "op": "eq",
+              "value": 8000,
+              "unit": "g"
+            }
+          ]
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "AP0101"
+        ],
+        "strict_ids": [
+          100012
+        ],
+        "applied": [
+          {
+            "path": "/filters/specs/0",
+            "resolved_id": "AT0099",
+            "value": 8,
+            "unit": "kg"
+          }
+        ]
+      }
+    },
+    {
+      "id": "Q121",
+      "tags": [
+        "filter",
+        "ความจุซัก"
+      ],
+      "split": "development",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "AP0101"
+          ],
+          "specs": [
+            {
+              "attribute_query": "ความจุซัก",
+              "op": "eq",
+              "value": 8,
+              "unit": "L"
+            }
+          ]
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "AP0101"
+        ],
+        "unapplied_paths": [
+          "/filters/specs/0"
+        ]
+      }
+    },
+    {
+      "id": "Q122",
+      "tags": [
+        "filter",
+        "ความจุอบ"
+      ],
+      "split": "development",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_query": "เครื่องอบผ้า",
+          "specs": [
+            {
+              "attribute_query": "ความจุอบ",
+              "op": "eq",
+              "value": 6,
+              "unit": "kg"
+            }
+          ]
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "AP0102"
+        ],
+        "strict_ids": [
+          100013
+        ]
+      }
+    },
+    {
+      "id": "Q123",
+      "tags": [
+        "filter",
+        "ความจุอบ"
+      ],
+      "split": "development",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_query": "Tumble dryer",
+          "specs": [
+            {
+              "attribute_query": "ความจุอบ",
+              "op": "eq",
+              "value": 6,
+              "unit": "kg"
+            }
+          ]
+        },
+        "limit": 100
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "AP0102"
+        ],
+        "strict_ids": [
+          100013
+        ]
+      }
+    },
+    {
+      "id": "Q124",
+      "tags": [
+        "validation",
+        "ชนิดข้อมูล"
+      ],
+      "split": "development",
+      "request": {
+        "query": "ทีวี",
+        "limit": "5"
+      },
+      "expected": {
+        "status": "invalid_request"
+      }
+    },
+    {
+      "id": "Q125",
+      "tags": [
+        "validation",
+        "ชนิดข้อมูล"
+      ],
+      "split": "holdout",
+      "request": {
+        "query": "ทีวี",
+        "filters": {
+          "price": {
+            "max": "25000"
+          }
+        }
+      },
+      "expected": {
+        "status": "invalid_request"
+      }
+    },
+    {
+      "id": "Q126",
+      "tags": [
+        "validation",
+        "ชนิดข้อมูล"
+      ],
+      "split": "development",
+      "request": {
+        "query": "ทีวี",
+        "filters": {
+          "specs": [
+            {
+              "attribute_id": "AT0048",
+              "op": "eq",
+              "value": "55",
+              "unit": "นิ้ว"
+            }
+          ]
+        }
+      },
+      "expected": {
+        "status": "invalid_request"
+      }
+    },
+    {
+      "id": "Q127",
+      "tags": [
+        "validation",
+        "ชนิดข้อมูล"
+      ],
+      "split": "development",
+      "request": {
+        "query": "ทีวี",
+        "version": "2"
+      },
+      "expected": {
+        "status": "invalid_request"
+      }
+    },
+    {
+      "id": "Q128",
+      "tags": [
+        "validation",
+        "ชนิดข้อมูล"
+      ],
+      "split": "development",
+      "request": {
+        "query": "ทีวี",
+        "extra": true
+      },
+      "expected": {
+        "status": "invalid_request"
+      }
+    },
+    {
+      "id": "Q129",
+      "tags": [
+        "validation",
+        "ชนิดข้อมูล"
+      ],
+      "split": "development",
+      "request": {
+        "query": "ทีวี",
+        "page": 0
+      },
+      "expected": {
+        "status": "invalid_request"
+      }
+    },
+    {
+      "id": "Q130",
+      "tags": [
+        "ranking",
+        "fixture-qrels"
+      ],
+      "split": "holdout",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "TV0108"
+          ]
+        },
+        "limit": 5,
+        "query": "ทีวี",
+        "semantic_query": "ดูหนังในบ้าน"
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "TV0108"
+        ],
+        "ranking": {
+          "complete": true,
+          "grades": {
+            "100000": 2,
+            "100001": 0,
+            "100002": 0,
+            "100003": 0,
+            "100004": 0,
+            "100005": 1,
+            "100006": 3,
+            "100007": 0,
+            "100008": 0,
+            "100009": 0,
+            "100010": 0
+          }
+        }
+      }
+    },
+    {
+      "id": "Q131",
+      "tags": [
+        "ranking",
+        "fixture-qrels"
+      ],
+      "split": "development",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "TV0108"
+          ]
+        },
+        "limit": 5,
+        "query": "ทีวี",
+        "semantic_query": "ดูหนังกับครอบครัว"
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "TV0108"
+        ],
+        "ranking": {
+          "complete": true,
+          "grades": {
+            "100000": 2,
+            "100001": 0,
+            "100002": 0,
+            "100003": 0,
+            "100004": 0,
+            "100005": 1,
+            "100006": 3,
+            "100007": 0,
+            "100008": 0,
+            "100009": 0,
+            "100010": 0
+          }
+        }
+      }
+    },
+    {
+      "id": "Q132",
+      "tags": [
+        "ranking",
+        "fixture-qrels"
+      ],
+      "split": "development",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "TV0108"
+          ]
+        },
+        "limit": 5,
+        "query": "ทีวี",
+        "semantic_query": "เล่นเกม"
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "TV0108"
+        ],
+        "ranking": {
+          "complete": true,
+          "grades": {
+            "100000": 2,
+            "100001": 0,
+            "100002": 0,
+            "100003": 0,
+            "100004": 0,
+            "100005": 1,
+            "100006": 3,
+            "100007": 0,
+            "100008": 0,
+            "100009": 0,
+            "100010": 0
+          }
+        }
+      }
+    },
+    {
+      "id": "Q133",
+      "tags": [
+        "ranking",
+        "fixture-qrels"
+      ],
+      "split": "development",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "TV0108"
+          ]
+        },
+        "limit": 5,
+        "query": "ทีวี",
+        "semantic_query": "ต่อคอนโซล"
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "TV0108"
+        ],
+        "ranking": {
+          "complete": true,
+          "grades": {
+            "100000": 2,
+            "100001": 0,
+            "100002": 0,
+            "100003": 0,
+            "100004": 0,
+            "100005": 1,
+            "100006": 3,
+            "100007": 0,
+            "100008": 0,
+            "100009": 0,
+            "100010": 0
+          }
+        }
+      }
+    },
+    {
+      "id": "Q134",
+      "tags": [
+        "ranking",
+        "fixture-qrels"
+      ],
+      "split": "development",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "TV0108"
+          ]
+        },
+        "limit": 5,
+        "query": "ทีวี",
+        "semantic_query": "ภาพยนตร์ห้องนั่งเล่น"
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "TV0108"
+        ],
+        "ranking": {
+          "complete": true,
+          "grades": {
+            "100000": 2,
+            "100001": 0,
+            "100002": 0,
+            "100003": 0,
+            "100004": 0,
+            "100005": 1,
+            "100006": 3,
+            "100007": 0,
+            "100008": 0,
+            "100009": 0,
+            "100010": 0
+          }
+        }
+      }
+    },
+    {
+      "id": "Q135",
+      "tags": [
+        "ranking",
+        "fixture-qrels"
+      ],
+      "split": "holdout",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "TV0108"
+          ]
+        },
+        "limit": 5,
+        "query": "ทีวี",
+        "semantic_query": "จอสำหรับความบันเทิง"
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "TV0108"
+        ],
+        "ranking": {
+          "complete": true,
+          "grades": {
+            "100000": 2,
+            "100001": 0,
+            "100002": 0,
+            "100003": 0,
+            "100004": 0,
+            "100005": 1,
+            "100006": 3,
+            "100007": 0,
+            "100008": 0,
+            "100009": 0,
+            "100010": 0
+          }
+        }
+      }
+    },
+    {
+      "id": "Q136",
+      "tags": [
+        "ranking",
+        "fixture-qrels"
+      ],
+      "split": "development",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "TV0108"
+          ]
+        },
+        "limit": 5,
+        "query": "ทีวี",
+        "semantic_query": "ภาพลื่นไหล"
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "TV0108"
+        ],
+        "ranking": {
+          "complete": true,
+          "grades": {
+            "100000": 2,
+            "100001": 0,
+            "100002": 0,
+            "100003": 0,
+            "100004": 0,
+            "100005": 1,
+            "100006": 3,
+            "100007": 0,
+            "100008": 0,
+            "100009": 0,
+            "100010": 0
+          }
+        }
+      }
+    },
+    {
+      "id": "Q137",
+      "tags": [
+        "ranking",
+        "fixture-qrels"
+      ],
+      "split": "development",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "TV0108"
+          ]
+        },
+        "limit": 5,
+        "query": "ทีวี",
+        "semantic_query": "ชมกีฬา"
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "TV0108"
+        ],
+        "ranking": {
+          "complete": true,
+          "grades": {
+            "100000": 2,
+            "100001": 0,
+            "100002": 0,
+            "100003": 0,
+            "100004": 0,
+            "100005": 1,
+            "100006": 3,
+            "100007": 0,
+            "100008": 0,
+            "100009": 0,
+            "100010": 0
+          }
+        }
+      }
+    },
+    {
+      "id": "Q138",
+      "tags": [
+        "ranking",
+        "fixture-qrels"
+      ],
+      "split": "development",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "TV0108"
+          ]
+        },
+        "limit": 5,
+        "query": "ทีวี",
+        "semantic_query": "ต่อ HDMI"
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "TV0108"
+        ],
+        "ranking": {
+          "complete": true,
+          "grades": {
+            "100000": 2,
+            "100001": 0,
+            "100002": 0,
+            "100003": 0,
+            "100004": 0,
+            "100005": 1,
+            "100006": 3,
+            "100007": 0,
+            "100008": 0,
+            "100009": 0,
+            "100010": 0
+          }
+        }
+      }
+    },
+    {
+      "id": "Q139",
+      "tags": [
+        "ranking",
+        "fixture-qrels"
+      ],
+      "split": "development",
+      "request": {
+        "version": "1",
+        "filters": {
+          "category_ids": [
+            "TV0108"
+          ]
+        },
+        "limit": 5,
+        "query": "ทีวี",
+        "semantic_query": "ใช้งานทั่วไป"
+      },
+      "expected": {
+        "status": "ok",
+        "category_ids": [
+          "TV0108"
+        ],
+        "ranking": {
+          "complete": true,
+          "grades": {
+            "100000": 2,
+            "100001": 0,
+            "100002": 0,
+            "100003": 0,
+            "100004": 0,
+            "100005": 1,
+            "100006": 3,
+            "100007": 0,
+            "100008": 0,
+            "100009": 0,
+            "100010": 0
+          }
+        }
+      }
+    }
+  ]
+}
