@@ -32,8 +32,8 @@
     "embedding:register": "node --import tsx src/scripts/register-embedding-model.ts",
     "embedding:backfill": "node --import tsx src/scripts/backfill-embeddings.ts",
     "db:check-category-semantic": "node --import tsx src/scripts/check-category-semantic.ts",
-    "dev:semantic": "node --env-file=.env --env-file=.env.embedding.local --env-file=.env.category-semantic.local --import tsx src/server.ts",
-    "dev:hybrid": "node --env-file=.env --env-file=.env.embedding.local --env-file=.env.category-semantic.local --env-file=.env.product-hybrid.local --import tsx src/server.ts",
+    "dev:semantic": "node --env-file=.env --env-file=.env.embedding.local --env-file=.env.category-semantic.local --env-file-if-exists=.env.query-cache.local --import tsx src/server.ts",
+    "dev:hybrid": "node --env-file=.env --env-file=.env.embedding.local --env-file=.env.category-semantic.local --env-file=.env.product-hybrid.local --env-file-if-exists=.env.query-cache.local --import tsx src/server.ts",
     "db:check-product-hybrid": "node --import tsx src/scripts/check-product-hybrid.ts"
   },
   "keywords": [

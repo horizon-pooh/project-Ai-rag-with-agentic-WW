@@ -9,4 +9,5 @@ export interface CategorySemanticPrepared {
  lexical:CategoryResolution;state:CategorySemanticState;
  vectors:Array<{index:number;phrase:string;vector:number[]}>;
  warning:{code:string;message:string}|null;
+ cache_warnings?:Array<{code:string;message:string}>;
 }

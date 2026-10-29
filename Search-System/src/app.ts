@@ -1,3 +1,5 @@
+import {createQueryEmbeddingCache,type QueryEmbeddingCache} from "./embeddings/query-embedding-cache.js";
+import {readQueryCacheConfig} from "./config/query-cache.config.js";
 import {readProductHybridConfig} from "./config/product-hybrid.config.js";
 import {createProductHybridEngine,type ProductHybridEngine} from "./services/product-hybrid.service.js";
 import {readCategorySemanticConfig} from "./config/category-semantic.config.js";
@@ -19,6 +21,7 @@ export interface AppOptions {
  catalog?:CatalogGateway;
  categorySemantic?:CategorySemanticEngine|null;
  productHybrid?:ProductHybridEngine|null;
+ queryCache?:QueryEmbeddingCache;
  logger?:boolean;
 }
 export function buildApp(options:AppOptions={}) {
@@ -36,10 +39,12 @@ export function buildApp(options:AppOptions={}) {
  }
  app.addHook("onRequest",async(request,reply)=>{reply.header("x-request-id",request.id);});
  if(api){
+  const queryCache=options.queryCache??createQueryEmbeddingCache(readQueryCacheConfig(process.env));
+  app.addHook("onClose",async()=>{await queryCache.close();});
   const semanticConfig=options.categorySemantic===undefined?readCategorySemanticConfig(process.env):null;
-  const categorySemantic=options.categorySemantic??(semanticConfig?createCategorySemanticEngine(semanticConfig):null);
+  const categorySemantic=options.categorySemantic??(semanticConfig?createCategorySemanticEngine(semanticConfig,undefined,{queryCache}):null);
   const hybridConfig=options.productHybrid===undefined?readProductHybridConfig(process.env):null;
-  const productHybrid=options.productHybrid??(hybridConfig?createProductHybridEngine(hybridConfig):null);
+  const productHybrid=options.productHybrid??(hybridConfig?createProductHybridEngine(hybridConfig,undefined,{queryCache}):null);
   const catalog=options.catalog??(database?.pool?createPostgresCatalogRepository(database.pool,{categorySemantic,productHybrid}):null);
   if(!catalog)throw new Error("Enabled Tool API requires PostgreSQL catalog access");
   registerToolApi(app,api,catalog);

@@ -34,9 +34,10 @@ export interface EmbeddingResult {
   usage: {promptTokens: number; totalTokens: number};
   attempts: number;
   tokenCounts: number[];
+  cache_status?: "hit" | "miss" | "shared" | "disabled";
 }
 export type EmbeddingErrorCode = "invalid_configuration" | "invalid_input" | "input_too_long" | "model_mismatch" | "cancelled" | "timeout" |
-  "deadline_exceeded" | "network_error" | "http_error" | "invalid_response" | "response_too_large" | "retry_after_exceeds_budget";
+  "deadline_exceeded" | "network_error" | "http_error" | "invalid_response" | "response_too_large" | "retry_after_exceeds_budget" | "capacity_exceeded";
 /** Safe diagnostics only: never retain provider messages, request text, credentials or an Error cause. */
 export class EmbeddingError extends Error {
   constructor(readonly code:EmbeddingErrorCode,readonly attempts=0,readonly httpStatus:number|null=null) {

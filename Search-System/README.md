@@ -36,6 +36,7 @@ npm run dev
 - [สร้างเวกเตอร์ทีละชุด](docs/embedding-backfill.md)
 - [ใช้เวกเตอร์ช่วยหาหมวด](docs/category-semantic-resolution.md)
 - [รวมอันดับสินค้าแบบ RRF](docs/product-hybrid-search.md)
+- [แคชคำค้นและ fallback](docs/query-embedding-cache.md)
 
 ## ตรวจโค้ด
 

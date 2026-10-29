@@ -1,3 +1,4 @@
+import type {QueryEmbeddingCache} from "../embeddings/query-embedding-cache.js";
 import type {PoolClient} from "pg";
 import type {ProductHybridConfig} from "../config/product-hybrid.config.js";
 import {embeddingConfigurationHash} from "../config/embedding.config.js";
@@ -10,10 +11,11 @@ import type {TypedFilterResolution} from "../types/typed-filter.types.js";
 import type {KeywordSearchEnvelope} from "../types/keyword-search.types.js";
 import {CatalogDataError} from "../types/catalog-read.types.js";
 type Database=Pick<PoolClient,"query">;
-export function createProductHybridEngine(raw:ProductHybridConfig,provider?:QueryEmbeddingProvider) {
+export function createProductHybridEngine(raw:ProductHybridConfig,provider?:QueryEmbeddingProvider,options:{queryCache?:QueryEmbeddingCache}={}) {
  const config=structuredClone(raw);
  if(!/^EM\d{4}$/.test(config.modelId) || !/^[0-9a-f]{64}$/.test(config.artifactSha256) || embeddingConfigurationHash(config.profile)!==config.configurationHash)throw new Error("Invalid hybrid configuration");
- const embedder=provider??createLlamaEmbeddingProvider({...config,bounds:{...config.bounds,maxAttempts:1,attemptTimeoutMs:4000,totalTimeoutMs:5000}});
+ const rawProvider=provider??createLlamaEmbeddingProvider({...config,bounds:{...config.bounds,maxAttempts:1,attemptTimeoutMs:4000,totalTimeoutMs:5000}});
+ const embedder=options.queryCache?options.queryCache.wrap(rawProvider,{...config,maxInputBytes:config.bounds.maxInputBytes}):rawProvider;
  return {
   requested(request:NormalizedToolSearchRequest):boolean {
    const q=request.query.trim();return request.sort==="relevance" && !request.exact && !/^1\d{5}$/.test(q) && !/^[A-Z]{2}\d{4}-\d{3,}$/.test(q) && Boolean((request.semantic_query??q).trim());
@@ -41,7 +43,7 @@ export function createProductHybridEngine(raw:ProductHybridConfig,provider?:Quer
     if(r.configurationHash!==config.configurationHash || r.model!==config.profile.model || r.dimensions!==config.profile.dimensions || r.purpose!=="query" ||
      r.vectors.length!==1 || r.vectors[0]!.length!==config.profile.dimensions || !r.vectors[0]!.every(n=>Number.isFinite(n) && Number.isFinite(Math.fround(n))) ||
      Math.abs(Math.hypot(...r.vectors[0]!)-1)>0.01)throw new EmbeddingError("invalid_response");
-    return {...out,vector:r.vectors[0]!};
+    return {...out,vector:r.vectors[0]!,warning:r.cache_status==="hit"?{code:"product_query_embedding_cached",message:"ใช้เวกเตอร์คำค้นจาก cache ของโมเดลที่ตรงกัน"}:r.cache_status==="shared"?{code:"product_query_embedding_shared",message:"ใช้ผลคำค้นเดียวกับงานที่กำลังรอโมเดล"}:null};
    }catch(e){if(!(e instanceof EmbeddingError))throw e;return {...out,warning:{code:"product_hybrid_"+e.code,message:"โมเดลสร้างเวกเตอร์ไม่พร้อม ใช้ keyword"}};}
   },
   async search(db:Database,scope:string[],request:NormalizedToolSearchRequest,prepared:ProductHybridPrepared):Promise<KeywordSearchEnvelope> {
@@ -54,7 +56,8 @@ export function createProductHybridEngine(raw:ProductHybridConfig,provider?:Quer
    }
    const r=(await db.query<{result:KeywordSearchEnvelope}>("SELECT catalog_search.search_products_hybrid_v2($1::text[],$2::jsonb,$3::extensions.vector,$4,$5,$6) result",
     [scope,JSON.stringify(request),JSON.stringify(prepared.vector),config.modelId,config.configurationHash,config.artifactSha256])).rows[0]?.result;
-   if(!r || (r.semantic_available && r.engine_version!=="hybrid-v2"))throw new CatalogDataError();return r;
+   if(!r || (r.semantic_available && r.engine_version!=="hybrid-v2"))throw new CatalogDataError();
+   if(r.semantic_available && prepared.warning)r.warnings=[...r.warnings,prepared.warning];return r;
   },
  };
 }

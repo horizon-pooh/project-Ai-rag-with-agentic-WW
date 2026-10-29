@@ -1,3 +1,4 @@
+import type {QueryEmbeddingCache} from "../embeddings/query-embedding-cache.js";
 import type {PoolClient} from "pg";
 import {createLlamaEmbeddingProvider} from "../embeddings/llama-embedding.provider.js";
 import {EmbeddingError,type EmbeddingResult} from "../embeddings/embedding.types.js";
@@ -9,12 +10,13 @@ import {createCategoryResolutionRepository} from "../repositories/category-resol
 import {CatalogDataError} from "../types/catalog-read.types.js";
 export interface QueryEmbeddingProvider {embed(input:{texts:readonly string[];purpose:"query";signal?:AbortSignal}):Promise<EmbeddingResult>}
 type Database=Pick<PoolClient,"query">;
-export function createCategorySemanticEngine(rawConfig:CategorySemanticConfig,provider?:QueryEmbeddingProvider) {
+export function createCategorySemanticEngine(rawConfig:CategorySemanticConfig,provider?:QueryEmbeddingProvider,options:{queryCache?:QueryEmbeddingCache}={}) {
  const config=structuredClone(rawConfig);
  if(!/^EM\d{4}$/.test(config.modelId) || !/^[0-9a-f]{64}$/.test(config.artifactSha256) || embeddingConfigurationHash(config.profile)!==config.configurationHash ||
   (config.policy.autoSelect && (config.policy.minScore===null || !Number.isFinite(config.policy.minScore) || config.policy.minScore<0 || config.policy.minScore>1 ||
   config.policy.minGap===null || !Number.isFinite(config.policy.minGap) || config.policy.minGap<=0 || config.policy.minGap>1 || !config.policy.calibrationId)))throw new Error("Invalid semantic configuration");
- const embedder=provider??createLlamaEmbeddingProvider({...config,bounds:{...config.bounds,maxAttempts:1,attemptTimeoutMs:4000,totalTimeoutMs:5000}});
+ const rawProvider=provider??createLlamaEmbeddingProvider({...config,bounds:{...config.bounds,maxAttempts:1,attemptTimeoutMs:4000,totalTimeoutMs:5000}});
+ const embedder=options.queryCache?options.queryCache.wrap(rawProvider,{...config,maxInputBytes:config.bounds.maxInputBytes}):rawProvider;
  const scalarParams=[config.modelId,config.configurationHash,config.artifactSha256];
  const needed=(group:CategoryGroupResolution)=>group.status!=="resolved" &&
   (["unknown_category","similar_labels_require_confirmation"].includes(group.reason) ||
@@ -30,7 +32,7 @@ export function createCategorySemanticEngine(rawConfig:CategorySemanticConfig,pr
   },
   /** Called only OUTSIDE the repository transaction/checked-out connection. */
   async prepare(lexical:CategoryResolution,state:CategorySemanticState):Promise<CategorySemanticPrepared> {
-   const out:CategorySemanticPrepared={lexical:structuredClone(lexical),state,vectors:[],warning:null};
+   const out:CategorySemanticPrepared={lexical:structuredClone(lexical),state,vectors:[],warning:null,cache_warnings:[]};
    if(state.status!=="ready")return {...out,warning:{code:"category_semantic_"+state.status,message:"Category semantic evidence is unavailable; lexical resolution retained."}};
    const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),5000);
    try {
@@ -40,12 +42,13 @@ export function createCategorySemanticEngine(rawConfig:CategorySemanticConfig,pr
       r.vectors.length!==1 || r.vectors[0]!.length!==config.profile.dimensions || !r.vectors[0]!.every(v=>Number.isFinite(v) && Number.isFinite(Math.fround(v))) ||
       Math.abs(Math.hypot(...r.vectors[0]!)-1)>0.01)throw new EmbeddingError("invalid_response");
      out.vectors.push({index,phrase:group.phrase,vector:r.vectors[0]!});
+     if(r.cache_status==="hit" || r.cache_status==="shared")out.cache_warnings!.push({code:r.cache_status==="hit"?"category_query_embedding_cached":"category_query_embedding_shared",message:"ใช้เวกเตอร์คำหมวดที่ตรง profile จาก cache หรืองานร่วม"});
     }
     return out;
    }catch(error){
     if(!(error instanceof EmbeddingError))throw error;
     // Never apply a partial set of an explicit multi-phrase request.
-    return {...out,vectors:[],warning:{code:"category_semantic_"+error.code,message:"Category embedding unavailable; lexical resolution retained."}};
+    return {...out,vectors:[],cache_warnings:[],warning:{code:"category_semantic_"+error.code,message:"Category embedding unavailable; lexical resolution retained."}};
    }finally{clearTimeout(timer);}
   },
   async resolve(db:Database,current:CategoryResolution,prepared:CategorySemanticPrepared):Promise<CategoryResolution> {
@@ -81,7 +84,7 @@ export function createCategorySemanticEngine(rawConfig:CategorySemanticConfig,pr
    return {...current,status:resolved?"resolved":"needs_clarification",resolver_version:"category-semantic-v1",groups,
     category_ids:[...new Set(scopes.map(s=>s.category_id))].sort(),scopes,
     semantic_warnings:[{code:selected?"category_semantic_scope_selected":"category_semantic_candidates",message:selected?
-     "เลือกหมวดจากเวกเตอร์ตามเกณฑ์ที่ตั้งไว้":"Category suggestions use semantic similarity and require confirmation; scores are not probabilities."}]};
+     "เลือกหมวดจากเวกเตอร์ตามเกณฑ์ที่ตั้งไว้":"Category suggestions use semantic similarity and require confirmation; scores are not probabilities."},...new Map((prepared.cache_warnings??[]).map(w=>[w.code,w])).values()]};
   },
  };
 }

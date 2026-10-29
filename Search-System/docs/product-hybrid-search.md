@@ -5,7 +5,7 @@
 ## การทำงาน
 
 1. เลือกหมวดและตรวจตัวกรองก่อน ตรวจว่าเวกเตอร์สินค้าที่เผยแพร่ในขอบเขตครบและตรงโมเดล
-2. ปล่อย connection ฐานแล้วสร้าง query vector จาก `semantic_query` หากไม่ส่งใช้ `query`
+2. ปล่อย connection ฐานแล้วอ่านแคชหรือสร้าง query vector จาก `semantic_query` หากไม่ส่งใช้ `query`
 3. เปิด snapshot อ่านใหม่ ตรวจความพร้อมซ้ำ แล้วตรวจราคา แบรนด์ สเปก ฟีเจอร์ และ keyword เพื่อแยกผลตรงกับ alternatives
 4. จัดอันดับ keyword และ cosine แยกภายในกลุ่มผลตรงและกลุ่ม alternatives แล้วรวมด้วย `1/(60+อันดับคำ) + 1/(60+อันดับเวกเตอร์)`
 5. เรียงรวมก่อนแบ่งหน้า ผลตรงมาก่อน alternatives เสมอ สำหรับ alternatives เรียงตามจำนวนข้อที่ไม่ตรง จำนวนข้อที่ไม่ทราบ ความห่างตัวเลขแบบสัดส่วน แล้วจึง RRF ใช้ Article ตัดสินเมื่อเท่ากัน
@@ -25,7 +25,7 @@ cp -n .env.product-hybrid.example .env.product-hybrid.local
 npm run dev:hybrid
 ```
 
-คำสั่งนี้โหลด `.env`, `.env.embedding.local`, `.env.category-semantic.local` และ `.env.product-hybrid.local` ต้องมีไฟล์เหล่านี้ ส่วน `npm run dev` ยังคงทางเดิมตาม environment ที่โหลด
+คำสั่งนี้โหลด `.env`, `.env.embedding.local`, `.env.category-semantic.local` และ `.env.product-hybrid.local` ต้องมีไฟล์เหล่านี้ และโหลด `.env.query-cache.local` เพิ่มเมื่อมี ส่วน `npm run dev` ยังคงทางเดิมตาม environment ที่โหลด
 
 ลองหมวดที่ตรวจแล้วว่าเวกเตอร์ครบ เช่น AP0101 เครื่องซักผ้าฝาหน้า:
 
@@ -37,7 +37,7 @@ npm run db:check-product-hybrid -- --category-id AP0101 --query "เครื่
 
 ## การกลับไปใช้ keyword
 
-- เวกเตอร์ในขอบเขตขาด เก่า โมเดลไม่ตรง หรือ provider ใช้ไม่ได้ จะกลับไป keyword พร้อม warning
+- เวกเตอร์ในขอบเขตขาด เก่า หรือโมเดลไม่ตรง จะกลับไป keyword พร้อม warning; provider ใช้ไม่ได้แต่มีแคชคำค้นที่ยังตรงจะใช้ต่อได้ เมื่อไม่มีแคชจึงกลับ keyword
 - ตรวจความครบทั้งหมวดที่ใช้ค้น ไม่ใช้เฉพาะรายการที่มีเวกเตอร์เพื่อหลีกเลี่ยงผลเอนเอียง
 - การเรียงราคา/Article และการค้น Article/รุ่นเจาะจงใช้ทางเดิม ไม่เปลี่ยนรุ่นแทน
 - ถ้าโมเดลหรือข้อมูลเปลี่ยนระหว่างเตรียมคำค้น จะตรวจอีกครั้งใน snapshot สุดท้าย
@@ -54,3 +54,5 @@ npm run db:check-product-hybrid -- --category-id AP0101 --query "เครื่
 ```
 
 `--max-price` เป็นตัวเลขสำหรับคำสั่งตรวจ ส่วน JSON จาก API ยังต้องส่งราคาเป็นชนิด number ตามเดิม
+
+อ่านขอบเขตแคชและวิธีปิดได้ใน [แคชเวกเตอร์คำค้น](query-embedding-cache.md)
