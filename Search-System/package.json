@@ -37,7 +37,14 @@
     "db:check-product-hybrid": "node --import tsx src/scripts/check-product-hybrid.ts",
     "search:evaluate": "node --import tsx src/scripts/evaluate-search.ts",
     "search:benchmark": "node --import tsx src/scripts/benchmark-search.ts",
-    "db:inspect-search": "node --import tsx src/scripts/inspect-search-performance.ts"
+    "db:inspect-search": "node --import tsx src/scripts/inspect-search-performance.ts",
+    "server:configure": "node --import tsx src/scripts/configure-server.ts",
+    "server:check": "node dist/scripts/check-server-startup.js",
+    "server:start": "node dist/scripts/start-server-release.js",
+    "server:units": "node dist/scripts/render-server-units.js",
+    "release:pack": "bash scripts/package-search-release.sh",
+    "api:peer-check": "node dist/scripts/check-peer-api.js",
+    "api:export": "node --import tsx src/scripts/export-tool-openapi.ts"
   },
   "keywords": [
     "search-engine"
@@ -59,5 +66,8 @@
     "dotenv": "^18.0.3",
     "fastify": "^5.12.5",
     "pg": "8.23.1"
+  },
+  "engines": {
+    "node": ">=24 <25"
   }
 }

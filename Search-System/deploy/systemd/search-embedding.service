@@ -1,0 +1,22 @@
+[Unit]
+Description=Local Qwen3 Search Embedding
+StartLimitIntervalSec=300
+StartLimitBurst=5
+
+[Service]
+Type=simple
+Environment=HOME=%h
+ExecStart=/usr/bin/bash %h/search-tool/current/Search-System/scripts/start-managed-embedding.sh
+Restart=on-failure
+RestartPreventExitStatus=78
+RestartSec=10
+TimeoutStopSec=30
+KillSignal=SIGTERM
+NoNewPrivileges=true
+UMask=0077
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=search-embedding
+
+[Install]
+WantedBy=default.target

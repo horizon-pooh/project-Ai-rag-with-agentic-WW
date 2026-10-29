@@ -3,11 +3,16 @@
   "info": {
     "title": "Product Search Tool API",
     "version": "1.0.0",
-    "description": "Keyword only; semantic_query unused. Private caller authentication required. No database writes."
+    "description": "รับ JSON รุ่น1 ค้น published products; hybrid เมื่อเวกเตอร์พร้อม มิฉะนั้น keyword พร้อมเหตุผล ข้อมูลจำลองยังมี is_mock/mock_notice"
   },
   "servers": [
     {
-      "url": "http://127.0.0.1:3000"
+      "url": "http://127.0.0.1:3000",
+      "description": "ผ่าน SSH tunnel หรือรันบนเซิร์ฟเวอร์"
+    },
+    {
+      "url": "http://100.116.20.59:3000",
+      "description": "เครือข่าย Tailscale ส่วนตัว"
     }
   ],
   "security": [
@@ -18,18 +23,38 @@
   "paths": {
     "/health": {
       "get": {
+        "summary": "ตรวจว่าโปรแกรมตอบได้ ไม่ยืนยันฐานหรือโมเดล",
         "security": [],
         "responses": {
           "200": {
-            "description": "Liveness status and service only"
+            "description": "โปรแกรมทำงาน",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "status",
+                    "service"
+                  ],
+                  "properties": {
+                    "status": {
+                      "const": "ok"
+                    },
+                    "service": {
+                      "const": "search-system"
+                    }
+                  }
+                }
+              }
+            }
           }
         }
       }
     },
     "/api/search": {
       "post": {
-        "operationId": "searchProducts",
-        "description": "Strict first, explained in-scope alternatives and stable global pagination. Maximum JSON body64KiB; no querystring parameters.",
+        "summary": "เลือกหมวด ตรวจตัวกรอง และค้นสินค้า",
         "requestBody": {
           "required": true,
           "content": {
@@ -42,7 +67,7 @@
         },
         "responses": {
           "200": {
-            "description": "ok, no_matches or needs_clarification",
+            "description": "อ่าน status ใน JSON: ok/no_matches/needs_clarification",
             "content": {
               "application/json": {
                 "schema": {
@@ -52,17 +77,17 @@
             }
           },
           "400": {
-            "description": "Invalid request",
+            "description": "คำขอไม่ถูกต้อง",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/SearchError"
+                  "$ref": "#/components/schemas/SearchResponse"
                 }
               }
             }
           },
           "401": {
-            "description": "Caller token required",
+            "description": "token ไม่ถูกต้อง",
             "content": {
               "application/json": {
                 "schema": {
@@ -72,17 +97,17 @@
             }
           },
           "409": {
-            "description": "Constraint conflict",
+            "description": "เงื่อนไขขัดกัน",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/SearchError"
+                  "$ref": "#/components/schemas/SearchResponse"
                 }
               }
             }
           },
           "413": {
-            "description": "Body too large",
+            "description": "body เกิน64KiB",
             "content": {
               "application/json": {
                 "schema": {
@@ -92,7 +117,7 @@
             }
           },
           "415": {
-            "description": "Unsupported media type",
+            "description": "Content-Type ไม่รองรับ",
             "content": {
               "application/json": {
                 "schema": {
@@ -102,11 +127,11 @@
             }
           },
           "503": {
-            "description": "Search unavailable",
+            "description": "ฐานหรือข้อมูลไม่พร้อม ไม่ใช่ไม่มีสินค้า",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/SearchError"
+                  "$ref": "#/components/schemas/SearchResponse"
                 }
               }
             }
@@ -116,22 +141,22 @@
     },
     "/api/products/{article_id}": {
       "get": {
-        "operationId": "getProductDetails",
-        "description": "Published Article only; no querystring parameters.",
+        "summary": "รายละเอียดสินค้า published ราย Article",
         "parameters": [
           {
-            "in": "path",
             "name": "article_id",
+            "in": "path",
             "required": true,
             "schema": {
-              "type": "string",
-              "pattern": "^1[0-9]{5}$"
+              "type": "integer",
+              "minimum": 100000,
+              "maximum": 199999
             }
           }
         ],
         "responses": {
           "200": {
-            "description": "Published product facts and structured details",
+            "description": "รายละเอียดสินค้ารายชิ้น",
             "content": {
               "application/json": {
                 "schema": {
@@ -141,7 +166,7 @@
             }
           },
           "400": {
-            "description": "Invalid Article",
+            "description": "Article ไม่ถูกต้อง",
             "content": {
               "application/json": {
                 "schema": {
@@ -151,7 +176,7 @@
             }
           },
           "401": {
-            "description": "Caller token required",
+            "description": "token ไม่ถูกต้อง",
             "content": {
               "application/json": {
                 "schema": {
@@ -161,7 +186,7 @@
             }
           },
           "404": {
-            "description": "Product absent or unpublished",
+            "description": "ไม่พบ published product รวมถึง draft",
             "content": {
               "application/json": {
                 "schema": {
@@ -171,7 +196,7 @@
             }
           },
           "503": {
-            "description": "Search unavailable",
+            "description": "ฐานหรือข้อมูลไม่พร้อม",
             "content": {
               "application/json": {
                 "schema": {
@@ -189,7 +214,7 @@
       "callerBearer": {
         "type": "http",
         "scheme": "bearer",
-        "description": "Private caller token; never place in an AI prompt/knowledge"
+        "description": "token ของผู้เรียก ไม่ใช่รหัสฐานข้อมูล"
       }
     },
     "schemas": {
@@ -516,6 +541,7 @@
         "required": []
       },
       "SearchResponse": {
+        "$id": "urn:search-tool:response:1",
         "oneOf": [
           {
             "type": "object",
@@ -1953,124 +1979,65 @@
               "status",
               "clarifications"
             ]
-          }
-        ]
-      },
-      "SearchError": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "version": {
-            "const": "1"
           },
-          "request_id": {
-            "type": "string",
-            "minLength": 1,
-            "maxLength": 100,
-            "pattern": "\\S"
-          },
-          "status": {
-            "enum": [
-              "invalid_request",
-              "constraint_conflict",
-              "search_unavailable"
-            ]
-          },
-          "issues": {
-            "type": "array",
-            "items": {
-              "type": "object",
-              "additionalProperties": false,
-              "properties": {
-                "path": {
-                  "type": "string"
-                },
-                "code": {
-                  "type": "string",
-                  "minLength": 1,
-                  "maxLength": 200,
-                  "pattern": "\\S"
-                },
-                "message": {
-                  "type": "string",
-                  "minLength": 1,
-                  "maxLength": 1000,
-                  "pattern": "\\S"
-                }
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "version": {
+                "const": "1"
               },
-              "required": [
-                "path",
-                "code",
-                "message"
-              ]
+              "request_id": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 100,
+                "pattern": "\\S"
+              },
+              "status": {
+                "enum": [
+                  "invalid_request",
+                  "constraint_conflict",
+                  "search_unavailable"
+                ]
+              },
+              "issues": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "path": {
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 200,
+                      "pattern": "\\S"
+                    },
+                    "message": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 1000,
+                      "pattern": "\\S"
+                    }
+                  },
+                  "required": [
+                    "path",
+                    "code",
+                    "message"
+                  ]
+                },
+                "minItems": 1
+              }
             },
-            "minItems": 1
-          }
-        },
-        "required": [
-          "version",
-          "request_id",
-          "status",
-          "issues"
-        ]
-      },
-      "HttpError": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "version": {
-            "const": "1"
-          },
-          "request_id": {
-            "type": "string",
-            "minLength": 1,
-            "maxLength": 100,
-            "pattern": "\\S"
-          },
-          "status": {
-            "enum": [
-              "unauthorized",
-              "not_found",
-              "invalid_request",
-              "search_unavailable"
+            "required": [
+              "version",
+              "request_id",
+              "status",
+              "issues"
             ]
-          },
-          "issues": {
-            "type": "array",
-            "minItems": 1,
-            "items": {
-              "type": "object",
-              "additionalProperties": false,
-              "properties": {
-                "path": {
-                  "type": "string"
-                },
-                "code": {
-                  "type": "string",
-                  "minLength": 1,
-                  "maxLength": 200,
-                  "pattern": "\\S"
-                },
-                "message": {
-                  "type": "string",
-                  "minLength": 1,
-                  "maxLength": 1000,
-                  "pattern": "\\S"
-                }
-              },
-              "required": [
-                "path",
-                "code",
-                "message"
-              ]
-            }
           }
-        },
-        "required": [
-          "version",
-          "request_id",
-          "status",
-          "issues"
         ]
       },
       "ProductDetails": {
@@ -2482,6 +2449,65 @@
           "request_id",
           "status",
           "details"
+        ]
+      },
+      "HttpError": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "version": {
+            "const": "1"
+          },
+          "request_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100,
+            "pattern": "\\S"
+          },
+          "status": {
+            "enum": [
+              "unauthorized",
+              "not_found",
+              "invalid_request",
+              "search_unavailable"
+            ]
+          },
+          "issues": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "path": {
+                  "type": "string"
+                },
+                "code": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 200,
+                  "pattern": "\\S"
+                },
+                "message": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 1000,
+                  "pattern": "\\S"
+                }
+              },
+              "required": [
+                "path",
+                "code",
+                "message"
+              ]
+            }
+          }
+        },
+        "required": [
+          "version",
+          "request_id",
+          "status",
+          "issues"
         ]
       }
     }

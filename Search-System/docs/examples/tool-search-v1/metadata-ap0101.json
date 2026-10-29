@@ -1,0 +1,254 @@
+{
+  "snapshot_at": "2026-10-29T16:39:04.339Z",
+  "category": {
+    "id": "AP0101",
+    "name_th": "เครื่องซักผ้าฝาหน้า",
+    "name_en": "Front-loading Washing Machine",
+    "aliases": [
+      "Front-loading Washing Machine",
+      "เครื่องซักผ้าฝาหน้า"
+    ]
+  },
+  "attributes": [
+    {
+      "id": "AT0017",
+      "name_th": "ความจุซัก",
+      "data_type": "number",
+      "unit_code": "kg",
+      "aliases": [
+        "wash capacity",
+        "ความจุการซัก",
+        "ความจุซัก",
+        "ซักได้กี่กิโล",
+        "น้ำหนักซัก"
+      ],
+      "is_filterable": true
+    },
+    {
+      "id": "AT0018",
+      "name_th": "รอบปั่นสูงสุด",
+      "data_type": "number",
+      "unit_code": "rpm",
+      "aliases": [
+        "spin speed",
+        "ความเร็วปั่นหมาด",
+        "รอบปั่นสูงสุด",
+        "รอบปั่นหมาด"
+      ],
+      "is_filterable": true
+    },
+    {
+      "id": "AT0019",
+      "name_th": "กำลังไฟสูงสุด",
+      "data_type": "number",
+      "unit_code": "W",
+      "aliases": [
+        "rated power",
+        "กำลังไฟ",
+        "กำลังไฟสูงสุด",
+        "วัตต์"
+      ],
+      "is_filterable": true
+    },
+    {
+      "id": "AT0020",
+      "name_th": "แรงดันไฟฟ้า",
+      "data_type": "number",
+      "unit_code": "V",
+      "aliases": [
+        "supply voltage",
+        "แรงดันไฟ",
+        "แรงดันไฟฟ้า"
+      ],
+      "is_filterable": true
+    },
+    {
+      "id": "AT0021",
+      "name_th": "จำนวนโปรแกรมซัก",
+      "data_type": "number",
+      "unit_code": "program",
+      "aliases": [
+        "program count",
+        "จำนวนโปรแกรมซัก"
+      ],
+      "is_filterable": true
+    },
+    {
+      "id": "AT0006",
+      "name_th": "ความกว้างสินค้า",
+      "data_type": "number",
+      "unit_code": "cm",
+      "aliases": [
+        "width",
+        "กว้าง",
+        "ความกว้าง",
+        "ความกว้างสินค้า"
+      ],
+      "is_filterable": true
+    },
+    {
+      "id": "AT0007",
+      "name_th": "ความลึกสินค้า",
+      "data_type": "number",
+      "unit_code": "cm",
+      "aliases": [
+        "depth",
+        "ความลึก",
+        "ความลึกสินค้า",
+        "ลึก"
+      ],
+      "is_filterable": true
+    },
+    {
+      "id": "AT0008",
+      "name_th": "ความสูงสินค้า",
+      "data_type": "number",
+      "unit_code": "cm",
+      "aliases": [
+        "height",
+        "ความสูง",
+        "ความสูงสินค้า",
+        "สูง"
+      ],
+      "is_filterable": true
+    },
+    {
+      "id": "AT0009",
+      "name_th": "น้ำหนักสินค้ารวมส่วนประกอบในชุดหลัก",
+      "data_type": "number",
+      "unit_code": "kg",
+      "aliases": [
+        "weight",
+        "น้ำหนัก",
+        "น้ำหนักสินค้า",
+        "น้ำหนักสินค้ารวมส่วนประกอบในชุดหลัก"
+      ],
+      "is_filterable": true
+    },
+    {
+      "id": "AT0010",
+      "name_th": "ความกว้างบรรจุภัณฑ์",
+      "data_type": "number",
+      "unit_code": "cm",
+      "aliases": [
+        "package width",
+        "ความกว้างบรรจุภัณฑ์"
+      ],
+      "is_filterable": false
+    },
+    {
+      "id": "AT0011",
+      "name_th": "ความลึกบรรจุภัณฑ์",
+      "data_type": "number",
+      "unit_code": "cm",
+      "aliases": [
+        "package depth",
+        "ความลึกบรรจุภัณฑ์"
+      ],
+      "is_filterable": false
+    },
+    {
+      "id": "AT0012",
+      "name_th": "ความสูงบรรจุภัณฑ์",
+      "data_type": "number",
+      "unit_code": "cm",
+      "aliases": [
+        "package height",
+        "ความสูงบรรจุภัณฑ์"
+      ],
+      "is_filterable": false
+    },
+    {
+      "id": "AT0013",
+      "name_th": "น้ำหนักรวมบรรจุภัณฑ์",
+      "data_type": "number",
+      "unit_code": "kg",
+      "aliases": [
+        "package weight",
+        "น้ำหนักรวมบรรจุภัณฑ์"
+      ],
+      "is_filterable": false
+    },
+    {
+      "id": "AT0014",
+      "name_th": "วัสดุหลัก",
+      "data_type": "text",
+      "unit_code": null,
+      "aliases": [
+        "main material",
+        "วัสดุ",
+        "วัสดุหลัก"
+      ],
+      "is_filterable": true
+    },
+    {
+      "id": "AT0015",
+      "name_th": "สีหลัก",
+      "data_type": "text",
+      "unit_code": null,
+      "aliases": [
+        "color",
+        "สี",
+        "สีหลัก"
+      ],
+      "is_filterable": true
+    },
+    {
+      "id": "AT0016",
+      "name_th": "ระยะรับประกันจำลอง",
+      "data_type": "number",
+      "unit_code": "month",
+      "aliases": [
+        "warranty months",
+        "ระยะรับประกันจำลอง"
+      ],
+      "is_filterable": true
+    },
+    {
+      "id": "AT0082",
+      "name_th": "มีโปรแกรมไอน้ำ",
+      "data_type": "boolean",
+      "unit_code": null,
+      "aliases": [
+        "steam cycle",
+        "มีโปรแกรมไอน้ำ"
+      ],
+      "is_filterable": true
+    }
+  ],
+  "features": [
+    {
+      "id": "FT0004",
+      "name_th": "ตั้งเวลาเริ่มทำงาน",
+      "aliases": [
+        "ตั้งเวลาเริ่มทำงาน",
+        "Delayed start"
+      ]
+    },
+    {
+      "id": "FT0005",
+      "name_th": "ล็อกปุ่มควบคุม",
+      "aliases": [
+        "ล็อกปุ่มควบคุม",
+        "Control lock"
+      ]
+    },
+    {
+      "id": "FT0006",
+      "name_th": "เพิ่มรอบล้าง",
+      "aliases": [
+        "เพิ่มรอบล้าง",
+        "Extra rinse"
+      ]
+    },
+    {
+      "id": "FT0057",
+      "name_th": "โปรแกรมไอน้ำ",
+      "aliases": [
+        "โปรแกรมไอน้ำ",
+        "steam cycle"
+      ]
+    }
+  ],
+  "note": "ตัวอย่าง knowledge หนึ่งหมวด ไม่ใช่ metadata endpoint และต้องตรวจรหัสกับฐานทุก request"
+}

@@ -41,6 +41,8 @@ npm run dev
 - [ผลประเมินชุดปัจจุบัน](docs/search-evaluation-results.md)
 - [วัดความเร็วและตรวจสิทธิ์](docs/search-performance.md)
 - [ผลวัดรอบปัจจุบัน](docs/search-performance-results.md)
+- [ติดตั้งบนเซิร์ฟเวอร์](docs/server-deployment.md)
+- [ส่งต่อให้ระบบสนทนา](docs/integration-handoff.md)
 
 ## ตรวจโค้ด
 

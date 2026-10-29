@@ -1,0 +1,12 @@
+import {searchRequestSchema} from "../schemas/search-request.schema.js";
+import {searchResponseSchema} from "../schemas/search-response.schema.js";
+import {detailsResponseSchema,httpErrorSchema} from "../schemas/tool-http.schema.js";
+export function toolOpenApiDocument() {
+ const response=(description:string,name:string)=>({description,content:{"application/json":{schema:{$ref:"#/components/schemas/"+name}}}});
+ return {openapi:"3.1.0",info:{title:"Product Search Tool API",version:"1.0.0",description:"รับ JSON รุ่น1 ค้น published products; hybrid เมื่อเวกเตอร์พร้อม มิฉะนั้น keyword พร้อมเหตุผล ข้อมูลจำลองยังมี is_mock/mock_notice"},
+ servers:[{url:"http://127.0.0.1:3000",description:"ผ่าน SSH tunnel หรือรันบนเซิร์ฟเวอร์"},{url:"http://100.116.20.59:3000",description:"เครือข่าย Tailscale ส่วนตัว"}],security:[{callerBearer:[]}],paths:{
+ "/health":{get:{summary:"ตรวจว่าโปรแกรมตอบได้ ไม่ยืนยันฐานหรือโมเดล",security:[],responses:{"200":{description:"โปรแกรมทำงาน",content:{"application/json":{schema:{type:"object",additionalProperties:false,required:["status","service"],properties:{status:{const:"ok"},service:{const:"search-system"}}}}}}}}},
+ "/api/search":{post:{summary:"เลือกหมวด ตรวจตัวกรอง และค้นสินค้า",requestBody:{required:true,content:{"application/json":{schema:{$ref:"#/components/schemas/SearchRequest"}}}},responses:{"200":response("อ่าน status ใน JSON: ok/no_matches/needs_clarification","SearchResponse"),"400":response("คำขอไม่ถูกต้อง","SearchResponse"),"401":response("token ไม่ถูกต้อง","HttpError"),"409":response("เงื่อนไขขัดกัน","SearchResponse"),"413":response("body เกิน64KiB","HttpError"),"415":response("Content-Type ไม่รองรับ","HttpError"),"503":response("ฐานหรือข้อมูลไม่พร้อม ไม่ใช่ไม่มีสินค้า","SearchResponse")}}},
+ "/api/products/{article_id}":{get:{summary:"รายละเอียดสินค้า published ราย Article",parameters:[{name:"article_id",in:"path",required:true,schema:{type:"integer",minimum:100000,maximum:199999}}],responses:{"200":response("รายละเอียดสินค้ารายชิ้น","ProductDetails"),"400":response("Article ไม่ถูกต้อง","HttpError"),"401":response("token ไม่ถูกต้อง","HttpError"),"404":response("ไม่พบ published product รวมถึง draft","HttpError"),"503":response("ฐานหรือข้อมูลไม่พร้อม","HttpError")}}}},
+ components:{securitySchemes:{callerBearer:{type:"http",scheme:"bearer",description:"token ของผู้เรียก ไม่ใช่รหัสฐานข้อมูล"}},schemas:{SearchRequest:searchRequestSchema,SearchResponse:searchResponseSchema,ProductDetails:detailsResponseSchema,HttpError:httpErrorSchema}}};
+}

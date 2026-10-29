@@ -1,0 +1,28 @@
+{
+  "version": "1",
+  "query": "เครื่องซักผ้า",
+  "semantic_query": "เครื่องซักผ้าสำหรับครอบครัว",
+  "filters": {
+    "category_ids": [
+      "AP0101"
+    ],
+    "feature_ids_all": [
+      "FT0005"
+    ],
+    "price": {
+      "max": 20000,
+      "currency": "THB"
+    },
+    "specs": [
+      {
+        "attribute_id": "AT0017",
+        "op": "gte",
+        "value": 9,
+        "unit": "kg"
+      }
+    ]
+  },
+  "page": 1,
+  "limit": 5,
+  "sort": "relevance"
+}

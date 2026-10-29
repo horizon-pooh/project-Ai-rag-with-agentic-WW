@@ -1,0 +1,24 @@
+[Unit]
+Description=Product Search Tool API
+After=search-embedding.service
+StartLimitIntervalSec=300
+StartLimitBurst=5
+
+[Service]
+Type=simple
+WorkingDirectory=%h/search-tool/current/Search-System
+Environment=SEARCH_SERVER_CONFIG=%h/search-tool/config/api.json
+ExecStart=@@NODE_BIN@@ %h/search-tool/current/Search-System/dist/scripts/start-server-release.js
+Restart=on-failure
+RestartSec=10
+TimeoutStartSec=120
+TimeoutStopSec=25
+KillSignal=SIGTERM
+NoNewPrivileges=true
+UMask=0077
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=search-tool-api
+
+[Install]
+WantedBy=default.target

@@ -22,3 +22,6 @@ npm-debug.log*
 
 # TypeScript
 *.tsbuildinfo
+# ข้อมูลตั้งค่าและไฟล์ส่งขึ้นเซิร์ฟเวอร์
+/deploy-private/
+/reports/

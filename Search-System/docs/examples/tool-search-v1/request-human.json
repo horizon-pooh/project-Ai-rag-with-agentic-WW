@@ -1,0 +1,26 @@
+{
+  "version": "1",
+  "query": "เครื่องซักผ้า",
+  "semantic_query": "เครื่องซักผ้าสำหรับครอบครัว",
+  "filters": {
+    "category_query": "เครื่องซักผ้าฝาหน้า",
+    "feature_queries_all": [
+      "ล็อกปุ่มควบคุม"
+    ],
+    "price": {
+      "max": 20000,
+      "currency": "THB"
+    },
+    "specs": [
+      {
+        "attribute_query": "ความจุซัก",
+        "op": "gte",
+        "value": 9,
+        "unit": "kg"
+      }
+    ]
+  },
+  "page": 1,
+  "limit": 5,
+  "sort": "relevance"
+}
