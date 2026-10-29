@@ -120,7 +120,7 @@ test("category semantic SQL and service preserve lexical specificity with privat
   }));
   await t.test("inferred query provenance does not claim literal-only after semantic selection",async()=>reader(async()=>{
    const repo=createPostgresCatalogRepository(pool,{categorySemantic:createCategorySemanticEngine(config(true),provider())});const result=await createToolApiService(repo).search({query:"ทีวี OLED สำหรับดูหนัง"},"fixture-request");
-   assert.ok(result.status==="ok" || result.status==="no_matches");if(result.status==="ok" || result.status==="no_matches")assert.ok(result.warnings.some(w=>w.code==="category_inferred_from_query" && w.message.includes("calibrated semantic")));
+   assert.ok(result.status==="ok" || result.status==="no_matches");if(result.status==="ok" || result.status==="no_matches")assert.ok(result.warnings.some(w=>w.code==="category_inferred_from_query" && w.message.includes("เวกเตอร์")));
   }));
   await t.test("HTTP auth and strict JSON precede semantic lookup; suggestions keep v1 contract",async()=>reader(async()=>{
    const p=provider(),catalog=createPostgresCatalogRepository(pool,{categorySemantic:createCategorySemanticEngine(config(),p)});

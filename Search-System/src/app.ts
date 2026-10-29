@@ -1,3 +1,5 @@
+import {readProductHybridConfig} from "./config/product-hybrid.config.js";
+import {createProductHybridEngine,type ProductHybridEngine} from "./services/product-hybrid.service.js";
 import {readCategorySemanticConfig} from "./config/category-semantic.config.js";
 import {createCategorySemanticEngine,type CategorySemanticEngine} from "./services/category-semantic.service.js";
 import Fastify from "fastify";
@@ -16,6 +18,7 @@ export interface AppOptions {
  api?:ToolApiConfig|null;
  catalog?:CatalogGateway;
  categorySemantic?:CategorySemanticEngine|null;
+ productHybrid?:ProductHybridEngine|null;
  logger?:boolean;
 }
 export function buildApp(options:AppOptions={}) {
@@ -35,7 +38,9 @@ export function buildApp(options:AppOptions={}) {
  if(api){
   const semanticConfig=options.categorySemantic===undefined?readCategorySemanticConfig(process.env):null;
   const categorySemantic=options.categorySemantic??(semanticConfig?createCategorySemanticEngine(semanticConfig):null);
-  const catalog=options.catalog??(database?.pool?createPostgresCatalogRepository(database.pool,{categorySemantic}):null);
+  const hybridConfig=options.productHybrid===undefined?readProductHybridConfig(process.env):null;
+  const productHybrid=options.productHybrid??(hybridConfig?createProductHybridEngine(hybridConfig):null);
+  const catalog=options.catalog??(database?.pool?createPostgresCatalogRepository(database.pool,{categorySemantic,productHybrid}):null);
   if(!catalog)throw new Error("Enabled Tool API requires PostgreSQL catalog access");
   registerToolApi(app,api,catalog);
  }

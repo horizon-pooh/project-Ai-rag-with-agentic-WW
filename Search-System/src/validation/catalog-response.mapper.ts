@@ -31,6 +31,7 @@ export function mapCatalogSearchResponse(snapshot:CatalogSearchSnapshot,requestI
     return checked({...base,status:"needs_clarification",clarifications:issues});
   }
   const search=snapshot.search;if(!search)throw new CatalogDataError();
+  if(search.semantic_available && search.engine_version!=="hybrid-v1")throw new CatalogDataError();
   const resolution=search.filter_resolution;
   if(search.status==="needs_clarification") {
     const issues:FilterDiagnostic[]=[...(resolution?.selector_issues??[]),...(search.issues??[]).map(i=>({...i,candidates:[]}))];
@@ -74,7 +75,7 @@ export function mapCatalogSearchResponse(snapshot:CatalogSearchSnapshot,requestI
   for(const i of resolution.selector_issues??[])unapplied_filters.push({category_id:null,path:i.path,reason:i.reason});
   const unique=[...new Map(unapplied_filters.map(i=>[JSON.stringify(i),i])).values()];
   if(search.meta.all_requested_filters_applied!==(unique.length===0))throw new CatalogDataError();
-  return checked({...base,status:search.status,query:request.query,semantic_available:false,
+  return checked({...base,status:search.status,query:request.query,semantic_available:search.semantic_available,
     resolved_categories:search.resolved_categories??[],applied_filters,unapplied_filters:unique,warnings:[...search.warnings,...(category.semantic_warnings??[])],
     meta:{...search.meta},results:search.results.map((hit,index)=>{
       const product=snapshot.products[index]!;if(product.article_id!==hit.article_id)throw new CatalogDataError();

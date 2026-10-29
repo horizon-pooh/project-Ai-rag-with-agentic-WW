@@ -23,7 +23,7 @@ export function createToolApiService(catalog:CatalogGateway) {
         if(response.status==="ok" || response.status==="no_matches") {
           response.applied_filters=response.applied_filters.map(f=>f.path==="/filters/category_query"?{...f,path:"/query"}:f);
           response.unapplied_filters=response.unapplied_filters.map(f=>f.path==="/filters/category_query"?{...f,path:"/query"}:f);
-          response.warnings=[...response.warnings,{code:"category_inferred_from_query",message:response.warnings.some(w=>w.code==="category_semantic_scope_selected")?"The query was used for category resolution with calibrated semantic evidence; product ranking remains keyword-only.":"The query was used as a literal category label; no semantic category inference was performed."}];
+          response.warnings=[...response.warnings,{code:"category_inferred_from_query",message:response.warnings.some(w=>w.code==="category_semantic_scope_selected")?"ใช้คำค้นเลือกหมวดด้วยเวกเตอร์ ตรวจ semantic_available เพื่อดูวิธีจัดอันดับสินค้า":"The query was used as a literal category label; no semantic category inference was performed."}];
         } else if(response.status==="needs_clarification")response.clarifications=response.clarifications.map(i=>i.path==="/filters/category_query"?{...i,path:"/query"}:i);
       }
       return response;

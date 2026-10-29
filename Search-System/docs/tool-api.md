@@ -12,7 +12,7 @@ npm run dev
 npm run api:check
 ```
 
-`api:configure` สร้างหรือเก็บ token เดิมโดยไม่พิมพ์ค่า และต้องใช้ `DATA_SOURCE=postgres` หากเปิดหมวดแบบเวกเตอร์ใช้ `npm run dev:semantic` แทนคำสั่งรันปกติ
+`api:configure` สร้างหรือเก็บ token เดิมโดยไม่พิมพ์ค่า และต้องใช้ `DATA_SOURCE=postgres` หากเปิดหมวดแบบเวกเตอร์ใช้ `npm run dev:semantic` ส่วนการรวมอันดับสินค้าใช้ `npm run dev:hybrid` ตาม [คู่มือ RRF](product-hybrid-search.md)
 
 ## เส้นทาง
 
@@ -56,4 +56,4 @@ npm run api:check
 
 ผู้เรียกต้องอ่านทั้ง HTTP และ `status` คงข้อความข้อมูลจำลอง เงื่อนไขที่ใช้ไม่ได้ และเหตุผลของ alternatives ไว้เมื่อนำไปตอบลูกค้า
 
-การจัดอันดับสินค้ายังเป็น keyword แม้เปิดเวกเตอร์ช่วยหาหมวด จึงคืน `semantic_available: false` รหัสคำขอสร้างจากเซิร์ฟเวอร์และข้อผิดพลาดไม่ส่ง SQL หรือรหัสผ่านกลับมา
+เมื่อเปิด product hybrid และรวมอันดับสำเร็จจะคืน `semantic_available: true` หากเวกเตอร์หรือโมเดลไม่พร้อมใช้ keyword และคืน false พร้อมเหตุผล รหัสคำขอสร้างจากเซิร์ฟเวอร์และข้อผิดพลาดไม่ส่ง SQL หรือรหัสผ่านกลับมา

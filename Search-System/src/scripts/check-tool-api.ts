@@ -22,7 +22,8 @@ try {
  assert.equal((await call("/api/search",{query:"ทีวี",limit:"5"})).response.status,400);
  const {response,json}=await call("/api/search",{query:"ทีวี",semantic_query:"ทีวีดูหนัง",filters:{category_query:"ทีวี OLED",category_ids:["TV0108"],
   feature_ids_all:["FT0023"],price:{max:25000},specs:[{attribute_id:"AT0048",op:"eq",value:55,unit:"นิ้ว"}]},limit:5});
- assert.equal(response.status,200);assert.equal(validateToolSearchResponse(json).valid,true);assert.equal(json.status,"ok");assert.equal(json.semantic_available,false);
+ assert.equal(response.status,200);assert.equal(validateToolSearchResponse(json).valid,true);assert.equal(json.status,"ok");assert.equal(typeof json.semantic_available,"boolean");
+ if(json.semantic_available)assert.ok(json.warnings.some((w:{code:string})=>w.code==="product_hybrid_rrf"));
  assert.ok(json.results.length>0);const article=json.results[0].product.article_id;
  const details=await call("/api/products/"+article);assert.equal(details.response.status,200);assert.equal(validDetailsResponse(details.json),true);
  assert.equal((await call("/api/products/106045")).response.status,404);
@@ -32,7 +33,7 @@ try {
  const semantic=await call("/api/search",{semantic_query:"ดูหนัง"});assert.equal(semantic.json.status,"needs_clarification");
  console.log(JSON.stringify({status:"tool_api_ready",search_meta:json.meta,details_article:article,
   details_sections:details.json.details.content_sections.length,unauthorized_status:401,invalid_request_status:400,draft_status:404,
-  query_category_fallback:true,semantic_available:false,secret_printed:false},null,2));
+  query_category_fallback:true,semantic_available:json.semantic_available,secret_printed:false},null,2));
 } catch {
- console.error(JSON.stringify({status:"failed",message:"Check the running local API, private caller token, tunnel, migration0006 and reader access. No credentials or raw errors are printed."}));process.exitCode=1;
+ console.error(JSON.stringify({status:"failed",message:"ตรวจ API ที่เปิดอยู่ token ส่วนตัว tunnel migration และสิทธิ์อ่าน ไม่แสดงข้อมูลลับหรือข้อผิดพลาดดิบ"}));process.exitCode=1;
 }

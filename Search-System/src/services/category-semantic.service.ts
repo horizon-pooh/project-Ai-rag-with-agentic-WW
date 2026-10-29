@@ -81,7 +81,7 @@ export function createCategorySemanticEngine(rawConfig:CategorySemanticConfig,pr
    return {...current,status:resolved?"resolved":"needs_clarification",resolver_version:"category-semantic-v1",groups,
     category_ids:[...new Set(scopes.map(s=>s.category_id))].sort(),scopes,
     semantic_warnings:[{code:selected?"category_semantic_scope_selected":"category_semantic_candidates",message:selected?
-     "Category scope used calibrated semantic evidence; product ranking remains keyword-only.":"Category suggestions use semantic similarity and require confirmation; scores are not probabilities."}]};
+     "เลือกหมวดจากเวกเตอร์ตามเกณฑ์ที่ตั้งไว้":"Category suggestions use semantic similarity and require confirmation; scores are not probabilities."}]};
   },
  };
 }

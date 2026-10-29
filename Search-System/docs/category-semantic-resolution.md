@@ -33,4 +33,4 @@ npm run dev:semantic
 
 การเรียก SQL ใหม่ให้สิทธิ์ผ่านฟังก์ชันอ่านที่จำกัดผล ไม่เปิดตารางเวกเตอร์หรือข้อมูลโมเดลโดยตรงแก่ `search_api` การย้อน `0008` ลบเฉพาะฟังก์ชัน ต้องปิดฟีเจอร์ก่อนย้อน
 
-ขั้นนี้ยังจัดอันดับสินค้าด้วย keyword จึงคง `semantic_available: false` ส่วน `semantic_query` ยังไม่ใช้จัดอันดับสินค้า การรวม product vector และ RRF เป็นงานถัดไป
+การใช้เวกเตอร์หาหมวดไม่เปลี่ยน `semantic_available` เอง ค่านี้ขึ้นกับการจัดอันดับสินค้า หากเปิด product hybrid จะใช้ `semantic_query` หรือ `query` รวมอันดับตาม [คู่มือ RRF](product-hybrid-search.md)

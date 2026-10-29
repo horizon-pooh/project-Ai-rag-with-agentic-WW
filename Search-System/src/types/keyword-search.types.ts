@@ -20,6 +20,7 @@ export interface KeywordSearchHit {
  mock_notice: string;
  match_type: "matches_applied_filters" | "alternative";
  keyword_score: number;
+ keyword_rank?:number|null;vector_rank?:number|null;vector_score?:number|null;rrf_score?:number|null;
  difference_count: number;
  unknown_count: number;
  numeric_distance: number;
@@ -27,9 +28,9 @@ export interface KeywordSearchHit {
  unknown_filters: KeywordDifference[];
 }
 export interface KeywordSearchEnvelope {
- engine_version: "keyword-v2";
+ engine_version: "keyword-v2" | "hybrid-v1";
  status: "ok" | "no_matches" | "needs_clarification" | "constraint_conflict";
- semantic_available: false;
+ semantic_available: boolean;
  warnings: Array<{code: string; message: string}>;
  issues?: Array<{path: string; reason: string}>;
  filter_resolution?: TypedFilterResolution;
