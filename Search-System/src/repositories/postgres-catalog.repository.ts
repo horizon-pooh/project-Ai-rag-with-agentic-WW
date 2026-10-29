@@ -45,7 +45,7 @@ export function createPostgresCatalogRepository(pool: CatalogPool,options:{categ
         const search=hybrid && productPrepared?await hybrid.search(client,category_resolution.category_ids,parsed.value,productPrepared):(await client.query<{result:KeywordSearchEnvelope}>(
           "SELECT catalog_search.search_products_keyword($1::text[],$2::jsonb) AS result",
           [category_resolution.category_ids,JSON.stringify(parsed.value)])).rows[0]?.result;
-        if(!search || (search.semantic_available && search.engine_version!=="hybrid-v1") || !Array.isArray(search.results) || search.results.length>parsed.value.limit)throw new CatalogDataError();
+        if(!search || (search.semantic_available && !["hybrid-v1","hybrid-v2"].includes(search.engine_version)) || !Array.isArray(search.results) || search.results.length>parsed.value.limit)throw new CatalogDataError();
         const ids=search.results.map(hit=>hit.article_id);
         if(new Set(ids).size!==ids.length)throw new CatalogDataError();
         const products=await createProductFactsRepository(client).findMany(ids);

@@ -28,7 +28,7 @@ export interface KeywordSearchHit {
  unknown_filters: KeywordDifference[];
 }
 export interface KeywordSearchEnvelope {
- engine_version: "keyword-v2" | "hybrid-v1";
+ engine_version: "keyword-v2" | "hybrid-v1" | "hybrid-v2";
  status: "ok" | "no_matches" | "needs_clarification" | "constraint_conflict";
  semantic_available: boolean;
  warnings: Array<{code: string; message: string}>;

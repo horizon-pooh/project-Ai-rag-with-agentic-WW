@@ -52,9 +52,9 @@ export function createProductHybridEngine(raw:ProductHybridConfig,provider?:Quer
     const warning=!same?{code:"product_hybrid_scope_changed",message:"ขอบเขตหมวดเปลี่ยนก่อนค้น ใช้ keyword"}:prepared.warning;
     if(warning)r.warnings=[...r.warnings,warning];return r;
    }
-   const r=(await db.query<{result:KeywordSearchEnvelope}>("SELECT catalog_search.search_products_hybrid_v1($1::text[],$2::jsonb,$3::extensions.vector,$4,$5,$6) result",
+   const r=(await db.query<{result:KeywordSearchEnvelope}>("SELECT catalog_search.search_products_hybrid_v2($1::text[],$2::jsonb,$3::extensions.vector,$4,$5,$6) result",
     [scope,JSON.stringify(request),JSON.stringify(prepared.vector),config.modelId,config.configurationHash,config.artifactSha256])).rows[0]?.result;
-   if(!r || (r.semantic_available && r.engine_version!=="hybrid-v1"))throw new CatalogDataError();return r;
+   if(!r || (r.semantic_available && r.engine_version!=="hybrid-v2"))throw new CatalogDataError();return r;
   },
  };
 }

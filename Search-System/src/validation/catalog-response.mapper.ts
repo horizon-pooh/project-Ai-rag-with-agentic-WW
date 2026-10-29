@@ -31,7 +31,7 @@ export function mapCatalogSearchResponse(snapshot:CatalogSearchSnapshot,requestI
     return checked({...base,status:"needs_clarification",clarifications:issues});
   }
   const search=snapshot.search;if(!search)throw new CatalogDataError();
-  if(search.semantic_available && search.engine_version!=="hybrid-v1")throw new CatalogDataError();
+  if(search.semantic_available && !["hybrid-v1","hybrid-v2"].includes(search.engine_version))throw new CatalogDataError();
   const resolution=search.filter_resolution;
   if(search.status==="needs_clarification") {
     const issues:FilterDiagnostic[]=[...(resolution?.selector_issues??[]),...(search.issues??[]).map(i=>({...i,candidates:[]}))];
