@@ -31,6 +31,7 @@ from app.pipeline.schemas import (
     StateRecord,
     User,
 )
+from app.pipeline.steps.fallback import PURPOSE_AI_DOWN
 from app.privacy.redact import redact_text
 from app.services.storage import resize_image
 
@@ -38,6 +39,9 @@ log = structlog.get_logger(__name__)
 
 # จำนวนข้อความย้อนหลังที่อ่านมาให้ AI (ตรงกับ call_ai.MAX_HISTORY / AiRequest.recent_messages)
 HISTORY_LIMIT = 4
+# ข้อความขาออกที่ไม่ใช่บทสนทนา ไม่ส่งเป็นแชทย้อนหลัง: "ระบบขัดข้อง" ใน history ทำให้ AI ตอบเพี้ยนซ้ำ
+# (วัดจริง 2026-10-26: มี AI_DOWN เป็น assistant turn -> AI ตอบ "Product link: No product link" ทั้งรายการ)
+HISTORY_EXCLUDED_TYPES = (PURPOSE_AI_DOWN,)
 
 # ชนิด consent ที่อ่าน — รอคำตอบ: ชนิด/ข้อความ consent จริงและ flow (ตอนนี้อ่านแล้วบันทึกไว้เฉยๆ ไม่บล็อก)
 CONSENT_TYPE = "pdpa"
@@ -51,7 +55,7 @@ class TurnContext(BaseModel):
     - state: None ถ้าไม่มีแถว หรือหมดอายุแล้ว (ห้ามใช้ state ที่หมดอายุ)
     - state_expired: เคยมี state แต่หมดอายุ หรือ conversation เพิ่งเปิดใหม่เพราะเงียบเกิน STATE_TTL
     - counters: ตัวนับสัญญาณหลังเกิดเหตุของแถวที่ยังไม่หมดอายุ (หมดอายุ/ไม่มี -> ค่าเริ่มต้น)
-    - history: ข้อความล่าสุด (redact แล้ว) ไม่รวมข้อความของ event นี้ เรียงเก่าไปใหม่
+    - history: ข้อความล่าสุด (redact แล้ว) ไม่รวมข้อความของ event นี้และ HISTORY_EXCLUDED_TYPES เรียงเก่าไปใหม่
     - image_keys: storage key ของรูปที่เก็บสำเร็จ (ไม่ใช่ตัวรูป)
     """
 
@@ -149,7 +153,10 @@ async def prepare(deps: Deps, event: InboundEvent) -> TurnContext:
     state_expired = expired or reopened
 
     history = await deps.messages.recent_texts_redacted(
-        conv.id, limit=HISTORY_LIMIT, exclude_raw_event_id=event.raw_event_id
+        conv.id,
+        limit=HISTORY_LIMIT,
+        exclude_raw_event_id=event.raw_event_id,
+        exclude_types=HISTORY_EXCLUDED_TYPES,
     )
 
     # consent: อ่านและบันทึกไว้ใน context เท่านั้น — รอคำตอบ: flow ขอ consent (ไม่บล็อกการตอบ)

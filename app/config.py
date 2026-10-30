@@ -64,6 +64,9 @@ class Settings(BaseSettings):
     ai_response_format: Literal["markdown", "json"] = "markdown"
     # (ไม่บังคับ) ไฟล์ system prompt ที่ใส่นำหน้า messages — ว่าง = ไม่ส่ง (gateway มี prompt ของตัวเอง)
     ai_system_prompt_file: Path | None = None
+    # ส่งรูปที่ลูกค้าส่งมา (ย่อแล้ว ตัด EXIF) ให้ AI อ่านเป็น data URL แบบ OpenAI vision — รอคำตอบ: gateway/model รับรูปได้ไหม
+    # รูปไม่ถูก redact (อาจมีบัตร/หน้าคน) จึงปิดไว้ก่อน เปิดเมื่อยืนยันว่ารับได้และรับเรื่อง PDPA แล้ว
+    ai_send_images: bool = False
     # วัดจริง: คำถามทั่วไป 2-7 วิ, ค้นสินค้า 22-43 วิ ต่อหนึ่งครั้ง -> 60 วิ เผื่อครั้งที่ช้า
     ai_timeout_s: float = Field(default=60, gt=0)
     # (เสนอ) ยังไม่รู้ว่า gateway รับพร้อมกันได้กี่งาน — รอคำตอบ

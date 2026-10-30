@@ -48,9 +48,9 @@ footer { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid var(--rule
 <body>
 <div class="frame">
 <nav class="crumbs"><a href="index.html">← สารบัญ</a> <a href="03-handoff-states.html">‹ ก่อนหน้า</a> <a href="05-fast-path.html">ถัดไป ›</a></nav>
-<p class="eyebrow">04 · SEQUENCE · LINE_PROD · ฉบับ 3</p>
-<h1>เรียก AI API หนึ่งครั้ง</h1>
-<p class="lede">Orchestrator อ่าน state ส่ง loading ให้ลูกค้าเห็น แล้วเรียก <code>ai_client</code> ซึ่งเป็นที่เดียวที่รู้จักรูปแบบ AI API ถ้าได้ผลทันเวลา ก็บันทึก state เช็คสถานะ (sendGuard) แล้วตอบ ถ้าลองซ้ำแล้วยังพัง ก็เข้า fallback</p>
+<p class="eyebrow">04 · SEQUENCE · LINE_PROD · 26 ต.ค. 2026</p>
+<h1>เรียก AI gateway หนึ่งครั้ง</h1>
+<p class="lede">Orchestrator อ่านแชทย้อนหลัง 4 ข้อความ (redact แล้ว) ส่ง loading ให้ลูกค้าเห็น แล้วเรียก <code>ai_client</code> ซึ่งเป็นที่เดียวที่รู้จักรูปแบบ API (OpenAI chat) gateway ไม่จำอะไรข้ามรอบ จึงรู้เรื่องก่อนหน้าจากแชทที่เราส่งไปเท่านั้น ได้ผลทันเวลาก็บันทึก state เช็คสถานะ (sendGuard) แล้วตอบ ลองซ้ำแล้วยังพังก็เข้า fallback</p>
 <div class="diagram-container">
 <svg viewBox="0 0 1280 720" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="call-ai-title call-ai-desc">
 <title id="call-ai-title">ลำดับการเรียก call_ai</title>
@@ -79,7 +79,7 @@ footer { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid var(--rule
 <path d="M 404,120 H 1116" fill="none" stroke="#6b6b6b" stroke-width="1.2" marker-end="url(#arrow)"/>
 <rect x="970" y="100" width="60" height="12" rx="2" fill="#f5f5f5"/><text x="1000" y="109" fill="#6b6b6b" font-size="8" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle" letter-spacing="0.06em">READ STATE</text>
 <path d="M 1116,152 H 404" fill="none" stroke="#6b6b6b" stroke-width="1" stroke-dasharray="5,4" marker-end="url(#arrow)"/>
-<rect x="960" y="132" width="80" height="12" rx="2" fill="#f5f5f5"/><text x="1000" y="141" fill="#6b6b6b" font-size="8" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle" letter-spacing="0.06em">STATE · RECENT</text>
+<rect x="960" y="132" width="80" height="12" rx="2" fill="#f5f5f5"/><text x="1000" y="141" fill="#6b6b6b" font-size="8" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle" letter-spacing="0.06em">CHAT 4 · STATE</text>
 <path d="M 396,184 H 160" fill="none" stroke="#6b6b6b" stroke-width="1" stroke-dasharray="5,4" marker-end="url(#arrow-open)"/>
 <rect x="256" y="164" width="48" height="12" rx="2" fill="#f5f5f5"/><text x="280" y="173" fill="#6b6b6b" font-size="8" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle" letter-spacing="0.06em">LOADING</text>
 <path d="M 404,216 H 636" fill="none" stroke="#6b6b6b" stroke-width="1.2" marker-end="url(#arrow)"/>
@@ -87,7 +87,7 @@ footer { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid var(--rule
 <path d="M 644,248 H 876" fill="none" stroke="#0066b3" stroke-width="1.2" marker-end="url(#arrow-link)"/>
 <rect x="720" y="228" width="80" height="12" rx="2" fill="#f5f5f5"/><text x="760" y="237" fill="#6b6b6b" font-size="8" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle" letter-spacing="0.06em">POST · RETRY 1</text>
 <path d="M 876,312 H 644" fill="none" stroke="#0066b3" stroke-width="1" stroke-dasharray="5,4" marker-end="url(#arrow-link)"/>
-<rect x="722" y="292" width="76" height="12" rx="2" fill="#f5f5f5"/><text x="760" y="301" fill="#6b6b6b" font-size="8" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle" letter-spacing="0.06em">200 · JSON/MD</text>
+<rect x="720" y="292" width="80" height="12" rx="2" fill="#f5f5f5"/><text x="760" y="301" fill="#6b6b6b" font-size="8" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle" letter-spacing="0.06em">200 · MARKDOWN</text>
 <path d="M 636,344 H 404" fill="none" stroke="#6b6b6b" stroke-width="1" stroke-dasharray="5,4" marker-end="url(#arrow)"/>
 <rect x="494" y="324" width="52" height="12" rx="2" fill="#f5f5f5"/><text x="520" y="333" fill="#6b6b6b" font-size="8" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle" letter-spacing="0.06em">AIRESULT</text>
 <path d="M 404,376 H 1116" fill="none" stroke="#6b6b6b" stroke-width="1.2" marker-end="url(#arrow)"/>
@@ -114,13 +114,13 @@ footer { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid var(--rule
 <text x="640" y="80" fill="#6b6b6b" font-size="9" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle">services/</text>
 <rect x="792" y="40" width="176" height="48" rx="6" fill="#f5f5f5"/>
 <rect x="792" y="40" width="176" height="48" rx="6" fill="rgba(26,26,26,0.03)" stroke="rgba(26,26,26,0.30)" stroke-width="1"/>
-<text x="880" y="65" fill="#1a1a1a" font-size="12" font-weight="600" font-family="'Geist', 'Noto Sans Thai', system-ui, sans-serif" text-anchor="middle">AI API</text>
-<text x="880" y="80" fill="#6b6b6b" font-size="9" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle">external</text>
+<text x="880" y="65" fill="#1a1a1a" font-size="12" font-weight="600" font-family="'Geist', 'Noto Sans Thai', system-ui, sans-serif" text-anchor="middle">AI gateway</text>
+<text x="880" y="80" fill="#6b6b6b" font-size="9" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle">OpenAI chat</text>
 <rect x="1032" y="40" width="176" height="48" rx="6" fill="#f5f5f5"/>
 <rect x="1032" y="40" width="176" height="48" rx="6" fill="rgba(26,26,26,0.05)" stroke="#6b6b6b" stroke-width="1"/>
 <text x="1120" y="65" fill="#1a1a1a" font-size="12" font-weight="600" font-family="'Geist', 'Noto Sans Thai', system-ui, sans-serif" text-anchor="middle">Postgres</text>
 <text x="1120" y="80" fill="#6b6b6b" font-size="9" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle">repositories/</text>
-<text x="640" y="616" fill="#6b6b6b" font-size="14" font-style="italic" font-family="'Instrument Serif', 'Noto Serif Thai', serif" text-anchor="middle">ถ้า AI API ช้าเกินอายุ replyToken: reply "กำลังค้นหา" ทันที แล้ว push คำตอบ (รอคำตอบเรื่องความเร็ว)</text>
+<text x="640" y="616" fill="#6b6b6b" font-size="14" font-style="italic" font-family="'Instrument Serif', 'Noto Serif Thai', serif" text-anchor="middle">วัดจริง 2–7 วิ (ทั่วไป) · 22–43 วิ (ค้นสินค้า) — loading 5–60 วิ, replyToken เกิน 50 วิ → push แทน</text>
 <line x1="40" y1="656" x2="1240" y2="656" stroke="rgba(26,26,26,0.10)" stroke-width="0.8"/>
 <text x="40" y="680" fill="#6b6b6b" font-size="8" font-family="'Geist Mono', ui-monospace, monospace" letter-spacing="0.14em">LEGEND</text>
 <line x1="120" y1="677" x2="142" y2="677" stroke="#6b6b6b" stroke-width="1.2" marker-end="url(#arrow)"/>
@@ -142,18 +142,19 @@ footer { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid var(--rule
 <tr><td>4xx อื่น / อ่านผลไม่ออก</td><td>ไม่ลองซ้ำ → <code>AiBadResponse</code></td></tr>
 <tr><td>ลองแล้วยังพัง</td><td><code>AiUnavailable</code></td></tr>
 </table>
-<p style="margin-top:.5rem">ทุกรอบรวมกันไม่เกิน deadline ต่อข้อความ และ <code>Semaphore(concurrency)</code> จำกัดงานพร้อมกัน</p></div>
-<div class="card"><h3><span class="dot accent"></span>AiRequest / AiResult</h3><p><b>ส่งไป</b>: state (None ถ้าหมดอายุ), <code>text_redacted</code>, ข้อความล่าสุด 2–4, รูปที่ย่อแล้ว <span class="tbd">รอคำตอบ</span>, flags</p>
-<p><b>ได้กลับ</b>: <code>kind</code> (products / answer / clarify / cannot_answer), intro, products[sku, name, price, url, image_url], <code>escalate_hint</code> <span class="tbd">รอคำตอบ</span>, <code>state_out</code> <span class="tbd">รอคำตอบ</span></p>
-<p>ตัวแปลงผล <code>JsonParser</code> หรือ <code>MarkdownParser</code> <span class="tbd">รอคำตอบ</span></p></div>
+<p style="margin-top:.5rem">ทุกรอบรวมกันไม่เกิน <code>TURN_DEADLINE_S</code> (90 วิ) แต่ละครั้งไม่เกิน <code>AI_TIMEOUT_S</code> (60 วิ) และ <code>Semaphore(AI_CONCURRENCY)</code> จำกัดงานพร้อมกัน — ไม่ตั้ง <code>AI_API_URL</code> = <code>StubAiClient</code> ทวนข้อความกลับ</p></div>
+<div class="card"><h3><span class="dot accent"></span>ส่งอะไรไป ได้อะไรกลับ</h3><p><b>ส่งไป</b> (<code>POST /chat/completions</code>): system prompt (ถ้าตั้ง) + แชทย้อนหลัง 4 ข้อความ (ลูกค้า = user, บอท = assistant, การ์ด = ชื่อสินค้า) + ข้อความปัจจุบัน — redact แล้วทั้งหมด ไม่ส่ง state / flags / รูป <span class="tbd">รอคำตอบ</span></p>
+<p><b>ได้กลับ</b>: markdown → <code>MarkdownParser</code>: intro + "## Product List" → products[sku, name, price, brand, details, image_url]; ลิงก์สร้างจากรหัสสินค้าเอง</p>
+<p>kind เดาจากเนื้อหา (มีสินค้า / ลงท้าย ? = clarify / นอกนั้น answer) — ไม่มี <code>escalate_hint</code>, <code>state_out</code> <span class="tbd">รอคำตอบ</span></p></div>
 <div class="card"><h3><span class="dot soft"></span>ระหว่างรอ</h3><ul>
 <li>ไม่ถือ transaction ของ DB ค้าง</li>
-<li>ล็อกต่อ user มีอายุ (TTL) มากกว่า deadline และต่ออายุระหว่างรอ</li>
-<li><code>ai_steps</code> เก็บ latency, attempts, error_class, cost</li>
+<li>งานของ user เดียวกันรอคิวด้วย <code>lock</code> ของ procrastinate (ไม่มี TTL lock ใน Redis แล้ว)</li>
+<li><code>ai_steps</code> เก็บ latency, attempts, error_class</li>
+<li>คำตอบมักถูกตัดกลางรายการ → ทิ้งก้อนที่ไม่ครบ <span class="tbd">รอคำตอบ</span></li>
 <li>fallback: ข้อความเสี่ยงส่งต่อ ไม่งั้นขอโทษ + ปุ่มคุยกับพนักงาน</li>
 </ul></div>
 </div>
-<footer>แหล่ง: docs/Line_ai_bot.md ฉบับ 3 (22 ต.ค. 2026) · ป้าย <span class="tbd">รอคำตอบ</span> = ขึ้นกับสเปก AI API ที่ยังไม่รู้</footer>
+<footer>แหล่ง: โค้ดใน branch <code>feat/python-impl</code> + docs/Line_ai_bot.md · docs/decisions.md (อัปเดต 26 ต.ค. 2026) · ป้าย <span class="tbd">รอคำตอบ</span> = ยังไม่รู้คำตอบจากเจ้าของระบบ</footer>
 </div>
 </body>
 </html>

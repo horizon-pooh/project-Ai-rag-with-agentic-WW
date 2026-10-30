@@ -91,6 +91,19 @@ class MinioStorage:
             content_type=content_type,
         )
 
+    async def get_image(self, key: str) -> bytes:
+        if not key:
+            raise ValueError("storage key ว่าง")
+        return await asyncio.to_thread(self._get_sync, key)
+
+    def _get_sync(self, key: str) -> bytes:
+        response = self._client.get_object(self._bucket, key)
+        try:
+            return response.read()
+        finally:
+            response.close()
+            response.release_conn()
+
     async def delete(self, key: str) -> None:
         if not key:
             raise ValueError("storage key ว่าง")

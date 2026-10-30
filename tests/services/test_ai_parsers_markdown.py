@@ -3,15 +3,16 @@
 เคสทดสอบของ MarkdownParser (app/services/ai_parsers.py) กับคำตอบจริงของ AI API + เคสสังเคราะห์
 
 รายละเอียด:
- - fixtures/ai_responses/*.json = คำตอบจริงของ gateway (2026-10-23, D-011) ข้อมูลแคตตาล็อกสาธารณะ + คำถามทดสอบ
-   ไม่มีข้อมูลลูกค้า; `_meta` = status, latency_s, request_messages (ตัดออกก่อนส่งให้ parser)
- - สินค้า: sku / ราคา / ลิงก์ตรงกับ fixture ทุกตัว, ก้อนท้ายที่ถูกตัดทิ้ง
+ - fixtures/ai_responses/*.json = คำตอบจริงของ gateway (01-07: 2026-10-23, 08-10: 2026-10-26, D-011)
+   ข้อมูลแคตตาล็อกสาธารณะ + คำถามทดสอบ ไม่มีข้อมูลลูกค้า; `_meta` = status, latency_s, request_messages (ตัดออกก่อนส่งให้ parser)
+ - สินค้า: sku / ราคาตรงกับ fixture ทุกตัว, ก้อนที่ถูกตัดก่อนครบทิ้ง; ลิงก์สร้างจาก sku เสมอ ไม่ใช้ลิงก์ของ AI
+   (08: มีแชทย้อนหลัง AI ตอบ "No product link" ทั้งรายการ, 09: AI เขียนโดเมนผิด, 10: มีชื่อรองใต้หัวสินค้า)
  - kind: products / clarify ("อยากได้ของ") / answer (เวลาเปิดร้าน, เคลม)
  - intro ไม่มีเครื่องหมาย markdown
- - สังเคราะห์: ไม่มีรายการ, รายการที่ไม่มีสินค้าครบ, รูป, ลิงก์ไม่ใช่ https, sku ซ้ำ, ข้อความต่อท้ายรายการ
+ - สังเคราะห์: ไม่มีรายการ, รายการที่ไม่มีสินค้าครบ, รูป, ลิงก์ของ AI ผิด/ไม่มี, sku ซ้ำ, ข้อความต่อท้ายรายการ
 
 แนวคิดจาก: src/ai/softnixParser.js (แบบเก่า)
-สถานะ: มีโค้ดแล้ว — 7 ตัวอย่างจริง (เป้า 20-30)
+สถานะ: มีโค้ดแล้ว — 10 ตัวอย่างจริง (เป้า 20-30)
 """
 
 from __future__ import annotations
@@ -73,7 +74,7 @@ def block(n: int, name: str, sku: str, price: str, *, image: str | None = None, 
 
 
 def test_fixtures_present():
-    assert len(FIXTURE_NAMES) == 7
+    assert len(FIXTURE_NAMES) == 10
 
 
 @pytest.mark.parametrize("name", FIXTURE_NAMES)
@@ -96,7 +97,16 @@ def test_every_fixture_parses_and_is_line_safe(name):
         assert p.image_url is None or p.image_url.startswith("https://")
 
 
-# (ชื่อไฟล์, [(sku, ราคา)]) — ก้อนที่ 5 ของทุกไฟล์ถูกตัด, 07 ก้อนที่ 3 ถูกตัดที่ลิงก์
+TRAP_PRODUCTS = [
+    ("1033871", "689.00"),
+    ("1043693", "307.00"),
+    ("1030372", "165.00"),
+    ("1021695", "810.00"),
+    ("1053536", "329.00"),
+]
+
+# (ชื่อไฟล์, [(sku, ราคา)]) — 01/02/06 ก้อนที่ 5 ถูกตัดก่อนมีราคา (ทิ้ง);
+# 07 ก้อนที่ 3 ถูกตัดที่ลิงก์แต่ชื่อ/ราคา/รหัสครบแล้ว (เก็บ); 08/09 ครบทั้ง 5 ก้อน
 EXPECTED_PRODUCTS = {
     "01_products_fridge": [
         ("1289220", "14999.00"),
@@ -116,12 +126,23 @@ EXPECTED_PRODUCTS = {
         ("1297952", "14990.00"),
         ("1260654", "16999.00"),
     ],
-    "07_compare": [("1249051", "16990.00"), ("1281772", "34990.00")],
+    "07_compare": [("1249051", "16990.00"), ("1281772", "34990.00"), ("1189182", "31990.00")],
+    "08_history_no_product_link": TRAP_PRODUCTS,
+    "09_wrong_link_domain": TRAP_PRODUCTS,
+    "10_subtitle_line": [
+        ("1319426", "15490.00"),
+        ("1319441", "29990.00"),
+        ("1319420", "12990.00"),
+        ("1319427", "18990.00"),
+        ("1232663", "7990.00"),
+    ],
 }
+# จำนวนก้อนที่ถูกตัดจนไม่ครบ (ทิ้ง) ต่อไฟล์
+DROPPED_BLOCKS = {"01_products_fridge": 1, "02_refine": 1, "06_topic_change": 1}
 
 
 @pytest.mark.parametrize("name", sorted(EXPECTED_PRODUCTS))
-def test_products_exact_and_truncated_block_dropped(name):
+def test_products_exact_and_incomplete_block_dropped(name):
     result = parse(body_of(name))
     assert result.kind is AiKind.PRODUCTS
     assert [(p.sku, p.price) for p in result.products] == [
@@ -129,8 +150,8 @@ def test_products_exact_and_truncated_block_dropped(name):
     ]
     for p in result.products:
         assert p.url == f"https://www.homepro.co.th/p/{p.sku}"
-    # ก้อนสุดท้ายในเนื้อหาจริงมีอยู่แต่ไม่ครบ
-    assert content_of(name).count("\n### ") == len(EXPECTED_PRODUCTS[name]) + 1
+    blocks = content_of(name).count("\n### ")
+    assert blocks == len(EXPECTED_PRODUCTS[name]) + DROPPED_BLOCKS.get(name, 0)
 
 
 def test_fridge_names_and_intro():
@@ -147,25 +168,74 @@ def test_list_without_intro_has_no_intro(name):
     assert parse(body_of(name)).intro is None
 
 
-def test_washing_machine_image_block_is_truncated_so_dropped():
-    """07: ก้อนที่มีรูปคือก้อนที่ 3 ซึ่งถูกตัดที่ "[View product" -> ทิ้งทั้งก้อน (รูปไม่ถูกใช้)"""
+def test_brand_and_details_from_real_answer():
+    """01: "- Brand:" / "- Details:" ขึ้นการ์ด (ไม่ใช้ตรวจราคา/ลิงก์)"""
+    p = parse(body_of("01_products_fridge")).products[0]
+    assert p.brand == "HISENSE"
+    assert p.details == "ระบบ Inverter, รับประกันคอมเพรสเซอร์ 25 ปี"
+
+
+def test_brand_and_details_optional_and_markdown_stripped():
+    content = "\n".join(
+        [
+            "## Product List",
+            "### 1. ตู้เย็น",
+            "- Price: ฿1,000",
+            "- **Details:** **ประหยัดไฟ** [ดูสเปก](https://evil.example/x)",
+            "- Product code: 111",
+            "### 2. พัดลม",
+            "- Price: ฿500",
+            "- Product code: 222",
+            "",
+        ]
+    )
+    first, second = parse(chat(content)).products
+    assert (first.brand, first.details) == (None, "ประหยัดไฟ ดูสเปก")
+    assert (second.brand, second.details) == (None, None)
+
+
+def test_washing_machine_block_cut_at_link_kept_with_image():
+    """07: ก้อนที่ 3 ถูกตัดที่ "[View product" — ชื่อ/ราคา/รหัส/รูปครบแล้ว ลิงก์สร้างจากรหัส"""
     content = content_of("07_compare")
     assert "![" in content and content.endswith("[View product")
-    result = parse(body_of("07_compare"))
-    assert "1189182" not in [p.sku for p in result.products]
-    assert all(p.image_url is None for p in result.products)
-
-
-def test_washing_machine_image_picked_up_when_block_complete():
-    """07 เดิมแต่ต่อก้อนที่ 3 ให้ครบ -> ได้ image_url จากบรรทัด ![..](..)"""
-    content = content_of("07_compare") + " details](https://www.homepro.co.th/p/1189182)"
-    result = parse(chat(content))
-    p = result.products[-1]
+    p = parse(body_of("07_compare")).products[-1]
     assert (p.sku, p.price) == ("1189182", Decimal("31990.00"))
+    assert p.url == "https://www.homepro.co.th/p/1189182"
     assert p.image_url == (
         "https://statice.homepro.co.th/homepro/ARTICLE_IMAGE/11/891/1189182/447x447/26012024_1189182$Imagec1.jpg"
     )
     assert p.name == "เครื่องซักผ้าฝาหน้า ELECTROLUX EWF1024P5WB 10 กก."
+
+
+def test_no_product_link_from_ai_still_gives_products():
+    """08: มีแชทย้อนหลัง (รวม "ระบบขัดข้อง") -> AI ตอบ "Product link: No product link" ทุกก้อน"""
+    assert content_of("08_history_no_product_link").count("Product link: No product link") == 5
+    result = parse(body_of("08_history_no_product_link"))
+    assert result.kind is AiKind.PRODUCTS and len(result.products) == 5
+    assert result.intro is None
+
+
+def test_wrong_link_domain_from_ai_replaced():
+    """09: AI เขียน "https://www.home/p/1033871" (โดเมนผิด) -> ใช้ลิงก์จากรหัสแทน"""
+    assert "https://www.home/p/1033871" in content_of("09_wrong_link_domain")
+    p = parse(body_of("09_wrong_link_domain")).products[0]
+    assert p.url == "https://www.homepro.co.th/p/1033871"
+
+
+def test_subtitle_line_under_heading_does_not_end_block():
+    """10: ใต้ "### 1. ทีวีแอลอีดี 55 นิ้ว ..." มีบรรทัด "LED TV 55” SAMSUNG ..." ก่อนช่องแรก
+    เดิมนับเป็นข้อความท้ายก้อน -> ทิ้งทุกก้อน แล้วส่งรายการทั้งก้อนเป็นข้อความธรรมดา"""
+    assert "\nLED TV 55” SAMSUNG" in content_of("10_subtitle_line")
+    result = parse(body_of("10_subtitle_line"))
+    assert result.kind is AiKind.PRODUCTS
+    assert result.products[0].name == "ทีวีแอลอีดี 55 นิ้ว SAMSUNG (4K, LED, TIZEN) UA55UE800HKXXT"
+    assert result.intro is None
+
+
+def test_plain_text_after_fields_still_ends_block():
+    content = "## Product List\n\n" + block(1, "A", "1", "100") + "\nสนใจรุ่นไหนคะ\n- Price: ฿5\n"
+    result = parse(chat(content))
+    assert [(p.sku, p.price) for p in result.products] == [("1", Decimal("100"))]
 
 
 def test_vague_question_is_clarify():
@@ -253,12 +323,26 @@ def test_price_or_code_on_cut_last_line_drops_block():
         "http://www.homepro.co.th/p/111",  # ไม่ใช่ https
         "javascript:alert(1)",
         "https://",
+        "https://evil.example/p/111",
+        "https://www.homepro.co.th/p/999",  # รหัสไม่ตรง
     ],
 )
-def test_non_https_product_link_drops_block(link):
+def test_ai_product_link_ignored(link):
     content = "เกริ่น\n\n## Product List\n\n" + block(1, "พัดลม", "111", "990", link=link) + "\n"
-    result = parse(chat(content))
-    assert result.kind is AiKind.ANSWER and result.products == []
+    (p,) = parse(chat(content)).products
+    assert p.url == "https://www.homepro.co.th/p/111"
+
+
+def test_missing_link_line_still_kept():
+    content = "## Product List\n\n### 1. พัดลม\n- Price: ฿990\n- Product code: 111\n"
+    (p,) = parse(chat(content)).products
+    assert p.url == "https://www.homepro.co.th/p/111"
+
+
+def test_sku_escaped_in_url():
+    content = "## Product List\n\n### 1. พัดลม\n- Price: ฿990\n- Product code: A/1?x#\n"
+    (p,) = parse(chat(content)).products
+    assert p.url == "https://www.homepro.co.th/p/A%2F1%3Fx%23"
 
 
 def test_non_https_image_ignored_but_product_kept():
@@ -267,17 +351,14 @@ def test_non_https_image_ignored_but_product_kept():
     assert p.image_url is None
 
 
-def test_bare_url_link_accepted_when_line_complete():
-    content = (
-        "## Product List\n\n### 1. พัดลม\n- Price: ฿990\n- Product code: 111\n"
-        "- Product link: https://www.homepro.co.th/p/111\n"
-    )
+def test_link_on_cut_last_line_does_not_matter():
+    content = "เกริ่น\n\n## Product List\n\n### 1. พัดลม\n- Price: ฿990\n- Product code: 111\n- Product link: https://www.homepro.co.th/p/11"
     (p,) = parse(chat(content)).products
     assert p.url == "https://www.homepro.co.th/p/111"
 
 
-def test_bare_url_on_cut_last_line_rejected():
-    content = "เกริ่น\n\n## Product List\n\n### 1. พัดลม\n- Price: ฿990\n- Product code: 111\n- Product link: https://www.homepro.co.th/p/11"
+def test_code_on_cut_last_line_drops_block():
+    content = "เกริ่น\n\n## Product List\n\n### 1. พัดลม\n- Price: ฿990\n- Product code: 11"
     assert parse(chat(content)).products == []
 
 

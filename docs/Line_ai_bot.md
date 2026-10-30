@@ -253,7 +253,7 @@ RETURNING *
 | แจ้ง call center ตอนส่งต่อ (สรุปบทสนทนา + ลิงก์ `/close`) + เวลาทำการ (นอกเวลาบอกลูกค้าตามจริง) | `src/notify/callCenter.js`, `src/notify/businessHours.js` | ส่งต่อแล้วต้องมีคนรู้ → `services/notify` ต้องเสร็จก่อนขึ้นจริง |
 | ลิงก์ `/close?token=` ใช้ครั้งเดียว (อายุ 24 ชม.) | `src/routes/close.js` | ช่องทาง `staff_closed` → `api/close` เรียก `end_handoff` |
 | ตัวกรอง FAQ/ทักทาย + keyword ของ Vendor 1 (ไม่ตอบ) | `src/pipeline/filter.js` | ลดการเรียก AI → ขั้น rules |
-| ปุ่ม "ดูรายละเอียด" ใช้ SKU จาก postback ไม่ผ่าน AI | `docs/conversation.md` | เร็ว ไม่เสียค่า AI → จับ postback ที่ขั้น rules ก่อนถึง call_ai |
+| ปุ่ม "ดูรายละเอียด" ใช้ SKU จาก postback ไม่ผ่าน AI (2026-10-26 ตัดปุ่มออก รายละเอียดอยู่บนการ์ดเลย — docs/decisions.md D-013) | `docs/conversation.md` | เร็ว ไม่เสียค่า AI → จับ postback ที่ขั้น rules ก่อนถึง call_ai |
 | runbook, รายงานรายวัน (ตอบได้, เวลารอ, ส่งต่อ, timeout, คิวเต็ม), config หยุดทันทีเมื่อค่าบังคับขาด, redact log, รันแบบ shadow ก่อนเปิดจริง | `docs/runbook.md`, `src/ops/dailyReport.js`, `src/config/index.js`, `src/observability/redact.js`, README | ขึ้นระบบจริง → `worker/cron` (รายงาน), `app/config` (fail-fast), `privacy/redact` |
 | D-007: ระบบเราเป็นคนเลือกว่าลูกค้าคุยกับ AI หรือ call center (ยืนยันแล้ว) | `docs/decisions.md` | ตรงกับแบบใหม่ (`bot`/`human` เป็นของเรา) |
 | คำถามค้างที่ยังต้องตอบ | `docs/open-questions.md` | ย้ายเข้าหัวข้อ 13 |

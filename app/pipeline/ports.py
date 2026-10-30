@@ -17,6 +17,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Collection
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
@@ -258,11 +259,17 @@ class MessagesRepo(Protocol):
         ...
 
     async def recent_texts_redacted(
-        self, conversation_id: int, limit: int = 4, *, exclude_raw_event_id: int | None = None
+        self,
+        conversation_id: int,
+        limit: int = 4,
+        *,
+        exclude_raw_event_id: int | None = None,
+        exclude_types: Collection[str] = (),
     ) -> list[ChatTurn]:
         """ข้อความล่าสุดไม่เกิน limit ที่มี text_redacted (ขาเข้า + ขาออกที่ status='sent') เรียงเก่าไปใหม่
 
         exclude_raw_event_id: ไม่เอาข้อความขาเข้าของ event นี้ (ข้อความปัจจุบันส่งแยกใน AiRequest.text_redacted)
+        exclude_types: ไม่เอาข้อความขาออกที่ message_type (purpose) อยู่ในนี้ — ไม่กินโควตา limit
         """
         ...
 
@@ -451,6 +458,10 @@ class Storage(Protocol):
 
     async def put_image(self, key: str, data: bytes, content_type: str) -> None:
         """เก็บไฟล์ที่ key (ทับได้ = idempotent) — key ห้ามมีข้อมูลส่วนบุคคล เช่น images/<conversation_id>/<line_message_id>"""
+        ...
+
+    async def get_image(self, key: str) -> bytes:
+        """อ่านไฟล์ที่ key (ไม่มี/อ่านไม่ได้ -> ยก error)"""
         ...
 
     async def delete(self, key: str) -> None:

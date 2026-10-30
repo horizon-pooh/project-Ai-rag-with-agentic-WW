@@ -205,3 +205,25 @@ async def test_delete_other_error_raises():
     client.remove_object.side_effect = s3_error("AccessDenied")
     with pytest.raises(S3Error):
         await storage(client).delete("k")
+
+
+async def test_get_image_reads_object_and_releases_connection():
+    client = MagicMock()
+    client.get_object.return_value.read.return_value = b"jpegbytes"
+    assert await storage(client).get_image("images/7/123") == b"jpegbytes"
+    client.get_object.assert_called_once_with("test-bucket", "images/7/123")
+    client.get_object.return_value.close.assert_called_once_with()
+    client.get_object.return_value.release_conn.assert_called_once_with()
+
+
+async def test_get_image_error_still_releases_connection():
+    client = MagicMock()
+    client.get_object.return_value.read.side_effect = ConnectionError("down")
+    with pytest.raises(ConnectionError):
+        await storage(client).get_image("k")
+    client.get_object.return_value.release_conn.assert_called_once_with()
+
+
+async def test_get_image_missing_key_rejected():
+    with pytest.raises(ValueError):
+        await storage(MagicMock()).get_image("")

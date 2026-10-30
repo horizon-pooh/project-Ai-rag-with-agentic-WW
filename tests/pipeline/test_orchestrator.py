@@ -37,6 +37,7 @@ from app.pipeline.schemas import (
     FeedbackKind,
     HandoffEndReason,
     JsonDict,
+    MediaContent,
     OutboundStatus,
     Product,
     RawEvent,
@@ -170,12 +171,13 @@ async def _raw(
     text: str | None = None,
     postback: str | None = None,
     message_type: str = "text",
+    message_id: str | None = None,
     reply_token: bool = True,
 ) -> RawEvent:
     if postback is not None:
         payload = _payload(deps, "postback", postback={"data": postback})
     else:
-        message: JsonDict = {"type": message_type, "id": f"m-{uuid.uuid4().hex[:8]}"}
+        message: JsonDict = {"type": message_type, "id": message_id or f"m-{uuid.uuid4().hex[:8]}"}
         if message_type == "text":
             message["text"] = text or ""
         payload = _payload(deps, "message", message=message)
@@ -235,7 +237,10 @@ async def test_happy_path_products_carousel_state_and_steps(settings, cfg) -> No
     ((token, msgs),) = deps.line.replies  # type: ignore[attr-defined]
     assert token == f"rt-{raw.id}"
     assert msgs[0] == _text("แนะนำตู้เย็นค่ะ")
-    assert msgs[1] == flex_builder.product_carousel([P1, P2])
+    # สินค้าที่ไม่มีรูปได้รูปแทนจาก PUBLIC_BASE_URL
+    assert msgs[1] == flex_builder.product_carousel(
+        [P1, P2], placeholder_image_url="https://bot.example.test/static/no-image.png"
+    )
 
     # state + counters บันทึกแล้ว ต่ออายุ STATE_TTL
     conv = _conv(deps)
@@ -365,14 +370,54 @@ async def test_human_is_silent_and_message_stored(settings, cfg) -> None:
     assert len(deps.notifier.started) == 1  # type: ignore[attr-defined]
 
 
-async def test_empty_and_image_only_messages_reply_empty(settings, cfg) -> None:
+async def test_empty_message_replies_empty(settings, cfg) -> None:
     deps = _deps(settings)
     o1 = await _turn(deps, cfg, message_type="sticker")
     assert o1.route == TurnRoute.RULE_EMPTY
     assert _last_sent(deps) == [_text(replies.EMPTY)]
-    # รอคำตอบ: AI รับรูปได้ไหม — ตอนนี้รูปเดี่ยวๆ ไม่ส่ง AI นับเป็นข้อความว่าง
-    o2 = await _turn(deps, cfg, message_type="image")
-    assert o2.route == TurnRoute.RULE_EMPTY
+
+
+async def test_image_only_when_images_not_sent_says_cannot_read(settings, cfg) -> None:
+    # AI_SEND_IMAGES ปิด (ตั้งต้น): รูปเดี่ยวๆ ไม่ส่ง AI บอกลูกค้าตรงๆ ว่ายังอ่านรูปไม่ได้
+    deps = _deps(settings)
+    o = await _turn(deps, cfg, message_type="image")
+    assert o.route == TurnRoute.RULE_EMPTY
+    assert _last_sent(deps) == [_text(replies.IMAGE_UNREADABLE)]
+    assert _ai_calls(deps) == []
+
+
+def _png_bytes() -> bytes:
+    import io
+
+    from PIL import Image
+
+    out = io.BytesIO()
+    Image.new("RGB", (40, 40), (200, 30, 30)).save(out, format="PNG")
+    return out.getvalue()
+
+
+async def test_image_only_is_sent_to_ai_when_enabled(rules_dir) -> None:
+    settings = make_settings(rules_dir=rules_dir, ai_send_images=True)
+    cfg = load_pipeline_config(settings)
+    deps = _deps(settings, products_result())
+    deps.line.contents["m-img"] = MediaContent(data=_png_bytes(), content_type="image/png")  # type: ignore[attr-defined]
+    o = await _turn(deps, cfg, message_type="image", message_id="m-img")
+
+    assert o.route == TurnRoute.AI_ANSWER
+    ((req, _),) = _ai_calls(deps)
+    assert req.text_redacted == "" and len(req.images) == 1
+    assert req.images[0] in deps.storage.objects  # type: ignore[attr-defined]
+    assert _step(deps, o.ai_run_id, "rules").output["outcome"] == "continue"
+
+
+async def test_image_that_failed_to_store_is_not_sent_even_when_enabled(rules_dir) -> None:
+    settings = make_settings(rules_dir=rules_dir, ai_send_images=True)
+    cfg = load_pipeline_config(settings)
+    deps = _deps(settings)  # ไม่มี content -> get_content 404 -> เก็บรูปไม่สำเร็จ
+    o = await _turn(deps, cfg, message_type="image")
+
+    assert o.route == TurnRoute.RULE_EMPTY
+    assert _last_sent(deps) == [_text(replies.IMAGE_UNREADABLE)]
     assert _ai_calls(deps) == []
 
 
@@ -448,6 +493,18 @@ async def test_ai_unavailable_not_risky_apologizes_with_staff_button(settings, c
     call = _step(deps, out.ai_run_id, "call_ai")
     assert call.error_class == "timeout" and call.attempts == 2 and call.latency_ms == 30000
     assert _step(deps, out.ai_run_id, "fallback").error_class == "timeout"
+
+
+async def test_ai_down_reply_not_sent_back_to_ai_as_history(settings, cfg) -> None:
+    # วัดจริง 2026-10-26: "ระบบขัดข้อง" ใน history ทำให้ AI ตอบรายการสินค้าแบบไม่มีลิงก์ซ้ำ
+    err = AiBadResponse("parse", error_class="parse", attempts=1, latency_ms=10)
+    deps = _deps(settings, err)
+    await _turn(deps, cfg, text="ต้องการท่อน้ำ")
+    assert _last_sent(deps) == [replies.ai_down_message()]
+    await _turn(deps, cfg, text="ต้องการท่อน้ำ")
+    req, _ = deps.ai.calls[-1]  # type: ignore[attr-defined]
+    history = [(t.direction, t.text_redacted) for t in req.recent_messages]
+    assert history == [(Direction.IN, "ต้องการท่อน้ำ")]
 
 
 async def test_ai_bad_response_risky_escalates(settings, cfg, monkeypatch) -> None:

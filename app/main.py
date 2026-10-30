@@ -31,7 +31,7 @@ from functools import partial
 
 from fastapi import FastAPI
 
-from app.api import close, health, webhook
+from app.api import assets, close, health, webhook
 from app.config import Settings, get_settings
 from app.pipeline import orchestrator
 from app.worker.app import open_queue
@@ -70,6 +70,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(webhook.router)
     app.include_router(health.router)
     app.include_router(close.router)
+    app.include_router(assets.router)
     return app
 
 

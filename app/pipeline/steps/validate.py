@@ -38,10 +38,10 @@ from app.services import flex_builder
 # validate ไม่ผ่านติดกันครบเท่านี้ -> ส่งต่อ (ครั้งแรกถามกลับ VALIDATE_RETRY) — docs/PLAN.md เกณฑ์ (เสนอ)
 VALIDATE_FAIL_ESCALATE_AT = 2
 
-# ขีดจำกัดของ LINE (เอกสาร Messaging API): uri action ≤1000, image url ≤2000, postback data ≤300
+# ขีดจำกัดของ LINE (เอกสาร Messaging API): uri action ≤1000, image url ≤2000
+# (การ์ดไม่มีปุ่ม postback แล้ว — ไม่ต้องตรวจความยาว postback data ของ SKU)
 LINE_MAX_URI_CHARS = 1000
 LINE_MAX_IMAGE_URL_CHARS = 2000
-LINE_MAX_POSTBACK_DATA_CHARS = 300
 
 # purpose ของ OutboundMessage (ลง messages.message_type)
 PURPOSE_ANSWER = "ai_answer"
@@ -104,8 +104,6 @@ def _product_errors(products: Sequence[Product]) -> list[str]:
             errors.append(f"{where}.sku: ซ้ำ")
         else:
             seen.add(p.sku)
-            if len(flex_builder.detail_postback_data(p)) > LINE_MAX_POSTBACK_DATA_CHARS:
-                errors.append(f"{where}.sku: ยาวเกิน postback data {LINE_MAX_POSTBACK_DATA_CHARS}")
         if not p.name.strip():
             errors.append(f"{where}.name: ว่าง")
         if (reason := _https_error(p.url, LINE_MAX_URI_CHARS)) is not None:
@@ -118,6 +116,14 @@ def _product_errors(products: Sequence[Product]) -> list[str]:
         if p.price is not None and (not p.price.is_finite() or p.price < 0):
             errors.append(f"{where}.price: ติดลบหรือไม่ใช่ตัวเลข")
     return errors
+
+
+def _card(product: Product, products: Sequence[Product]) -> Product:
+    """สินค้าที่จะขึ้นการ์ด: details เป็นข้อความอิสระของ AI -> ลบ URL ที่ไม่ใช่ลิงก์สินค้า (เหมือน intro)"""
+    if not product.details:
+        return product
+    details, _ = _strip_unknown_urls(product.details, products)
+    return product.model_copy(update={"details": details.strip() or None})
 
 
 def _text_error(name: str, text: str) -> str | None:
@@ -173,11 +179,16 @@ def _fail(errors: list[str]) -> ValidationResult:
 
 
 def validate(
-    result: AiResult, route: AiRoute, *, prefix_texts: Sequence[str] = ()
+    result: AiResult,
+    route: AiRoute,
+    *,
+    prefix_texts: Sequence[str] = (),
+    placeholder_image_url: str | None = None,
 ) -> ValidationResult:
     """ตรวจผล AI ตามเส้นทาง แล้วสร้าง OutboundMessage ที่พร้อมส่ง (ฟังก์ชันล้วน)
 
     - prefix_texts: ข้อความของระบบที่ต้องส่งนำหน้า (เช่น HANDOFF_TIMED_OUT_PREFIX) ใช้กับทุกเส้นทาง
+    - placeholder_image_url: รูปบนการ์ดของสินค้าที่ไม่มี image_url (None = ไม่มีรูป)
     - ANSWER + products: ตรวจสินค้าทุกรายการ แล้วตัดเหลือ MAX_CAROUSEL_BUBBLES ใบ
       -> [prefix..., intro (ถ้ามี), carousel]
     - ANSWER ไม่มี products: ต้องมี intro (คำตอบ) -> [prefix..., intro]
@@ -194,7 +205,8 @@ def validate(
     - ไม่มี products: ราคาในข้อความส่งตามเดิม — รอคำตอบ: ราคาที่ AI ตอบผิดใครรับผิดชอบ ต้องมีข้อความกำกับไหม
       (Line_ai_bot.md เรื่องค้าง)
     - รหัสสินค้า (SKU) ในข้อความไม่ตรวจ: รูปแบบไม่แน่นอน แยกจากรุ่นสินค้า/ตัวเลขอื่นไม่ได้แน่ชัด
-      ตรวจแล้วจะตัดข้อความดีทิ้งเยอะ; การ์ดและปุ่ม detail ใช้ SKU จาก products อยู่แล้ว
+      ตรวจแล้วจะตัดข้อความดีทิ้งเยอะ; การ์ดใช้ SKU จาก products อยู่แล้ว
+    - details บนการ์ด (ข้อความอิสระของ AI): ลบ URL ที่ไม่ใช่ลิงก์สินค้าแบบเดียวกับ intro
     คำเตือนอยู่ใน errors ทั้งที่ ok=True (ValidationResult อนุญาต) — orchestrator ลง ai_steps
     """
     if route is AiRoute.ESCALATE:
@@ -230,8 +242,10 @@ def validate(
                 else:
                     messages.append(replies.text_message(intro))
             if not errors:
-                cards = list(result.products)[:MAX_CAROUSEL_BUBBLES]
-                messages.append(flex_builder.product_carousel(cards))
+                cards = [_card(p, result.products) for p in result.products[:MAX_CAROUSEL_BUBBLES]]
+                messages.append(
+                    flex_builder.product_carousel(cards, placeholder_image_url=placeholder_image_url)
+                )
         elif not intro:
             errors.append("intro: คำตอบว่าง (ไม่มีทั้ง products และ intro)")
         elif (e := _text_error("intro", intro)) is not None:

@@ -307,6 +307,9 @@ class Product(BaseModel):
     price: Decimal | None = None
     url: str
     image_url: str | None = None
+    # ข้อความแสดงบนการ์ดเท่านั้น (ไม่ใช้ตรวจราคา/ลิงก์) — "- Brand:" / "- Details:" ในคำตอบ markdown
+    brand: str | None = None
+    details: str | None = None
 
 
 class Counters(_Frozen):

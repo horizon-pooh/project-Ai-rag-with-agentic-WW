@@ -26,6 +26,7 @@
 from __future__ import annotations
 
 import asyncio
+import base64
 import json
 from decimal import Decimal
 
@@ -46,6 +47,7 @@ from app.pipeline.schemas import (
 )
 from app.services import ai_client as ai_client_mod
 from app.services.ai_client import (
+    IMAGE_ONLY_PROMPT,
     MIN_RETRY_BUDGET_S,
     STUB_PREFIX,
     HttpAiClient,
@@ -56,7 +58,7 @@ from app.services.ai_client import (
     parse_retry_after,
 )
 from app.services.ai_parsers import JsonParser, MarkdownParser
-from tests.fakes import make_settings
+from tests.fakes import FakeStorage, make_settings
 from tests.services._helpers import FakeTime, RecordingLogger
 
 AI_BASE = "https://ai.example.test/v1"
@@ -190,7 +192,7 @@ async def test_200_valid_returns_ai_result_with_products(http, fake_time, logger
     assert (p.name, p.price, p.url, p.image_url) == (
         "ตู้เย็น 2 ประตู",
         Decimal("12990.00"),
-        "https://shop.example.test/p/RF-100",
+        "https://www.homepro.co.th/p/RF-100",  # ลิงก์สร้างจาก Product code ไม่ใช้ลิงก์ของ AI
         "https://shop.example.test/i/RF-100.jpg",
     )
     assert result.products[1].price == Decimal("5990") and result.products[1].image_url is None
@@ -707,3 +709,87 @@ async def test_make_ai_client_picks_stub_or_http(monkeypatch):
     client = make_ai_client(settings())
     assert isinstance(client, HttpAiClient)
     await client.aclose()
+
+
+# --- รูป (AI_SEND_IMAGES): ส่งเป็น data URL แบบ OpenAI vision ---
+
+IMG_KEY = "img/1/9.jpg"
+IMG_BYTES = b"\xff\xd8fake-jpeg"
+IMG_DATA_URL = "data:image/jpeg;base64," + base64.b64encode(IMG_BYTES).decode()
+
+
+def image_request(text: str = "", *keys: str) -> AiRequest:
+    return AiRequest(text_redacted=text, images=list(keys))
+
+
+def test_build_messages_without_images_keeps_plain_string():
+    last = build_messages(request())[-1]
+    assert last == {"role": "user", "content": REDACTED_TEXT}
+
+
+def test_build_messages_with_images_uses_content_parts():
+    last = build_messages(image_request("ตู้เย็นแบบนี้", IMG_KEY), None, [IMG_DATA_URL])[-1]
+    assert last == {
+        "role": "user",
+        "content": [
+            {"type": "text", "text": "ตู้เย็นแบบนี้"},
+            {"type": "image_url", "image_url": {"url": IMG_DATA_URL}},
+        ],
+    }
+
+
+def test_build_messages_image_only_gets_default_prompt():
+    last = build_messages(image_request("", IMG_KEY), None, [IMG_DATA_URL])[-1]
+    assert last["content"] == [
+        {"type": "text", "text": IMAGE_ONLY_PROMPT},
+        {"type": "image_url", "image_url": {"url": IMG_DATA_URL}},
+    ]
+
+
+@respx.mock
+async def test_image_is_read_from_storage_and_sent_as_data_url(http, fake_time, logger):
+    route = respx.post(AI_URL).mock(return_value=ok())
+    storage = FakeStorage()
+    await storage.put_image(IMG_KEY, IMG_BYTES, "image/jpeg")
+    client = HttpAiClient(
+        settings(), http=http, sleep=fake_time.sleep, monotonic=fake_time.monotonic, storage=storage
+    )
+    await client.call(image_request("", IMG_KEY), 50)
+
+    sent = json.loads(route.calls[0].request.content)
+    assert sent["messages"][-1]["content"] == [
+        {"type": "text", "text": IMAGE_ONLY_PROMPT},
+        {"type": "image_url", "image_url": {"url": IMG_DATA_URL}},
+    ]
+
+
+@respx.mock
+async def test_unreadable_image_is_skipped_when_there_is_text(http, fake_time, logger):
+    route = respx.post(AI_URL).mock(return_value=ok())
+    client = HttpAiClient(
+        settings(), http=http, sleep=fake_time.sleep, monotonic=fake_time.monotonic, storage=FakeStorage()
+    )
+    await client.call(image_request("ตู้เย็น", IMG_KEY), 50)
+
+    sent = json.loads(route.calls[0].request.content)
+    assert sent["messages"][-1] == {"role": "user", "content": "ตู้เย็น"}
+    assert [r[1] for r in logger.records] == ["ai_image_load_failed"]
+
+
+@respx.mock
+async def test_unreadable_image_without_text_is_unavailable_and_not_sent(http, fake_time, logger):
+    route = respx.post(AI_URL).mock(return_value=ok())
+    client = HttpAiClient(
+        settings(), http=http, sleep=fake_time.sleep, monotonic=fake_time.monotonic, storage=FakeStorage()
+    )
+    with pytest.raises(AiUnavailable) as ei:
+        await client.call(image_request("", IMG_KEY), 50)
+    assert (ei.value.error_class, ei.value.attempts) == ("image_unavailable", 0)
+    assert route.call_count == 0
+
+
+@respx.mock
+async def test_images_without_storage_are_not_sent(http, fake_time, logger):
+    route = respx.post(AI_URL).mock(return_value=ok())
+    await make_client(http, fake_time).call(image_request("ตู้เย็น", IMG_KEY), 50)
+    assert "image_url" not in route.calls[0].request.content.decode()

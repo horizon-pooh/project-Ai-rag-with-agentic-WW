@@ -163,10 +163,10 @@
 
 | เรื่อง | ตัดสิน |
 |---|---|
-| request | `messages` = แชทย้อนหลัง (redact, in → user / out → assistant, ≤4) + ข้อความปัจจุบัน (redact); ไม่ส่ง state / flags / รูป; ไม่มี system prompt (gateway มีของตัวเอง) — ใส่ได้ด้วย `AI_SYSTEM_PROMPT_FILE` |
+| request | `messages` = แชทย้อนหลัง (redact, in → user / out → assistant, ≤4, ไม่รวมข้อความ `ai_down` "ระบบขัดข้อง" — ทำให้ AI ตอบเพี้ยนซ้ำ) + ข้อความปัจจุบัน (redact); ไม่ส่ง state / flags / รูป; ไม่มี system prompt (gateway มีของตัวเอง) — ใส่ได้ด้วย `AI_SYSTEM_PROMPT_FILE` |
 | ความจำ | ไม่มี state จาก API → ใช้ "ส่งแชทย้อนหลังสั้นๆ" ตามแบบหลัก §ความจำ; ข้อความขาออกที่เก็บเป็นแชทย้อนหลัง = ข้อความ text + altText ของ carousel ("สินค้าแนะนำ: ชื่อ, ชื่อ") ไม่ใช่ JSON ของ flex |
 | ตัวแปลง | `AI_RESPONSE_FORMAT=markdown` (ตั้งต้น) → `MarkdownParser`; `json` → `JsonParser` (สัญญาเสนอเดิม เผื่อ API เปลี่ยน) |
-| สินค้า | รับเฉพาะก้อนที่ครบ (ชื่อ + Product code + Price + ลิงก์ https) ก้อนที่ถูกตัดทิ้งแล้ว log จำนวน; รูปจากบรรทัด `![..](https://..)` |
+| สินค้า | รับเฉพาะก้อนที่ครบ (ชื่อ + Product code + Price) ก้อนที่ถูกตัดทิ้งแล้ว log จำนวน; รูปจากบรรทัด `![..](https://..)`; **ลิงก์สร้างจาก Product code เสมอ** (`https://www.homepro.co.th/p/<code>`, `ai_parsers.PRODUCT_URL_TEMPLATE`) ไม่ใช้ลิงก์ของ AI — วัดจริง 2026-10-26: มีแชทย้อนหลัง AI ตอบ `Product link: No product link` ทั้งรายการ และบางครั้งเขียนโดเมนผิด (`https://www.home/p/..`) |
 | kind | มีสินค้าครบ ≥1 → products; ไม่งั้นมีบรรทัดลงท้าย ? → clarify; ไม่งั้น answer — heuristic (**รอคำตอบ**: API ไม่บอก kind) ไม่มีทาง cannot_answer / escalate_hint จาก API |
 | เวลา | `AI_TIMEOUT_S=60`, `TURN_DEADLINE_S=90` (หนึ่งครั้งอาจถึง ~45 วิ เผื่อลองซ้ำหนึ่งครั้ง) → เพดานงาน worker 150 วิ; `AI_CONCURRENCY=4` ยังเป็นค่าเสนอ |
 
@@ -207,3 +207,16 @@
   5. MinIO → โฟลเดอร์บนดิสก์ + `attachments.storage_key` (ลด service; community edition ของ MinIO ถูกลดฟีเจอร์ปี 2025 — **ยังไม่ได้ตรวจสอบเอง**)
   6. ไม่ใช่โค้ด: สัญญาณ "พนักงานปิดงาน" จาก call center, DPA กับเจ้าของ AI gateway / Vendor 1 (ส่งข้อมูลออกนอกประเทศ ม.28–29?), ROPA, คนสำรองเมื่อ dev ไม่อยู่
 - **จะเปลี่ยนใจเมื่อ:** ปริมาณโตเกินเครื่องเดียวรับไหว หรือบริษัทมีระบบ backup กลางให้ใช้แทนสคริปต์
+
+## D-013 การ์ดสินค้า: รายละเอียดอยู่บนการ์ด ไม่มีปุ่ม "ดูรายละเอียด" สีตาม HomePro (2026-10-26)
+
+- **สถานะ:** ทำแล้ว (ผู้ใช้ขอ) — ยังไม่ได้ดูบน LINE จริง
+- **ทำอะไร:** bubble = รูป, แบรนด์, ชื่อ, Details, ราคา, รหัสสินค้า, ปุ่ม "เปิดหน้าสินค้า" ปุ่มเดียว (แตะรูป/เนื้อการ์ดก็เปิด)
+  - `Product` เพิ่ม `brand`, `details` (MarkdownParser อ่าน "- Brand:" / "- Details:") — แสดงอย่างเดียว ไม่ใช้ตรวจราคา/ลิงก์;
+    validate ลบ URL ที่ไม่ใช่ลิงก์สินค้าออกจาก details แบบเดียวกับ intro
+  - สินค้าที่ไม่มีรูป → รูปแทน `{PUBLIC_BASE_URL}/static/no-image.png` (`app/api/assets.py`, Caddy เปิด path นี้);
+    ไม่ได้ตั้ง PUBLIC_BASE_URL → ไม่มีรูปเหมือนเดิม
+  - สี: น้ำเงินโลโก้ `#27509A` (ชื่อ/ปุ่ม), ส้มเว็บ `#F79420` (แบรนด์), แดงราคา `#DA3731`, เทา `#525255` / `#99999C`
+    — อ่านจาก homepro.co.th `style-common.css` และ `Logo-2026.svg` วันที่ 2026-10-26
+- **คงไว้:** postback `action=detail` ยังตอบได้ (การ์ดเก่าในแชทลูกค้ายังมีปุ่มนี้)
+- **ตัดออก:** ตรวจความยาว postback data ของ SKU ใน validate (ไม่มีปุ่ม postback บนการ์ดแล้ว)

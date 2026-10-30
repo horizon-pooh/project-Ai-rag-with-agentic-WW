@@ -1,0 +1,33 @@
+{
+  "_meta": {
+    "captured": "2026-10-26",
+    "status": 200,
+    "latency_s": 31.5,
+    "request_messages": [
+      {
+        "role": "user",
+        "content": "ต้องการท่อน้ำ"
+      }
+    ]
+  },
+  "id": "chatcmpl-48bc4653",
+  "object": "chat.completion",
+  "created": 1793002595,
+  "model": "gemma4-31b",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "## Product List\n\n### 1. ท่อน้ำทิ้งอ่างล้างหน้ากระปุก RASLAND RA FR0504 30 ซม.\n![BOTTLE TRAP 30CM RA FR0504](https://statice.homepro.co.th/homepro/ARTICLE_IMAGE/10/338/71/447x447/10072021_1033871$Imagec1.jpg)\n- Brand: RASLAND\n- Price: ฿689.00\n- Details: ความยาว 30ซม. แบบกระปุก\n- Product code: 1033871\n- Product link: [View product details](https://www.home/p/1033871)\n\n### 2. ท่อน้ำทิ้งอ่างล้างหน้าแบบกระปุก 10 ซม. OS-803-10\n![BOTTLE TRAP FOR LAVATORY LUZERN OS-803-10 10CM CHROME](https://statice.homepro.co.th/homepro/ARTICLE_IMAGE/10/436/93/447x447/10072021_1043693$Imagec1.jpg)\n- Brand: LUZERN\n- Price: ฿307.00\n- Details: ความยาว 10ซม. แบบกระปุก\n- Product code: 1043693\n- Product link: [View product details](https://www.homepro.co.th/p/1043693)\n\n### 3. ท่อน้ำทิ้งอ่างล้างหน้ากระปุก 30 ซม. HANG BP-04\n![BOTTLE TRAP FOR LAVATORY HANG BP-04 30CM](https://statice.homepro.co.th/homepro/ARTICLE_IMAGE/10/303/72/447x447/18062025_1030372$Imagec1.jpg)\n- Brand: HANG\n- Price: ฿165.00\n- Details: ความยาว 30ซม. แบบกระปุก\n- Product code: 1030372\n- Product link: [View product details](https://www.homepro.co.th/p/1030372)\n\n### 4. ท่อน้ำทิ้งอ่างล้างหน้ากระปุก 25 ซม. AMERICAN STANDARD A-8107-DIY\n![BOTTLE TRAP FOR LAVATORY 2<0xA0>25CM AMERICAN STANDARD A-8107-DIY](https://statice.homepro.co.th/homepro/ARTICLE_IMAGE/10/216/95/447x447/18122025_1021695$Imagec1.jpg)\n- Brand: AMERICAN STANDARD\n- Price: ฿810.00\n- Details: ความยาว 25ซม. แบบกระปุก\n- Product code: 1021695\n- Product link: [View product details](https://www.homepro.co.th/p/1021695)\n\n### 5. ท่อน้ำทิ้งอ่างล้างหน้ากระปุก LUZERN OS-803-12 30 ซม.\n![BOTTLE TRAP FOR LAVATORY LUZERN OS-803-12 30CM](https://statice.homepro.co.th/homepro/ARTICLE_IMAGE/10/535/356/447x447/20062025_1053536$Imagec1.jpg)\n- Brand: LUZERN\n- Price: ฿329.00\n- Details: ความยาว 30ซม. แบบกระปุก สามารถปรับระดับได้\n- Product code: 1053536\n- Product link: [View product details](https://www.homepro.co.th/p/1053536)\n\nIf you're interested in a particular model, tell me the model name or Article number, and I can compare the details for you.",
+        "tool_calls": null
+      },
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 0,
+    "completion_tokens": 0,
+    "total_tokens": 0
+  }
+}

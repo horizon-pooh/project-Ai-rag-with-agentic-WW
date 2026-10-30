@@ -19,7 +19,7 @@ from __future__ import annotations
 
 import itertools
 import secrets
-from collections.abc import Callable
+from collections.abc import Callable, Collection
 from dataclasses import dataclass, field
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
@@ -526,7 +526,12 @@ class FakeMessagesRepo:
         return mid
 
     async def recent_texts_redacted(
-        self, conversation_id: int, limit: int = 4, *, exclude_raw_event_id: int | None = None
+        self,
+        conversation_id: int,
+        limit: int = 4,
+        *,
+        exclude_raw_event_id: int | None = None,
+        exclude_types: Collection[str] = (),
     ) -> list[ChatTurn]:
         rows = [
             m
@@ -534,6 +539,7 @@ class FakeMessagesRepo:
             if m.conversation_id == conversation_id
             and m.text_redacted
             and (m.direction is Direction.IN or m.status is OutboundStatus.SENT)
+            and not (m.direction is Direction.OUT and m.message_type in exclude_types)
             and not (
                 exclude_raw_event_id is not None
                 and m.direction is Direction.IN
@@ -854,6 +860,11 @@ class FakeStorage:
 
     async def put_image(self, key: str, data: bytes, content_type: str) -> None:
         self.objects[key] = (data, content_type)
+
+    async def get_image(self, key: str) -> bytes:
+        if key not in self.objects:
+            raise KeyError(key)
+        return self.objects[key][0]
 
     async def delete(self, key: str) -> None:
         if key in self.fail_delete:

@@ -48,9 +48,9 @@ footer { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid var(--rule
 <body>
 <div class="frame">
 <nav class="crumbs"><a href="index.html">← สารบัญ</a> <a href="04-call-ai.html">‹ ก่อนหน้า</a> <a href="06-code-layers.html">ถัดไป ›</a></nav>
-<p class="eyebrow">05 · SEQUENCE · LINE_PROD · ฉบับ 3</p>
+<p class="eyebrow">05 · SEQUENCE · LINE_PROD · 26 ต.ค. 2026</p>
 <h1>ลูกค้าขอพนักงานระหว่างรอ AI</h1>
-<p class="lede">ทางด่วนเปลี่ยนสถานะเป็น <code>human</code> ทันทีโดยไม่รอล็อกของ Worker พอคำตอบ AI มาถึงช้าๆ sendGuard อ่านสถานะล่าสุดเห็น <code>human</code> แล้วทิ้งคำตอบนั้น ลูกค้าจึงไม่ได้การ์ดสินค้าแทรกเข้ามาตอนคุยกับพนักงาน</p>
+<p class="lede">ทางด่วนเปลี่ยนสถานะเป็น <code>human</code> ทันทีโดยไม่รอคิวของ Worker พอคำตอบ AI มาถึงช้าๆ sendGuard อ่านสถานะล่าสุดเห็น <code>human</code> แล้วทิ้งคำตอบนั้น ลูกค้าจึงไม่ได้การ์ดสินค้าแทรกเข้ามาตอนคุยกับพนักงาน</p>
 <div class="diagram-container">
 <svg viewBox="0 0 1280 720" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="fast-path-title fast-path-desc">
 <title id="fast-path-title">ทางด่วนตอนขอพนักงานระหว่างรอ AI</title>
@@ -102,7 +102,7 @@ footer { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid var(--rule
 <rect x="312" y="40" width="176" height="48" rx="6" fill="#f5f5f5"/>
 <rect x="312" y="40" width="176" height="48" rx="6" fill="#ffffff" stroke="#1a1a1a" stroke-width="1"/>
 <text x="400" y="65" fill="#1a1a1a" font-size="12" font-weight="600" font-family="'Geist', 'Noto Sans Thai', system-ui, sans-serif" text-anchor="middle">API · fast_path</text>
-<text x="400" y="80" fill="#6b6b6b" font-size="9" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle">no user lock</text>
+<text x="400" y="80" fill="#6b6b6b" font-size="9" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle">BackgroundTask · no lock</text>
 <rect x="552" y="40" width="176" height="48" rx="6" fill="#f5f5f5"/>
 <rect x="552" y="40" width="176" height="48" rx="6" fill="rgba(26,26,26,0.05)" stroke="#6b6b6b" stroke-width="1"/>
 <text x="640" y="65" fill="#1a1a1a" font-size="12" font-weight="600" font-family="'Geist', 'Noto Sans Thai', system-ui, sans-serif" text-anchor="middle">Postgres</text>
@@ -110,12 +110,12 @@ footer { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid var(--rule
 <rect x="792" y="40" width="176" height="48" rx="6" fill="#f5f5f5"/>
 <rect x="792" y="40" width="176" height="48" rx="6" fill="rgba(227,6,19,0.06)" stroke="#e30613" stroke-width="1.2"/>
 <text x="880" y="65" fill="#1a1a1a" font-size="12" font-weight="600" font-family="'Geist', 'Noto Sans Thai', system-ui, sans-serif" text-anchor="middle">Worker</text>
-<text x="880" y="80" fill="#6b6b6b" font-size="9" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle">holds user lock</text>
+<text x="880" y="80" fill="#6b6b6b" font-size="9" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle">procrastinate lock</text>
 <rect x="1032" y="40" width="176" height="48" rx="6" fill="#f5f5f5"/>
 <rect x="1032" y="40" width="176" height="48" rx="6" fill="rgba(26,26,26,0.03)" stroke="rgba(26,26,26,0.30)" stroke-width="1"/>
-<text x="1120" y="65" fill="#1a1a1a" font-size="12" font-weight="600" font-family="'Geist', 'Noto Sans Thai', system-ui, sans-serif" text-anchor="middle">AI API</text>
-<text x="1120" y="80" fill="#6b6b6b" font-size="9" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle">slow call</text>
-<text x="640" y="616" fill="#6b6b6b" font-size="14" font-style="italic" font-family="'Instrument Serif', 'Noto Serif Thai', serif" text-anchor="middle">ถ้าไม่มีทางด่วน: postback ต้องรอล็อก → AI ตอบแทรกก่อน แล้วค่อยส่งต่อ (ช้าเป็นนาทีถ้า API ช้า)</text>
+<text x="1120" y="65" fill="#1a1a1a" font-size="12" font-weight="600" font-family="'Geist', 'Noto Sans Thai', system-ui, sans-serif" text-anchor="middle">AI gateway</text>
+<text x="1120" y="80" fill="#6b6b6b" font-size="9" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle">22–43 s (ค้นสินค้า)</text>
+<text x="640" y="616" fill="#6b6b6b" font-size="14" font-style="italic" font-family="'Instrument Serif', 'Noto Serif Thai', serif" text-anchor="middle">ถ้าไม่มีทางด่วน: postback ต้องรอคิว → AI ตอบแทรกก่อน แล้วค่อยส่งต่อ (ช้าได้ถึง ~40 วิ)</text>
 <line x1="40" y1="656" x2="1240" y2="656" stroke="rgba(26,26,26,0.10)" stroke-width="0.8"/>
 <text x="40" y="680" fill="#6b6b6b" font-size="8" font-family="'Geist Mono', ui-monospace, monospace" letter-spacing="0.14em">LEGEND</text>
 <line x1="120" y1="677" x2="142" y2="677" stroke="#0066b3" stroke-width="1.2" marker-end="url(#arrow-link)"/>
@@ -131,21 +131,21 @@ footer { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid var(--rule
 </svg>
 </div>
 <div class="cards">
-<div class="card"><h3><span class="dot accent"></span>ปัญหาที่แก้</h3><p>Worker ล็อกต่อ user และทำข้อความตามลำดับ ถ้าลูกค้ากด "คุยกับพนักงาน" ระหว่างที่ AI กำลังทำงาน event นั้นต้องรอล็อก</p>
+<div class="card"><h3><span class="dot accent"></span>ปัญหาที่แก้</h3><p>งานของ user เดียวกันรันทีละงาน (<code>lock</code> ของ procrastinate) ถ้าลูกค้ากด "คุยกับพนักงาน" ระหว่างที่ AI กำลังค้นสินค้า (วัดได้ 22–43 วิ) event นั้นต้องรอคิว</p>
 <p>ผลคือ AI ตอบเสร็จ → sendGuard เห็นยังเป็น <code>bot</code> → ส่งการ์ดสินค้าแทรก → แล้วค่อยส่งต่อ</p></div>
-<div class="card"><h3><span class="dot ink"></span>ทางด่วนทำอะไร</h3><ul>
-<li>คำสั่งเปลี่ยนสถานะ (<code>talk_to_staff</code>, <code>resume_ai</code>, คำขอคนชัดเจนตามกฎขั้น 5) ไม่รอล็อก</li>
-<li>ส่งต่อ: <code>UPDATE … SET status='human' WHERE status='bot'</code></li>
-<li>คืน AI: <code>end_handoff()</code> แบบมีเงื่อนไขเหมือนกัน</li>
-<li>event ยังบันทึกและตั้ง <code>process_status</code> เพื่อไม่ให้ Worker ทำซ้ำ</li>
+<div class="card"><h3><span class="dot ink"></span>ทางด่วนทำอะไร (ตัดสินแล้ว)</h3><ul>
+<li>webhook เรียกเป็น <b>BackgroundTask ของ FastAPI</b> หลังตอบ 200 ไม่มีคิวแยก (<code>api/fast_path.py</code>)</li>
+<li>event ที่วิ่งทางนี้: postback <code>talk_to_staff</code> / <code>resume_ai</code>, พิมพ์ "คุยกับ AI" ตรงทั้งข้อความ, ข้อความที่กฎขั้น 5 ส่งต่อทันที (<code>is_fast_path_event</code>)</li>
+<li>ส่งต่อ: <code>UPDATE … SET status='human' WHERE status='bot'</code> · คืน AI: <code>end_handoff()</code></li>
+<li>event ยังเข้าคิวตามปกติ แต่ทางด่วน <b>claim</b> ก่อน worker มาทีหลัง claim ได้ None แล้วข้าม</li>
 </ul></div>
-<div class="card"><h3><span class="dot soft"></span>ยังไม่ตัดสิน</h3><ul>
-<li>เรียกทางด่วนจาก webhook ตรงๆ หรือคิวแยกที่ไม่ล็อก (<code>api/fast_path.py</code>)</li>
-<li>ข้อความใหม่ระหว่างรอ AI: ทิ้งคำตอบเก่าแล้วตอบรวม หรือส่งไปก่อน (ตัดสินหลังรู้ความเร็ว API)</li>
-<li>เทสต์: เคส <code>escalationRace</code> ต้องผ่านก่อนขึ้นจริง</li>
+<div class="card"><h3><span class="dot soft"></span>สถานะ</h3><ul>
+<li>เทสต์ race ผ่านแล้ว: <code>test_escalation_race_*</code> (orchestrator), <code>test_fast_path_*</code> (webhook)</li>
+<li>ข้อความใหม่ระหว่างรอ AI: ตอนนี้ตอบเรียงทีละข้อความ (ยังไม่รวมคำตอบ)</li>
+<li>ยังไม่ได้ลองกับ LINE จริง</li>
 </ul></div>
 </div>
-<footer>แหล่ง: docs/Line_ai_bot.md ฉบับ 3 (22 ต.ค. 2026) · ป้าย <span class="tbd">รอคำตอบ</span> = ขึ้นกับสเปก AI API ที่ยังไม่รู้</footer>
+<footer>แหล่ง: โค้ดใน branch <code>feat/python-impl</code> + docs/Line_ai_bot.md · docs/decisions.md (อัปเดต 26 ต.ค. 2026) · ป้าย <span class="tbd">รอคำตอบ</span> = ยังไม่รู้คำตอบจากเจ้าของระบบ</footer>
 </div>
 </body>
 </html>

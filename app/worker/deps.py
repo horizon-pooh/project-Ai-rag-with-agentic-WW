@@ -95,8 +95,12 @@ async def build_deps(settings: Settings) -> tuple[Deps, Resources]:
         repos = make_repos(pool)
         reply_tokens = PgReplyTokens(pool, settings.reply_token_ttl_s)
         # AI_API_URL ตั้งแล้ว -> HttpAiClient บน httpx client ที่เราปิดเอง; ว่าง -> stub (make_ai_client log เตือน)
+        # MinIO สร้าง bucket ตอนใช้ครั้งแรก (MinIO ยังไม่พร้อมก็เริ่มได้)
+        storage = MinioStorage(settings)
         ai: AiClient = (
-            HttpAiClient(settings, http=ai_http) if settings.ai_enabled else make_ai_client(settings)
+            HttpAiClient(settings, http=ai_http, storage=storage)
+            if settings.ai_enabled
+            else make_ai_client(settings)
         )
         deps = Deps(
             settings=settings,
@@ -113,8 +117,7 @@ async def build_deps(settings: Settings) -> tuple[Deps, Resources]:
             line=HttpLineClient(settings, http=line_http),
             reply_tokens=reply_tokens,
             notifier=make_notifier(settings),
-            # MinIO สร้าง bucket ตอนใช้ครั้งแรก (MinIO ยังไม่พร้อมก็เริ่มได้)
-            storage=MinioStorage(settings),
+            storage=storage,
             kill_switch=FlagsKillSwitch(settings, repos.flags),
         )
         res = Resources(

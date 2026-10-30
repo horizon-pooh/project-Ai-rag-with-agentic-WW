@@ -15,6 +15,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Collection
 from datetime import datetime
 from typing import Any
 
@@ -80,7 +81,12 @@ class PgMessagesRepo:
         return row["id"]
 
     async def recent_texts_redacted(
-        self, conversation_id: int, limit: int = 4, *, exclude_raw_event_id: int | None = None
+        self,
+        conversation_id: int,
+        limit: int = 4,
+        *,
+        exclude_raw_event_id: int | None = None,
+        exclude_types: Collection[str] = (),
     ) -> list[ChatTurn]:
         if limit <= 0:
             return []
@@ -94,6 +100,7 @@ class PgMessagesRepo:
                     WHERE conversation_id = %(conv)s
                       AND text_redacted IS NOT NULL AND text_redacted <> ''
                       AND (direction = 'in' OR status = 'sent')
+                      AND NOT (direction = 'out' AND message_type = ANY(%(skip)s::text[]))
                       AND NOT (
                           direction = 'in'
                           AND %(ex)s::bigint IS NOT NULL
@@ -104,7 +111,12 @@ class PgMessagesRepo:
                 ) AS recent
                 ORDER BY created_at, id
                 """,
-                {"conv": conversation_id, "ex": exclude_raw_event_id, "limit": limit},
+                {
+                    "conv": conversation_id,
+                    "ex": exclude_raw_event_id,
+                    "skip": list(exclude_types),
+                    "limit": limit,
+                },
             )
             rows = await cur.fetchall()
         return [ChatTurn.model_validate(r) for r in rows]

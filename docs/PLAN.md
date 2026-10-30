@@ -25,7 +25,7 @@
 | การจับคำ | `resume_ai.txt` และ `faq.txt` ตรงทั้งข้อความหลัง normalize; `escalate.txt` มีอยู่ในข้อความ (substring) หลัง normalize |
 | รูปแบบ `faq.txt` | `pattern<TAB>คำตอบ`; คำตอบเป็น `-` = keyword ของ Vendor 1 (บอทไม่ตอบ) |
 | แจ้ง call center | ช่องทางรอคำตอบ → `LogNotifier` (log อย่างเดียว) หลัง interface `Notifier` |
-| AI API | (แทนที่โดย D-011, วัดจริง 2026-10-23) POST `{AI_API_URL}/chat/completions` แบบ OpenAI `{"model", "messages", "temperature"}` + Bearer `AI_API_KEY`; messages = แชทย้อนหลัง redact + ข้อความปัจจุบัน; ตอบ markdown → `MarkdownParser` (`AI_RESPONSE_FORMAT=json` → `JsonParser` สัญญาเสนอเดิม); รูปยังไม่ส่ง (รอคำตอบ) |
+| AI API | (แทนที่โดย D-011, วัดจริง 2026-10-23) POST `{AI_API_URL}/chat/completions` แบบ OpenAI `{"model", "messages", "temperature"}` + Bearer `AI_API_KEY`; messages = แชทย้อนหลัง redact + ข้อความปัจจุบัน; ตอบ markdown → `MarkdownParser` (`AI_RESPONSE_FORMAT=json` → `JsonParser` สัญญาเสนอเดิม); รูปส่งเป็น data URL แบบ OpenAI vision เฉพาะเมื่อ `AI_SEND_IMAGES=true` (ตั้งต้นปิด — รอคำตอบ: gateway/model รับรูปได้ไหม; รูปไม่ถูก redact) ปิดอยู่ → รูปเดี่ยวๆ ตอบ `replies.IMAGE_UNREADABLE` |
 
 ## สัญญาระหว่างโมดูล
 
@@ -33,7 +33,7 @@
 - `conversations.status`: `bot` | `human`
 - `line_raw_events.process_status`: `pending` | `processing` | `done` | `failed` | `skipped`
 - `handoff_end_reason`: `user_resumed` | `timeout` | `staff_closed`
-- postback data (querystring): `action=talk_to_staff`, `action=resume_ai`, `action=restart`, `action=detail&sku=<SKU>`, `action=feedback&v=up|down&run=<ai_run_id>`
+- postback data (querystring): `action=talk_to_staff`, `action=resume_ai`, `action=restart`, `action=detail&sku=<SKU>` (การ์ดใหม่ไม่มีปุ่มนี้แล้ว — ยังรับจากการ์ดเก่า), `action=feedback&v=up|down&run=<ai_run_id>`
 - ขีดจำกัด LINE ที่ใช้ใน validate: ≤5 ข้อความต่อ reply/push, text ≤5000 ตัวอักษร, carousel ≤10 bubble (เราจำกัดเอง ต่ำกว่าเพดาน LINE 12), quick reply ≤13 รายการ, altText ≤400
 
 ### `app/pipeline/text.py`
@@ -86,7 +86,7 @@ repositories และ services ต้อง implement ตามนี้ เท
 | `EMPTY` | ต้องการให้ช่วยหาสินค้าอะไรคะ |
 | `DETAIL_NOT_FOUND` | ขออภัยค่ะ ไม่พบรายละเอียดสินค้านี้แล้ว ช่วยค้นหาใหม่อีกครั้งนะคะ |
 
-การ์ดสินค้า (`services/flex_builder.py`): bubble ต่อสินค้า = รูป (ถ้ามี `image_url`), ชื่อ, ราคา `฿{price:,.0f}` (ไม่มีราคา → ไม่แสดงบรรทัดราคา), ปุ่ม "ดูรายละเอียด" (postback `action=detail&sku=`), ปุ่ม "เปิดหน้าสินค้า" (uri = `url`). intro ของ AI ส่งเป็น text นำหน้า carousel
+การ์ดสินค้า (`services/flex_builder.py`, D-013): bubble ต่อสินค้า = รูป (`image_url` หรือรูปแทน `{PUBLIC_BASE_URL}/static/no-image.png`), แบรนด์, ชื่อ, รายละเอียด (`details` จาก "- Details:"), ราคา `฿{price:,.0f}` (ไม่มีค่า → ไม่แสดงบรรทัดนั้น), รหัสสินค้า, ปุ่มเดียว "เปิดหน้าสินค้า" (uri = `url`; แตะรูป/เนื้อการ์ดก็เปิด) — ไม่มีปุ่ม "ดูรายละเอียด" แล้ว; สีตาม HomePro. intro ของ AI ส่งเป็น text นำหน้า carousel
 
 ## งาน
 

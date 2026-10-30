@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>07 line_prod — การ deploy</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500;600&family=Noto+Sans+Thai:wght@400;500;600&family=Noto+Serif+Thai:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --paper: #f5f5f5; --paper-2: #ececec; --ink: #1a1a1a; --muted: #6b6b6b; --soft: #80868c;
+  --rule: rgba(26,26,26,0.12); --accent: #e30613; --accent-tint: rgba(227,6,19,0.06); --link: #0066b3;
+  --font-sans: 'Geist', 'Noto Sans Thai', system-ui, sans-serif;
+  --font-serif: 'Instrument Serif', 'Noto Serif Thai', serif;
+  --font-mono: 'Geist Mono', ui-monospace, monospace;
+}
+body { font-family: var(--font-sans); background: var(--paper); color: var(--ink); padding: 2.5rem 16px 3rem; line-height: 1.6; }
+.frame { max-width: 1320px; margin: 0 auto; }
+nav.crumbs { font-family: var(--font-mono); font-size: 0.72rem; letter-spacing: 0.04em; color: var(--muted); margin-bottom: 1.75rem; display: flex; gap: 1.25rem; flex-wrap: wrap; }
+nav.crumbs a { color: var(--link); text-decoration: none; }
+nav.crumbs a:hover { text-decoration: underline; }
+.eyebrow { font-family: var(--font-mono); font-size: 0.66rem; font-weight: 500; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); margin-bottom: 0.5rem; }
+h1 { font-family: var(--font-serif); font-size: clamp(1.6rem, 2.4vw + 0.8rem, 2.2rem); font-weight: 400; letter-spacing: -0.01em; line-height: 1.2; margin-bottom: 0.75rem; }
+.lede { max-width: 76ch; color: var(--muted); font-size: 0.95rem; margin-bottom: 1.75rem; }
+code { font-family: var(--font-mono); font-size: 0.82em; color: var(--ink); background: rgba(26,26,26,0.05); padding: 0 0.3em; border-radius: 3px; }
+.tbd { font-family: var(--font-mono); font-size: 0.7rem; color: var(--accent); border: 1px solid rgba(227,6,19,0.4); border-radius: 3px; padding: 0 0.35em; white-space: nowrap; }
+.diagram-container { width: 100%; overflow-x: auto; margin-bottom: 2rem; }
+.diagram-container svg { width: 100%; display: block; }
+.cards { display: grid; grid-template-columns: 1.15fr 1fr 0.85fr; gap: 1rem; }
+.card { background: #ffffff; border: 1px solid var(--rule); border-radius: 6px; padding: 1.25rem; min-width: 0; }
+.card h3 { font-size: 0.95rem; font-weight: 600; display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.6rem; }
+.card h3 a { color: var(--ink); text-decoration: none; }
+.card h3 a:hover { color: var(--link); }
+.card ul, .card ol { padding-left: 1.1rem; font-size: 0.86rem; }
+.card li { margin-bottom: 0.3rem; }
+.card p { font-size: 0.86rem; color: var(--muted); margin-bottom: 0.4rem; }
+.card table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+.card td, .card th { text-align: left; padding: 0.25rem 0.4rem 0.25rem 0; border-bottom: 1px solid var(--rule); vertical-align: top; }
+.card th { font-weight: 600; font-size: 0.78rem; color: var(--muted); }
+.dot { width: 7px; height: 7px; border-radius: 50%; display: inline-block; flex: none; }
+.dot.ink { background: var(--ink); } .dot.accent { background: var(--accent); } .dot.link { background: var(--link); } .dot.soft { background: var(--soft); }
+footer { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid var(--rule); font-family: var(--font-mono); font-size: 0.68rem; color: var(--muted); letter-spacing: 0.04em; }
+@media (max-width: 860px) { .cards { grid-template-columns: 1fr; } }
+.diagram-container svg { min-width: 1280px; }
+@media print { .diagram-container { overflow-x: visible; } .diagram-container svg { min-width: 0; } }
+</style>
+</head>
+<body>
+<div class="frame">
+<nav class="crumbs"><a href="index.html">← สารบัญ</a> <a href="06-code-layers.html">‹ ก่อนหน้า</a> <a href="08-overview-plain.html">ถัดไป ›</a></nav>
+<p class="eyebrow">07 · DEPLOYMENT · LINE_PROD · 26 ต.ค. 2026</p>
+<h1>อะไรรันอยู่ตรงไหนบนเครื่อง</h1>
+<p class="lede">ทั้งระบบเป็น Docker Compose บนเครื่องเดียว มีแค่ <b>Caddy</b> ที่เปิดพอร์ตออกอินเทอร์เน็ต api, worker และ watchdog ใช้ image เดียวกันที่ build จากโค้ดนี้ ส่วน <b>Postgres</b> เก็บทั้งข้อมูลและคิวงาน จึงเป็นจุดที่ล่มแล้วหยุดทั้งระบบ และสำรองออกนอกเครื่องทุกคืน</p>
+<div class="diagram-container">
+<svg viewBox="0 0 1280 660" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="deployment-title deployment-desc">
+<title id="deployment-title">line_prod — การ deploy ด้วย Docker Compose</title>
+<desc id="deployment-desc">On a single Docker host, only Caddy publishes ports 80 and 443; the api, worker and watchdog services share one app image and talk to Postgres, MinIO, LINE and the company AI gateway over labelled ports.</desc>
+<defs>
+  <marker id="arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#6b6b6b"/></marker>
+  <marker id="arrow-accent" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#e30613"/></marker>
+  <marker id="arrow-link" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#0066b3"/></marker>
+  <marker id="arrow-open" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polyline points="0 0, 8 3, 0 6" fill="none" stroke="#6b6b6b" stroke-width="1.2"/></marker>
+</defs>
+<rect width="100%" height="100%" fill="#f5f5f5"/>
+<rect x="40" y="56" width="216" height="536" rx="8" fill="rgba(26,26,26,0.02)" stroke="rgba(26,26,26,0.20)" stroke-width="0.8" stroke-dasharray="4,4"/><rect x="52" y="60" width="116" height="12" rx="2" fill="#f5f5f5"/><text x="110" y="69" fill="rgba(26,26,26,0.50)" font-size="7" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle" letter-spacing="0.14em">OUTSIDE · INTERNET</text>
+<rect x="280" y="56" width="736" height="536" rx="8" fill="rgba(26,26,26,0.02)" stroke="rgba(26,26,26,0.20)" stroke-width="0.8" stroke-dasharray="4,4"/><rect x="292" y="60" width="188" height="12" rx="2" fill="#f5f5f5"/><text x="386" y="69" fill="rgba(26,26,26,0.50)" font-size="7" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle" letter-spacing="0.14em">DOCKER HOST · line_prod_default</text>
+<rect x="1040" y="56" width="200" height="536" rx="8" fill="rgba(26,26,26,0.02)" stroke="rgba(26,26,26,0.20)" stroke-width="0.8" stroke-dasharray="4,4"/><rect x="1052" y="60" width="72" height="12" rx="2" fill="#f5f5f5"/><text x="1088" y="69" fill="rgba(26,26,26,0.50)" font-size="7" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle" letter-spacing="0.14em">COMPANY AI</text>
+<path d="M 236,144 H 312" fill="none" stroke="#0066b3" stroke-width="1.2" marker-end="url(#arrow-link)"/>
+<rect x="244" y="124" width="56" height="12" rx="2" fill="#f5f5f5"/><text x="272" y="133" fill="#6b6b6b" font-size="8" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle" letter-spacing="0.06em">HTTPS:443</text>
+<path d="M 488,168 H 560" fill="none" stroke="#6b6b6b" stroke-width="1.2" marker-end="url(#arrow)"/>
+<rect x="492" y="148" width="56" height="12" rx="2" fill="#f5f5f5"/><text x="520" y="157" fill="#6b6b6b" font-size="8" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle" letter-spacing="0.06em">HTTP:8000</text>
+<path d="M 600,104 V 88 Q 600,80 592,80 H 158 Q 150,80 150,88 V 120" fill="none" stroke="#0066b3" stroke-width="1.2" marker-end="url(#arrow-link)"/>
+<rect x="484" y="62" width="72" height="12" rx="2" fill="#f5f5f5"/><text x="520" y="71" fill="#6b6b6b" font-size="8" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle" letter-spacing="0.06em">HTTPS · PUSH</text>
+<path d="M 808,200 H 1064" fill="none" stroke="#0066b3" stroke-width="1.2" marker-end="url(#arrow-link)"/>
+<rect x="904" y="180" width="72" height="12" rx="2" fill="#f5f5f5"/><text x="940" y="189" fill="#6b6b6b" font-size="8" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle" letter-spacing="0.06em">HTTPS · CHAT</text>
+<path d="M 684,272 V 368" fill="none" stroke="#6b6b6b" stroke-width="1.2" marker-end="url(#arrow)"/>
+<rect x="692" y="314" width="48" height="12" rx="2" fill="#f5f5f5"/><text x="716" y="323" fill="#6b6b6b" font-size="8" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle" letter-spacing="0.06em">TCP:5432</text>
+<path d="M 560,256 H 408 Q 400,256 400,264 V 368" fill="none" stroke="#6b6b6b" stroke-width="1.2" marker-end="url(#arrow)"/>
+<rect x="408" y="306" width="44" height="12" rx="2" fill="#f5f5f5"/><text x="430" y="315" fill="#6b6b6b" font-size="8" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle" letter-spacing="0.06em">S3:9000</text>
+<path d="M 560,504 H 236" fill="none" stroke="#0066b3" stroke-width="1" stroke-dasharray="5,4" marker-end="url(#arrow-link)"/>
+<rect x="300" y="520" width="76" height="12" rx="2" fill="#f5f5f5"/><text x="338" y="529" fill="#6b6b6b" font-size="8" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle" letter-spacing="0.06em">RSYNC · 03:30</text>
+<rect x="64" y="120" width="172" height="72" rx="6" fill="#f5f5f5"/>
+<rect x="64" y="120" width="172" height="72" rx="6" fill="rgba(26,26,26,0.03)" stroke="rgba(26,26,26,0.30)" stroke-width="1"/>
+<rect x="72" y="126" width="24" height="12" rx="2" fill="transparent" stroke="rgba(26,26,26,0.30)" stroke-opacity="0.45" stroke-width="0.8"/><text x="84" y="135" fill="rgba(26,26,26,0.55)" font-size="7" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle" letter-spacing="0.08em">EXT</text>
+<text x="150" y="161" fill="#1a1a1a" font-size="12" font-weight="600" font-family="'Geist', 'Noto Sans Thai', system-ui, sans-serif" text-anchor="middle">LINE Platform</text>
+<text x="150" y="176" fill="#6b6b6b" font-size="9" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle">webhook · Messaging API</text>
+<rect x="64" y="472" width="172" height="64" rx="6" fill="#f5f5f5"/>
+<rect x="64" y="472" width="172" height="64" rx="6" fill="rgba(26,26,26,0.03)" stroke="rgba(26,26,26,0.30)" stroke-width="1" stroke-dasharray="5,4"/>
+<rect x="72" y="478" width="24" height="12" rx="2" fill="transparent" stroke="rgba(26,26,26,0.30)" stroke-opacity="0.45" stroke-width="0.8"/><text x="84" y="487" fill="rgba(26,26,26,0.55)" font-size="7" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle" letter-spacing="0.08em">EXT</text>
+<text x="150" y="509" fill="#1a1a1a" font-size="12" font-weight="600" font-family="'Geist', 'Noto Sans Thai', system-ui, sans-serif" text-anchor="middle">เครื่อง backup</text>
+<text x="150" y="524" fill="#6b6b6b" font-size="9" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle">นอก VM · รอคำตอบ</text>
+<rect x="312" y="104" width="176" height="136" rx="6" fill="#f5f5f5"/>
+<rect x="312" y="104" width="176" height="136" rx="6" fill="#ffffff" stroke="#1a1a1a" stroke-width="1"/>
+<rect x="320" y="110" width="56" height="12" rx="2" fill="transparent" stroke="#1a1a1a" stroke-opacity="0.45" stroke-width="0.8"/><text x="348" y="119" fill="rgba(26,26,26,0.70)" font-size="7" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle" letter-spacing="0.08em">CONTAINER</text>
+<text x="324" y="144" fill="#1a1a1a" font-size="12" font-weight="600" font-family="'Geist', 'Noto Sans Thai', system-ui, sans-serif">caddy</text>
+<rect x="324" y="156" width="152" height="24" rx="4" fill="rgba(26,26,26,0.05)" stroke="#6b6b6b" stroke-width="0.8"/><text x="332" y="172" fill="#1a1a1a" font-size="12" font-family="'Geist', 'Noto Sans Thai', system-ui, sans-serif">caddy</text><text x="468" y="172" fill="#6b6b6b" font-size="9" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="end">2</text>
+<rect x="324" y="188" width="152" height="24" rx="4" fill="rgba(26,26,26,0.05)" stroke="#6b6b6b" stroke-width="0.8"/><text x="332" y="204" fill="#1a1a1a" font-size="12" font-family="'Geist', 'Noto Sans Thai', system-ui, sans-serif">Caddyfile</text><text x="468" y="204" fill="#6b6b6b" font-size="9" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="end">route</text>
+<text x="324" y="228" fill="#6b6b6b" font-size="9" font-family="'Geist Mono', ui-monospace, monospace">เปิด 80 · 443 · ใบรับรอง LE</text>
+<rect x="560" y="104" width="248" height="168" rx="6" fill="#f5f5f5"/>
+<rect x="560" y="104" width="248" height="168" rx="6" fill="#ffffff" stroke="#1a1a1a" stroke-width="1"/>
+<rect x="568" y="110" width="84" height="12" rx="2" fill="transparent" stroke="#1a1a1a" stroke-opacity="0.45" stroke-width="0.8"/><text x="610" y="119" fill="rgba(26,26,26,0.70)" font-size="7" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle" letter-spacing="0.08em">IMAGE · BUILD .</text>
+<text x="572" y="144" fill="#1a1a1a" font-size="12" font-weight="600" font-family="'Geist', 'Noto Sans Thai', system-ui, sans-serif">line-prod app</text>
+<rect x="780" y="110" width="20" height="12" rx="2" fill="#f5f5f5" stroke="#1a1a1a" stroke-opacity="0.45" stroke-width="0.8"/><text x="790" y="119" fill="rgba(26,26,26,0.70)" font-size="8" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle">x3</text>
+<rect x="572" y="156" width="224" height="24" rx="4" fill="rgba(26,26,26,0.05)" stroke="#6b6b6b" stroke-width="0.8"/><text x="580" y="172" fill="#1a1a1a" font-size="12" font-family="'Geist', 'Noto Sans Thai', system-ui, sans-serif">api</text><text x="788" y="172" fill="#6b6b6b" font-size="9" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="end">uvicorn :8000</text>
+<rect x="572" y="188" width="224" height="24" rx="4" fill="rgba(26,26,26,0.05)" stroke="#6b6b6b" stroke-width="0.8"/><text x="580" y="204" fill="#1a1a1a" font-size="12" font-family="'Geist', 'Noto Sans Thai', system-ui, sans-serif">worker</text><text x="788" y="204" fill="#6b6b6b" font-size="9" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="end">procrastinate</text>
+<rect x="572" y="220" width="224" height="24" rx="4" fill="rgba(26,26,26,0.05)" stroke="#6b6b6b" stroke-width="0.8"/><text x="580" y="236" fill="#1a1a1a" font-size="12" font-family="'Geist', 'Noto Sans Thai', system-ui, sans-serif">watchdog</text><text x="788" y="236" fill="#6b6b6b" font-size="9" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="end">ทุก 60 วิ</text>
+<text x="572" y="260" fill="#6b6b6b" font-size="9" font-family="'Geist Mono', ui-monospace, monospace">python:3.12-slim · ไม่เปิดพอร์ต</text>
+<rect x="560" y="368" width="248" height="168" rx="6" fill="#f5f5f5"/>
+<rect x="560" y="368" width="248" height="168" rx="6" fill="rgba(227,6,19,0.06)" stroke="#e30613" stroke-width="1.2"/>
+<rect x="568" y="374" width="56" height="12" rx="2" fill="transparent" stroke="#e30613" stroke-opacity="0.45" stroke-width="0.8"/><text x="596" y="383" fill="rgba(227,6,19,0.85)" font-size="7" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle" letter-spacing="0.08em">CONTAINER</text>
+<text x="572" y="408" fill="#1a1a1a" font-size="12" font-weight="600" font-family="'Geist', 'Noto Sans Thai', system-ui, sans-serif">postgres</text>
+<rect x="572" y="420" width="224" height="24" rx="4" fill="rgba(26,26,26,0.05)" stroke="#6b6b6b" stroke-width="0.8"/><text x="580" y="436" fill="#1a1a1a" font-size="12" font-family="'Geist', 'Noto Sans Thai', system-ui, sans-serif">postgres</text><text x="788" y="436" fill="#6b6b6b" font-size="9" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="end">16</text>
+<rect x="572" y="452" width="224" height="24" rx="4" fill="rgba(26,26,26,0.05)" stroke="#6b6b6b" stroke-width="0.8"/><text x="580" y="468" fill="#1a1a1a" font-size="12" font-family="'Geist', 'Noto Sans Thai', system-ui, sans-serif">dbmate migrate</text><text x="788" y="468" fill="#6b6b6b" font-size="9" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="end">2 · ครั้งเดียว</text>
+<rect x="572" y="484" width="224" height="24" rx="4" fill="rgba(26,26,26,0.05)" stroke="#6b6b6b" stroke-width="0.8"/><text x="580" y="500" fill="#1a1a1a" font-size="12" font-family="'Geist', 'Noto Sans Thai', system-ui, sans-serif">pg_dump (cron host)</text><text x="788" y="500" fill="#6b6b6b" font-size="9" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="end">gpg · 14 วัน</text>
+<text x="572" y="524" fill="#6b6b6b" font-size="9" font-family="'Geist Mono', ui-monospace, monospace">vol postgres_data · ไม่เปิดพอร์ต</text>
+<rect x="312" y="368" width="176" height="104" rx="6" fill="#f5f5f5"/>
+<rect x="312" y="368" width="176" height="104" rx="6" fill="#ffffff" stroke="#1a1a1a" stroke-width="1"/>
+<rect x="320" y="374" width="56" height="12" rx="2" fill="transparent" stroke="#1a1a1a" stroke-opacity="0.45" stroke-width="0.8"/><text x="348" y="383" fill="rgba(26,26,26,0.70)" font-size="7" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle" letter-spacing="0.08em">CONTAINER</text>
+<text x="324" y="408" fill="#1a1a1a" font-size="12" font-weight="600" font-family="'Geist', 'Noto Sans Thai', system-ui, sans-serif">minio</text>
+<rect x="324" y="420" width="152" height="24" rx="4" fill="rgba(26,26,26,0.05)" stroke="#6b6b6b" stroke-width="0.8"/><text x="332" y="436" fill="#1a1a1a" font-size="12" font-family="'Geist', 'Noto Sans Thai', system-ui, sans-serif">minio/minio</text><text x="468" y="436" fill="#6b6b6b" font-size="9" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="end">ไม่ pin</text>
+<text x="324" y="460" fill="#6b6b6b" font-size="9" font-family="'Geist Mono', ui-monospace, monospace">vol minio_data · รูป 30 วัน</text>
+<rect x="1064" y="168" width="152" height="64" rx="6" fill="#f5f5f5"/>
+<rect x="1064" y="168" width="152" height="64" rx="6" fill="rgba(26,26,26,0.03)" stroke="rgba(26,26,26,0.30)" stroke-width="1"/>
+<rect x="1072" y="174" width="24" height="12" rx="2" fill="transparent" stroke="rgba(26,26,26,0.30)" stroke-opacity="0.45" stroke-width="0.8"/><text x="1084" y="183" fill="rgba(26,26,26,0.55)" font-size="7" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle" letter-spacing="0.08em">EXT</text>
+<text x="1140" y="205" fill="#1a1a1a" font-size="12" font-weight="600" font-family="'Geist', 'Noto Sans Thai', system-ui, sans-serif" text-anchor="middle">AI gateway</text>
+<text x="1140" y="220" fill="#6b6b6b" font-size="9" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle">OpenAI chat</text>
+<text x="648" y="568" fill="#6b6b6b" font-size="11" font-family="'Geist', 'Noto Sans Thai', system-ui, sans-serif" text-anchor="middle">compose.debug.yml: 127.0.0.1:5432 · 127.0.0.1:9001 เฉพาะตอนดูข้อมูล</text>
+<line x1="40" y1="616" x2="1240" y2="616" stroke="rgba(26,26,26,0.10)" stroke-width="0.8"/>
+<text x="40" y="640" fill="#6b6b6b" font-size="8" font-family="'Geist Mono', ui-monospace, monospace" letter-spacing="0.14em">LEGEND</text>
+<rect x="120" y="630" width="20" height="14" rx="3" fill="rgba(227,6,19,0.06)" stroke="#e30613" stroke-width="1"/>
+<text x="150" y="641" fill="#6b6b6b" font-size="11" font-family="'Geist', 'Noto Sans Thai', system-ui, sans-serif">จุดเสี่ยงจุดเดียว</text>
+<rect x="292" y="630" width="20" height="14" rx="3" fill="#ffffff" stroke="#1a1a1a" stroke-width="1"/>
+<text x="322" y="641" fill="#6b6b6b" font-size="11" font-family="'Geist', 'Noto Sans Thai', system-ui, sans-serif">container ของเรา</text>
+<rect x="458" y="630" width="20" height="14" rx="3" fill="rgba(26,26,26,0.03)" stroke="rgba(26,26,26,0.30)" stroke-width="1"/>
+<text x="488" y="641" fill="#6b6b6b" font-size="11" font-family="'Geist', 'Noto Sans Thai', system-ui, sans-serif">ภายนอก</text>
+<line x1="560" y1="637" x2="582" y2="637" stroke="#0066b3" stroke-width="1.2" marker-end="url(#arrow-link)"/>
+<text x="590" y="641" fill="#6b6b6b" font-size="11" font-family="'Geist', 'Noto Sans Thai', system-ui, sans-serif">ข้ามโซน (HTTPS)</text>
+<line x1="720" y1="637" x2="742" y2="637" stroke="#6b6b6b" stroke-width="1.2" marker-end="url(#arrow)"/>
+<text x="750" y="641" fill="#6b6b6b" font-size="11" font-family="'Geist', 'Noto Sans Thai', system-ui, sans-serif">ภายในเครื่อง</text>
+<line x1="860" y1="637" x2="882" y2="637" stroke="#0066b3" stroke-width="1.2" stroke-dasharray="5,4" marker-end="url(#arrow-link)"/>
+<text x="890" y="641" fill="#6b6b6b" font-size="11" font-family="'Geist', 'Noto Sans Thai', system-ui, sans-serif">รายคืน</text>
+</svg>
+</div>
+<div class="cards">
+<div class="card"><h3><span class="dot ink"></span>service ใน <code>docker-compose.yml</code></h3><table>
+<tr><th>service</th><th>image / คำสั่ง</th><th>หมายเหตุ</th></tr>
+<tr><td>caddy</td><td><code>caddy:2</code></td><td>เปิด 80/443 อย่างเดียวของระบบ, route ตาม <code>Caddyfile</code></td></tr>
+<tr><td>migrate</td><td><code>dbmate:2 up</code></td><td>รันครั้งเดียวแล้วจบ (exit 0)</td></tr>
+<tr><td>api</td><td><code>uvicorn app.main:create_app</code></td><td>expose 8000 ภายใน, healthcheck <code>/health</code></td></tr>
+<tr><td>worker</td><td><code>python -m app.worker</code></td><td><code>stop_grace_period</code> 30 วิ</td></tr>
+<tr><td>watchdog</td><td><code>python -m app.worker.watchdog</code></td><td>แจ้งผู้ดูแลเมื่อ worker ตายหมด / คิวค้าง / DB ล่ม</td></tr>
+<tr><td>postgres</td><td><code>postgres:16</code></td><td>ข้อมูล + คิว + replyToken</td></tr>
+<tr><td>minio</td><td><code>minio/minio</code></td><td>รูปลูกค้า</td></tr>
+</table></div>
+<div class="card"><h3><span class="dot accent"></span>ลำดับเริ่ม</h3><ol>
+<li><b>postgres</b> healthy (<code>pg_isready</code> ผ่าน TCP)</li>
+<li><b>migrate</b> apply <code>migrations/*.sql</code> จบด้วย 0</li>
+<li><b>api</b>, <b>worker</b> เริ่ม (worker ไม่รอ MinIO พร้อม)</li>
+<li><b>caddy</b> ขอใบรับรอง Let's Encrypt แล้วรับ webhook</li>
+<li><b>watchdog</b> เริ่มหลัง postgres (ไม่รอ healthy — ต้องรายงานได้แม้ DB ไม่ขึ้น)</li>
+</ol>
+<p>ไม่มีโดเมน: ใช้ Cloudflare quick tunnel ชี้ <code>api:8000</code> ตรง (ข้าม Caddy) ทดสอบเท่านั้น</p></div>
+<div class="card"><h3><span class="dot soft"></span>ความเสี่ยง / ยังไม่ทำ</h3><ul>
+<li><b>เครื่องเดียว</b>: postgres ล่ม = ทั้งระบบหยุด (ข้อมูล คิว และ replyToken อยู่ที่เดียว)</li>
+<li>backup: มีสคริปต์แล้ว (<code>deploy/backup/</code>, cron 03:30) แต่ยังไม่ซ้อมกู้บน VM จริง และยังไม่รู้เครื่องปลายทาง <span class="tbd">รอคำตอบ</span></li>
+<li><code>minio/minio</code> ไม่ pin เวอร์ชัน</li>
+<li>ยังไม่เคย <code>docker compose up</code> บนเครื่องจริง</li>
+</ul></div>
+</div>
+<footer>แหล่ง: โค้ดใน branch <code>feat/python-impl</code> + docs/Line_ai_bot.md · docs/decisions.md (อัปเดต 26 ต.ค. 2026) · ป้าย <span class="tbd">รอคำตอบ</span> = ยังไม่รู้คำตอบจากเจ้าของระบบ</footer>
+</div>
+</body>
+</html>

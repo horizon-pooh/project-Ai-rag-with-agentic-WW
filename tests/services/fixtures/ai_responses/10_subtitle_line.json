@@ -1,0 +1,42 @@
+{
+  "_meta": {
+    "captured": "2026-10-26",
+    "status": 200,
+    "latency_s": null,
+    "note": "ซองคำตอบสร้างใหม่จาก ai_steps.output.raw (content ตรงตามจริง)",
+    "request_messages": [
+      {
+        "role": "user",
+        "content": "ต้องการท่อน้ำ"
+      },
+      {
+        "role": "user",
+        "content": "ต้องการท่อน้ำ"
+      },
+      {
+        "role": "user",
+        "content": "เครื่องชักผ้า"
+      },
+      {
+        "role": "assistant",
+        "content": "สินค้าแนะนำ: ฐานยึดเครื่องซักผ้า SIEMENS WZ11410, ผงทำความสะอาดคราบตะกรันเครื่องซักผ้า BOSCH, สายรัดเครื่องซักผ้า ELECTROLUX TH-KTL0010, ผ้าคลุมเครื่องซักผ้าฝาหน้า 10 กก. CKR PLASTIC CKR F-F002 65X65X85 ซม. สีเงินทึบ, ฐานยึดเครื่องซักผ้า SIEMENS WZ20311"
+      },
+      {
+        "role": "user",
+        "content": "Tv"
+      }
+    ]
+  },
+  "object": "chat.completion",
+  "model": "gemma4-31b",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "## Product List\n\n### 1. ทีวีแอลอีดี 55 นิ้ว SAMSUNG (4K, LED, TIZEN) UA55UE800HKXXT\nLED TV 55” SAMSUNG (4K, LED, TIZEN) UA55UE800HKXXT\n- Brand: SAMSUNG\n- Price: ฿15490.00\n- Details: ขนาดหน้าจอ 55 นิ้ว, ความละเอียด 4K, Smart TV TIZEN, HDMI 3 ช่อง\n- Product code: 1319426\n- Product link: [View product details](https://www.homepro.co.th/p/1319426)\n\n### 2. ทีวีแอลอีดี 75 นิ้ว SAMSUNG (4K, LED, TIZEN) UA75UE800HKXXT\nLED TV 75” SAMSUNG (4K, LED, TIZEN) UA75UE800HKXXT\n- Brand: SAMSUNG\n- Price: ฿29990.00\n- Details: ขนาดหน้าจอ 75 นิ้ว, ความละเอียด 4K, Smart TV TIZEN, HDMI 3 ช่อง\n- Product code: 1319441\n- Product link: [View product details](https://www.homepro.co.th/p/1319441)\n\n### 3. ทีวีแอลอีดี 50 นิ้ว SAMSUNG (4K, LED, TIZEN) UA50UE800HKXXT\nLED TV 50” SAMSUNG (4K, LED, TIZEN) UA50UE800HKXXT\n- Brand: SAMSUNG\n- Price: ฿12990.00\n- Details: ขนาดหน้าจอ 50 นิ้ว, ความละเอียด 4K, Smart TV TIZEN, HDMI 3 ช่อง\n- Product code: 1319420\n- Product link: [View product details](https://www.homepro.co.th/p/1319420)\n\n### 4. ทีวีแอลอีดี 65 นิ้ว SAMSUNG (4K, LED, TIZEN) UA65UE800HKXXT\nLED TV 65” SAMSUNG (4K, LED, TIZEN) UA65UE800HKXXT\n- Brand: SAMSUNG\n- Price: ฿18990.00\n- Details: ขนาดหน้าจอ 65 นิ้ว, ความละเอียด 4K, Smart TV TIZEN, HDMI 3 ช่อง\n- Product code: 1319427\n- Product ลิงก์: [View product details](https://www.homepro.co.th/p/1319427)\n\n### 5. ทีวีแอลอีดี 40 นิ้ว HAIER (FULL HD, LED, ANDROID TV) H40K66G\nLED TV 40\" HAIER (FULL HD, LED, ANDROID TV) H40K66G\n- Brand: HAIER\n- Price: ฿7990.00\n- Details: ขนาดหน้าจอ 40 นิ้ว, ความละเอียด Full HD, Android TV, HDMI 3 ช่อง\n- Product code: 1232663\n- Product link: [View product details](https://www.homepro.co.th/p/1232663)\n\nIf you're interested in a particular model, tell me the model name or Article number, and I can compare the details for you."
+      },
+      "finish_reason": "stop"
+    }
+  ]
+}

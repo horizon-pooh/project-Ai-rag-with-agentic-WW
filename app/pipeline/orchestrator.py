@@ -18,7 +18,8 @@
        - error อื่นนอกจาก AiError ปล่อยขึ้นไป (ผู้เรียก mark_failed)
        - ความเร็ว AI API วัดแล้ว (D-011: 2-43 วิ): กลยุทธ์ "reply 'กำลังค้นหา' แล้ว push คำตอบ" ยังไม่ทำ
          ใช้ loading animation อย่างเดียว (เกินอายุ replyToken -> send ใช้ push เอง)
-       - รอคำตอบ: AI API รับรูปได้ไหม — ตอนนี้ไม่ส่งรูป (SEND_IMAGES_TO_AI = False)
+       - รอคำตอบ: AI API รับรูปได้ไหม — ส่งรูปให้ AI เมื่อ AI_SEND_IMAGES=true เท่านั้น (ตั้งต้นปิด: เก็บรูปใน
+         MinIO แต่ไม่ส่ง AI; รูปเดี่ยวๆ ไม่มีข้อความตอบ replies.IMAGE_UNREADABLE)
 """
 
 from __future__ import annotations
@@ -74,9 +75,6 @@ from app.privacy.redact import redact_obj, redact_text
 from app.services import flex_builder
 
 log = structlog.get_logger(__name__)
-
-# รอคำตอบ: AI API รับรูปได้ไหม — False = เก็บรูปใน MinIO แต่ไม่ส่ง AI และรูปเดี่ยวๆ (ไม่มีข้อความ) นับเป็นข้อความว่าง
-SEND_IMAGES_TO_AI = False
 
 # event ที่ pipeline ทำ; อื่นๆ (follow/unfollow/unsend/...) ข้าม ไม่บันทึก ไม่ตอบ
 # follow: ข้อความทักทายตั้งใน LINE OA Manager อยู่แล้ว บอทไม่ส่งซ้ำ
@@ -547,7 +545,7 @@ class _Turn:
         count = await deps.messages.count_inbound_since(
             self.conv.id, deps.clock.now() - RATE_WINDOW
         )
-        has_image = self.ctx.has_image and SEND_IMAGES_TO_AI
+        has_image = bool(self.images_for_ai)
         rule = apply_rules(
             self.event,
             self.cfg.rules,
@@ -578,7 +576,10 @@ class _Turn:
             case RuleOutcome.IGNORE:
                 return TurnRoute.RULE_IGNORE, rule.reason
             case RuleOutcome.EMPTY:
-                await self.reply_texts(PURPOSE_EMPTY, rule.reply_text or replies.EMPTY)
+                # ส่งรูปมาแต่ AI อ่านไม่ได้ (ปิด AI_SEND_IMAGES หรือเก็บรูปไม่สำเร็จ) -> บอกตรงๆ ดีกว่าถามกลับเฉยๆ
+                unreadable = self.ctx.has_image and not has_image
+                text = replies.IMAGE_UNREADABLE if unreadable else rule.reply_text or replies.EMPTY
+                await self.reply_texts(PURPOSE_EMPTY, text)
                 return TurnRoute.RULE_EMPTY, rule.reason
             case RuleOutcome.RATE_LIMITED:
                 # ตอบครั้งเดียวตอนเพิ่งเกิน (ข้อความที่ limit+1) ที่เหลือเงียบ ไม่งั้นบอทรัวตามลูกค้า
@@ -637,6 +638,11 @@ class _Turn:
 
     # --- AI ---
 
+    @property
+    def images_for_ai(self) -> list[str]:
+        """storage_key ของรูปที่จะส่ง AI รอบนี้: ว่างถ้าปิด AI_SEND_IMAGES หรือเก็บรูปไม่สำเร็จ"""
+        return list(self.ctx.image_keys) if self.deps.settings.ai_send_images else []
+
     def remaining_s(self) -> float:
         """เวลาที่เหลือของข้อความนี้: TURN_DEADLINE_S หักเวลาที่ใช้ไปแล้วในรอบนี้ (ตาม deps.clock)"""
         elapsed = (self.deps.clock.now() - self.started_at).total_seconds()
@@ -670,7 +676,7 @@ class _Turn:
             text_redacted=self.ctx.text_redacted or "",
             history=self.ctx.history,
             flags=flags,
-            images=self.ctx.image_keys if SEND_IMAGES_TO_AI else (),
+            images=self.images_for_ai,
         )
         req_input = {**req.model_dump(mode="json"), "deadline_s": round(deadline_s, 3)}
         t0 = time.perf_counter()
@@ -754,7 +760,14 @@ class _Turn:
             )
 
         t0 = time.perf_counter()
-        checked = validate(result, route, prefix_texts=self.prefix_texts(route))
+        checked = validate(
+            result,
+            route,
+            prefix_texts=self.prefix_texts(route),
+            placeholder_image_url=flex_builder.placeholder_image_url(
+                self.deps.settings.public_base_url
+            ),
+        )
         await self.record(
             "validate",
             input={"route": route.value, "prefix_texts": self.prefix_texts(route)},
@@ -793,7 +806,6 @@ class _Turn:
 
 __all__ = [
     "HANDLED_EVENT_TYPES",
-    "SEND_IMAGES_TO_AI",
     "PipelineConfig",
     "TurnOutcome",
     "TurnRoute",

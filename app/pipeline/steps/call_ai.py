@@ -62,7 +62,8 @@ def build_ai_request(
     """สร้าง AiRequest — ผู้เรียกต้องส่งข้อความที่ผ่าน app/privacy/redact.py แล้วเท่านั้น
 
     - history เรียงเก่าไปใหม่ (ตาม MessagesRepo.recent_texts_redacted) ส่งแค่ MAX_HISTORY ข้อความท้าย
-    - images: storage_key ของรูปที่ย่อแล้ว — รอคำตอบ: AI API รับรูปได้ไหม (ตอนนี้ orchestrator ส่ง () ตาม docs/PLAN.md)
+    - images: storage_key ของรูปที่ย่อแล้ว — orchestrator ใส่เมื่อ AI_SEND_IMAGES=true เท่านั้น (ไม่งั้น ())
+      ai_client อ่านรูปจาก storage เอง; รอคำตอบ: AI API รับรูปได้ไหม
     """
     recent = list(history)[-MAX_HISTORY:] if MAX_HISTORY > 0 else []
     return AiRequest(

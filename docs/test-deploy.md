@@ -30,7 +30,7 @@
 3. แท็บ Messaging API -> Webhook settings
    - Webhook URL: `https://<DOMAIN>/webhook`
    - เปิด **Use webhook**
-   - กด **Verify** ได้หลังขึ้นระบบแล้วเท่านั้น (ข้อ 5.2)
+   - กด **Verify** ได้หลังขึ้นระบบแล้วเท่านั้น (เช็คลิสต์ข้อ 5 แถว 2)
 4. ปิดข้อความอัตโนมัติของ LINE เอง (ไม่งั้นลูกค้าได้ 2 ข้อความ): LINE Official Account Manager -> ตั้งค่าการตอบกลับ
    (Response settings) -> ปิด **ข้อความตอบกลับอัตโนมัติ (Auto-reply)** และ **ข้อความทักทาย (Greeting)**, เปิด **Webhook**
    — เช็คหน้าจอจริง (ชื่อเมนู/ที่อยู่ของปุ่ม; โหมด "แชท" จะเปิดไว้ก็ได้ถ้าจะให้พนักงานตอบในแชทระหว่างทดสอบ)
@@ -159,6 +159,44 @@ SELECT queue_name, task_name, status, count(*) FROM procrastinate_jobs GROUP BY 
 docker compose exec minio ls -R /data/line-images/img
 ```
 ต้องเห็นโฟลเดอร์ `<raw_event_id>.jpg` — เช็คของจริง (รูปแบบการเก็บบนดิสก์ขึ้นกับเวอร์ชัน MinIO)
+
+query ที่ใช้บ่อย:
+
+```sql
+-- บทสนทนาล่าสุด
+SELECT c.id, u.line_user_id, c.status, c.opened_at, c.last_user_message_at, c.handoff_reason
+FROM conversations c JOIN line_users u ON u.id = c.user_id ORDER BY c.id DESC LIMIT 20;
+-- แชทของเคสหนึ่ง (ฉบับ redact)
+SELECT created_at, direction, message_type, text_redacted, status, drop_reason
+FROM messages WHERE conversation_id = <id> ORDER BY created_at, id;
+-- บอทตัดสินใจยังไง แต่ละขั้นใช้เวลาเท่าไร
+SELECT r.id, r.route, r.reason, s.seq, s.step, s.latency_ms, s.error_class
+FROM ai_runs r JOIN ai_steps s ON s.ai_run_id = r.id
+WHERE r.conversation_id = <id> ORDER BY r.id, s.seq;
+-- input/output ของขั้นเดียว
+SELECT step, jsonb_pretty(input), jsonb_pretty(output) FROM ai_steps WHERE id = <step_id>;
+```
+
+`line_raw_events.payload` มีข้อความต้นฉบับที่ยังไม่ redact (เก็บ 90 วัน) — เปิดเฉพาะตอนจำเป็น
+
+### 5.2 เปิดดูด้วยโปรแกรม (DBeaver / pgAdmin / MinIO console)
+
+ปกติ Postgres และ MinIO ไม่เปิดพอร์ตออก host; `compose.debug.yml` เปิดให้เฉพาะ `127.0.0.1` (เครื่องที่รัน docker)
+
+```sh
+docker compose -f docker-compose.yml -f compose.debug.yml up -d postgres minio
+```
+
+| ดู | ต่อที่ | login |
+|---|---|---|
+| Postgres (DBeaver / pgAdmin) | host `localhost` port `5432` database ตาม `POSTGRES_DB` | `POSTGRES_USER` / `POSTGRES_PASSWORD` (SSL: ปิด) |
+| MinIO console (ดูรูป) | เบราว์เซอร์ `http://localhost:9001` -> bucket `line-images` | `MINIO_ROOT_USER` / `MINIO_ROOT_PASSWORD` |
+
+- Docker Desktop บน Windows: เปิดโปรแกรมบนเครื่องเดียวกันได้เลย
+- docker อยู่บน server อื่น: เปิด tunnel จากเครื่องตัวเองก่อน แล้วต่อ `localhost` ตามตาราง
+  `ssh -L 5432:127.0.0.1:5432 -L 9001:127.0.0.1:9001 <user>@<server>`
+- ดูเสร็จปิดพอร์ตกลับ: `docker compose up -d postgres minio` (ไม่มีไฟล์ debug -> container ถูกสร้างใหม่แบบไม่เปิดพอร์ต ข้อมูลอยู่ใน volume ไม่หาย)
+- ห้ามแก้ `127.0.0.1` เป็น `0.0.0.0` หรือเปิดพอร์ตนี้ใน firewall / security group
 
 ## 6. วัดเวลา
 

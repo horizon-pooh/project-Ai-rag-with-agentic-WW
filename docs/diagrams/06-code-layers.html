@@ -47,14 +47,14 @@ footer { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid var(--rule
 </head>
 <body>
 <div class="frame">
-<nav class="crumbs"><a href="index.html">← สารบัญ</a> <a href="05-fast-path.html">‹ ก่อนหน้า</a></nav>
-<p class="eyebrow">06 · LAYER STACK · LINE_PROD · ฉบับ 3</p>
+<nav class="crumbs"><a href="index.html">← สารบัญ</a> <a href="05-fast-path.html">‹ ก่อนหน้า</a> <a href="07-deployment.html">ถัดไป ›</a></nav>
+<p class="eyebrow">06 · LAYER STACK · LINE_PROD · 26 ต.ค. 2026</p>
 <h1>โครงสร้างโค้ด app/</h1>
 <p class="lede">โค้ดเรียกจากบนลงล่างเท่านั้น <code>pipeline/</code> เป็นชั้นที่ตัดสินทุกอย่าง ส่วนที่คุยกับโลกภายนอกแยกเป็น <code>services/</code> (API ภายนอก) กับ <code>repositories/</code> (SQL) จึงสลับผู้ให้บริการหรือจำลองในเทสต์ได้ที่เดียว</p>
 <div class="diagram-container">
 <svg viewBox="0 0 1280 720" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="code-layers-title code-layers-desc">
 <title id="code-layers-title">โครงสร้างโค้ด app/ เป็นชั้น</title>
-<desc id="code-layers-desc">The app package is layered top-down from api and worker through the deciding pipeline to services and repositories, which alone talk to LINE, the AI API, MinIO, Postgres and Redis.</desc>
+<desc id="code-layers-desc">The app package is layered top-down from api and worker through the deciding pipeline to services and repositories, which alone talk to LINE, the AI gateway, MinIO and Postgres (data and queue).</desc>
 <defs>
   <marker id="arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#6b6b6b"/></marker>
   <marker id="arrow-accent" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#e30613"/></marker>
@@ -67,13 +67,13 @@ footer { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid var(--rule
 <rect x="200" y="72" width="840" height="88" fill="#ffffff" stroke="rgba(26,26,26,0.30)" stroke-width="1"/>
 <text x="216" y="96" fill="#6b6b6b" font-size="8" font-family="'Geist Mono', ui-monospace, monospace" letter-spacing="0.14em">01 · ENTRY</text>
 <text x="216" y="118" fill="#1a1a1a" font-size="14" font-weight="600" font-family="'Geist', 'Noto Sans Thai', system-ui, sans-serif">api/</text>
-<text x="216" y="136" fill="#6b6b6b" font-size="9" font-family="'Geist Mono', ui-monospace, monospace">webhook · health · close · fast_path</text>
+<text x="216" y="136" fill="#6b6b6b" font-size="9" font-family="'Geist Mono', ui-monospace, monospace">webhook · health · close · fast_path · assets</text>
 <text x="1024" y="118" fill="#6b6b6b" font-size="12" font-family="'Geist', 'Noto Sans Thai', system-ui, sans-serif" text-anchor="end">รับ → บันทึก raw event → ใส่คิว → ตอบ 200</text>
 <rect x="200" y="160" width="840" height="88" fill="#ffffff" stroke="rgba(26,26,26,0.30)" stroke-width="1"/>
 <text x="216" y="184" fill="#6b6b6b" font-size="8" font-family="'Geist Mono', ui-monospace, monospace" letter-spacing="0.14em">02 · QUEUE</text>
 <text x="216" y="206" fill="#1a1a1a" font-size="14" font-weight="600" font-family="'Geist', 'Noto Sans Thai', system-ui, sans-serif">worker/</text>
-<text x="216" y="224" fill="#6b6b6b" font-size="9" font-family="'Geist Mono', ui-monospace, monospace">settings · tasks · cron · locks</text>
-<text x="1024" y="206" fill="#6b6b6b" font-size="12" font-family="'Geist', 'Noto Sans Thai', system-ui, sans-serif" text-anchor="end">ล็อกต่อ user แล้วเรียก orchestrator</text>
+<text x="216" y="224" fill="#6b6b6b" font-size="9" font-family="'Geist Mono', ui-monospace, monospace">app · tasks · cron · deps · admin · watchdog</text>
+<text x="1024" y="206" fill="#6b6b6b" font-size="12" font-family="'Geist', 'Noto Sans Thai', system-ui, sans-serif" text-anchor="end">คิว procrastinate: lock ต่อ user แล้วเรียก orchestrator</text>
 <rect x="200" y="248" width="840" height="88" fill="rgba(227,6,19,0.06)" stroke="#e30613" stroke-width="1.2"/>
 <text x="216" y="272" fill="#e30613" font-size="8" font-family="'Geist Mono', ui-monospace, monospace" letter-spacing="0.14em">03 · DECIDE</text>
 <text x="216" y="294" fill="#1a1a1a" font-size="14" font-weight="600" font-family="'Geist', 'Noto Sans Thai', system-ui, sans-serif">pipeline/</text>
@@ -84,21 +84,21 @@ footer { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid var(--rule
 <text x="216" y="360" fill="#6b6b6b" font-size="8" font-family="'Geist Mono', ui-monospace, monospace" letter-spacing="0.14em">04A · ADAPTERS</text>
 <text x="216" y="382" fill="#1a1a1a" font-size="14" font-weight="600" font-family="'Geist', 'Noto Sans Thai', system-ui, sans-serif">services/</text>
 <text x="216" y="400" fill="#6b6b6b" font-size="9" font-family="'Geist Mono', ui-monospace, monospace">line_client · ai_client · ai_parsers</text>
-<text x="216" y="413" fill="#6b6b6b" font-size="9" font-family="'Geist Mono', ui-monospace, monospace">storage · flex_builder · notify · kill_switch</text>
+<text x="216" y="413" fill="#6b6b6b" font-size="9" font-family="'Geist Mono', ui-monospace, monospace">storage · flex_builder · notify · kill_switch · alert</text>
 <rect x="620" y="336" width="420" height="88" fill="#ffffff" stroke="rgba(26,26,26,0.30)" stroke-width="1"/>
 <text x="636" y="360" fill="#6b6b6b" font-size="8" font-family="'Geist Mono', ui-monospace, monospace" letter-spacing="0.14em">04B · DATA</text>
 <text x="636" y="382" fill="#1a1a1a" font-size="14" font-weight="600" font-family="'Geist', 'Noto Sans Thai', system-ui, sans-serif">repositories/</text>
-<text x="636" y="400" fill="#6b6b6b" font-size="9" font-family="'Geist Mono', ui-monospace, monospace">raw_events · users · conversations</text>
-<text x="636" y="413" fill="#6b6b6b" font-size="9" font-family="'Geist Mono', ui-monospace, monospace">messages · state · ai_runs · feedback</text>
+<text x="636" y="400" fill="#6b6b6b" font-size="9" font-family="'Geist Mono', ui-monospace, monospace">raw_events · users · conversations · reply_tokens</text>
+<text x="636" y="413" fill="#6b6b6b" font-size="9" font-family="'Geist Mono', ui-monospace, monospace">messages · state · ai_runs · feedback · flags · health</text>
 <text x="1024" y="382" fill="#6b6b6b" font-size="12" font-family="'Geist', 'Noto Sans Thai', system-ui, sans-serif" text-anchor="end">ที่เดียวที่เขียน SQL</text>
 <rect x="200" y="424" width="420" height="88" fill="rgba(26,26,26,0.03)" stroke="rgba(26,26,26,0.30)" stroke-width="1"/>
 <text x="216" y="448" fill="#6b6b6b" font-size="8" font-family="'Geist Mono', ui-monospace, monospace" letter-spacing="0.14em">05 · EXTERNAL</text>
-<text x="216" y="470" fill="#1a1a1a" font-size="14" font-weight="600" font-family="'Geist', 'Noto Sans Thai', system-ui, sans-serif">LINE · AI API · MinIO</text>
-<text x="216" y="488" fill="#6b6b6b" font-size="9" font-family="'Geist Mono', ui-monospace, monospace">Messaging API · AI (external) · S3 images</text>
+<text x="216" y="470" fill="#1a1a1a" font-size="14" font-weight="600" font-family="'Geist', 'Noto Sans Thai', system-ui, sans-serif">LINE · AI gateway · MinIO</text>
+<text x="216" y="488" fill="#6b6b6b" font-size="9" font-family="'Geist Mono', ui-monospace, monospace">Messaging API · OpenAI chat · S3 images</text>
 <rect x="620" y="424" width="420" height="88" fill="rgba(26,26,26,0.03)" stroke="rgba(26,26,26,0.30)" stroke-width="1"/>
 <text x="636" y="448" fill="#6b6b6b" font-size="8" font-family="'Geist Mono', ui-monospace, monospace" letter-spacing="0.14em">05 · EXTERNAL</text>
-<text x="636" y="470" fill="#1a1a1a" font-size="14" font-weight="600" font-family="'Geist', 'Noto Sans Thai', system-ui, sans-serif">Postgres 16 · Redis</text>
-<text x="636" y="488" fill="#6b6b6b" font-size="9" font-family="'Geist Mono', ui-monospace, monospace">source of truth · queue only</text>
+<text x="636" y="470" fill="#1a1a1a" font-size="14" font-weight="600" font-family="'Geist', 'Noto Sans Thai', system-ui, sans-serif">Postgres 16</text>
+<text x="636" y="488" fill="#6b6b6b" font-size="9" font-family="'Geist Mono', ui-monospace, monospace">ข้อมูลทั้งหมด + คิว procrastinate</text>
 <rect x="1072" y="72" width="168" height="352" rx="6" fill="rgba(26,26,26,0.02)" stroke="rgba(26,26,26,0.30)" stroke-width="1" stroke-dasharray="4,3"/>
 <text x="1088" y="96" fill="#6b6b6b" font-size="8" font-family="'Geist Mono', ui-monospace, monospace" letter-spacing="0.14em">CROSS-CUTTING</text>
 <text x="1088" y="136" fill="#1a1a1a" font-size="9" font-family="'Geist Mono', ui-monospace, monospace">app/config.py</text>
@@ -129,17 +129,19 @@ footer { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid var(--rule
 <li>มีแต่ <code>repositories/</code> ที่เขียน SQL</li>
 <li><code>pipeline/</code> รับตัวช่วยผ่าน <code>deps</code> ไม่เรียก LINE ไม่เขียน SQL เอง</li>
 <li>orchestrator บันทึก <code>ai_steps</code> แต่ละ step ไม่บันทึกเอง</li>
+<li>ข้อความถึงลูกค้าออกทาง <code>steps/send.py</code> เท่านั้น — แจ้งผู้ดูแล (<code>services/alert</code>) ไม่ใช้ LINE</li>
 </ul></div>
 <div class="card"><h3><span class="dot ink"></span>ไฟล์ที่ไม่ได้อยู่ใน app/</h3><ul>
-<li><code>prompts/rules/</code>: รายการคำของกฎ ทุกคำต้องมีเคสทดสอบภาษาไทย</li>
-<li><code>prompts/system.md</code>: system prompt (รอรูปแบบ AI API)</li>
-<li><code>migrations/</code>: <code>.sql</code> + dbmate</li>
+<li><code>prompts/rules/</code>: <code>escalate</code> · <code>faq</code> · <code>resume_ai</code> ทุกคำต้องมีเคสทดสอบภาษาไทย</li>
+<li><code>prompts/system.md</code>: system prompt (ส่งเมื่อตั้ง <code>AI_SYSTEM_PROMPT_FILE</code>)</li>
+<li><code>app/static/no-image.png</code>: รูปแทนบนการ์ดสินค้า</li>
+<li><code>migrations/</code>: <code>.sql</code> + dbmate (รวม schema ของ procrastinate)</li>
 <li><code>tests/</code>: pytest + respx (คนละที่กับ <code>test/</code> ของแบบเก่า)</li>
 </ul></div>
-<div class="card"><h3><span class="dot soft"></span>สถานะ</h3><p>ทุกไฟล์ใน <code>app/</code> ยังเป็น stub (มีแต่ docstring) ดูหน้าที่รายไฟล์ใน <code>filemap.md</code></p>
+<div class="card"><h3><span class="dot soft"></span>สถานะ</h3><p>มีโค้ดครบทุกชั้น เทสต์ 944 ผ่าน (SQL ทดสอบกับ Postgres 16 จริงผ่าน pgserver) — ยังไม่เคยรันกับ LINE / Docker จริง ดูหน้าที่รายไฟล์ใน <code>filemap.md</code></p>
 <p>ไฟล์ JS เดิมใน <code>src/</code> เป็นแบบเก่า ห้ามแก้</p></div>
 </div>
-<footer>แหล่ง: docs/Line_ai_bot.md ฉบับ 3 (22 ต.ค. 2026) · ป้าย <span class="tbd">รอคำตอบ</span> = ขึ้นกับสเปก AI API ที่ยังไม่รู้</footer>
+<footer>แหล่ง: โค้ดใน branch <code>feat/python-impl</code> + docs/Line_ai_bot.md · docs/decisions.md (อัปเดต 26 ต.ค. 2026) · ป้าย <span class="tbd">รอคำตอบ</span> = ยังไม่รู้คำตอบจากเจ้าของระบบ</footer>
 </div>
 </body>
 </html>

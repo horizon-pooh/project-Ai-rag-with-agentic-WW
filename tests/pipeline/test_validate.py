@@ -128,10 +128,41 @@ def test_bad_product_beyond_cap_still_fails() -> None:
     assert not validate(_products(*products), AiRoute.ANSWER).ok
 
 
-def test_sku_too_long_for_postback_fails() -> None:
-    v = validate(_products(_p("X" * 300)), AiRoute.ANSWER)
-    assert not v.ok
-    assert any("postback" in e for e in v.errors)
+def test_long_sku_ok_without_postback_button() -> None:
+    # การ์ดไม่มีปุ่ม postback แล้ว (ตัด "ดูรายละเอียด" 2026-10-26) -> ไม่จำกัดความยาว SKU ตาม postback data
+    assert validate(_products(_p("X" * 300)), AiRoute.ANSWER).ok
+
+
+def _bubbles(v) -> list[dict]:
+    assert v.ok, v.errors
+    return v.outbound.messages[-1]["contents"]["contents"]
+
+
+def test_placeholder_image_for_products_without_image() -> None:
+    placeholder = "https://bot.example/static/no-image.png"
+    v = validate(
+        _products(_p("A"), _p("B", image_url="https://img.example/b.jpg")),
+        AiRoute.ANSWER,
+        placeholder_image_url=placeholder,
+    )
+    assert [b["hero"]["url"] for b in _bubbles(v)] == [placeholder, "https://img.example/b.jpg"]
+
+
+def test_no_placeholder_means_no_hero() -> None:
+    assert "hero" not in _bubbles(validate(_products(_p()), AiRoute.ANSWER))[0]
+
+
+def test_details_unknown_url_removed_product_url_kept() -> None:
+    details = "สเปกเต็ม https://evil.example/x ดูที่ https://shop.example/A1"
+    (bubble,) = _bubbles(validate(_products(_p(details=details)), AiRoute.ANSWER))
+    shown = bubble["body"]["contents"][1]["text"]
+    assert "evil.example" not in shown
+    assert shown.startswith("สเปกเต็ม") and shown.endswith("ดูที่ https://shop.example/A1")
+
+
+def test_details_only_unknown_url_is_dropped() -> None:
+    (bubble,) = _bubbles(validate(_products(_p(details="https://evil.example/x")), AiRoute.ANSWER))
+    assert [c["text"] for c in bubble["body"]["contents"]] == ["ตู้เย็น A1", "รหัสสินค้า A1"]
 
 
 def test_intro_too_long_fails() -> None:
@@ -150,7 +181,7 @@ def test_cards_use_only_product_data_not_intro_text() -> None:
     v = validate(r, AiRoute.ANSWER)
     assert _types(v) == ["flex"]
     bubble = v.outbound.messages[0]["contents"]["contents"][0]
-    assert bubble["footer"]["contents"][1]["action"]["uri"] == "https://shop.example/A"
+    assert bubble["footer"]["contents"][0]["action"]["uri"] == "https://shop.example/A"
     assert bubble["body"]["contents"][1]["text"] == "฿100"
 
 

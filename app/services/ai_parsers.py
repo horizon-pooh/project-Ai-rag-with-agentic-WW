@@ -22,7 +22,7 @@ import re
 from dataclasses import dataclass, field
 from decimal import Decimal, InvalidOperation
 from typing import Any, Protocol
-from urllib.parse import urlsplit
+from urllib.parse import quote, urlsplit
 
 import structlog
 from pydantic import ValidationError
@@ -111,13 +111,18 @@ _FIELD_RE = re.compile(
 )
 _IMAGE_RE = re.compile(r"!\[(?P<alt>[^\]\n]*)\]\((?P<url>[^)\s]+)\)")
 _LINK_RE = re.compile(r"\[(?P<text>[^\]\n]*)\]\((?P<url>[^)\s]+)\)")
-_BARE_URL_RE = re.compile(r"^(?P<url>https://\S+)$")
 _BULLET_RE = re.compile(r"^[ \t]*[-*+][ \t]")
 _NUMBER_RE = re.compile(r"\d{1,3}(?:,\d{3})+(?:\.\d+)?|\d+(?:\.\d+)?")
 
 _KEY_SKU = frozenset({"product code", "code", "sku"})
 _KEY_PRICE = frozenset({"price"})
-_KEY_LINK = frozenset({"product link", "link", "url"})
+_KEY_BRAND = frozenset({"brand"})
+_KEY_DETAILS = frozenset({"details", "detail", "description"})
+
+# ลิงก์สินค้าสร้างจาก Product code เสมอ ไม่ใช้ลิงก์ที่ AI เขียน (Line_ai_bot.md §10 ห้ามเชื่อลิงก์ของ AI):
+# วัดจริง 2026-10-26 AI ตอบ "Product link: No product link" ทั้งรายการเมื่อมีแชทย้อนหลัง
+# และบางครั้งเขียนโดเมนผิด ("https://www.home/p/1033871") ขณะที่ Product code ถูกทุกครั้ง
+PRODUCT_URL_TEMPLATE = "https://www.homepro.co.th/p/{sku}"
 
 # เครื่องหมายคำถาม (ครึ่งความกว้าง / เต็มความกว้าง)
 _QUESTION_MARKS = ("?", "？")
@@ -130,6 +135,7 @@ class _Block:
     name: str
     fields: dict[str, str] = field(default_factory=dict)
     image_url: str | None = None
+    has_field_lines: bool = False  # เจอบรรทัด "- Key: value" แล้ว (ช่องไหนก็ได้)
 
 
 def _https_url(value: str | None) -> str | None:
@@ -143,6 +149,11 @@ def _https_url(value: str | None) -> str | None:
     if parts.scheme != "https" or not parts.hostname:
         return None
     return value
+
+
+def product_url(sku: str) -> str:
+    """ลิงก์หน้าสินค้าจาก Product code (escape ทุกอักขระที่ไม่ปลอดภัยใน path)"""
+    return PRODUCT_URL_TEMPLATE.format(sku=quote(sku, safe=""))
 
 
 def _parse_price(value: str) -> Decimal | None:
@@ -206,16 +217,19 @@ class MarkdownParser:
 
     รูปแบบ content ที่เห็น: ย่อหน้าเกริ่น (มีหรือไม่มี) -> "## Product List" -> ก้อนละสินค้า
         ### N. <ชื่อ>
+        <ชื่อรองภาษาอังกฤษ>                                (บางครั้ง — ข้าม)
         ![alt](https://statice.homepro.co.th/...jpg)      (บางก้อน)
         - Brand: X / - Price: ฿14,999.00 / - Details: ... / - Product code: 1289220
         - Product link: [View product details](https://www.homepro.co.th/p/1289220)
     บางครั้งมีข้อความต่อท้ายรายการ; คำถามทั่วไปตอบเป็นข้อความไทยล้วน (มี **ตัวหนา** / รายการเลข)
 
     - คำตอบมักถูกตัดกลางสินค้า (finish_reason ยังเป็น "stop") -> รับเฉพาะก้อนที่ครบ:
-      ชื่อ + Product code (-> sku) + Price (-> Decimal) + Product link ที่เป็น https; ก้อนไม่ครบทิ้ง (log จำนวน)
-      บรรทัดสุดท้ายของ content (ไม่มี newline ปิด) อาจถูกตัดกลางบรรทัด -> นับเฉพาะลิงก์ markdown ที่มี ")" ปิด
+      ชื่อ + Product code (-> sku) + Price (-> Decimal); ก้อนไม่ครบทิ้ง (log จำนวน)
+      บรรทัดสุดท้ายของ content (ไม่มี newline ปิด) อาจถูกตัดกลางบรรทัด -> ไม่อ่านช่องในบรรทัดนั้น
+    - url = product_url(sku) เสมอ ไม่อ่าน "Product link" ของ AI (บางครั้งไม่มี / โดเมนผิด — ดู PRODUCT_URL_TEMPLATE)
     - sku ซ้ำ -> เก็บตัวแรก (validate ถือว่า sku ซ้ำทำให้ทั้งชุดไม่ผ่าน)
     - image_url จากบรรทัด ![..](https://..) ในก้อน (https เท่านั้น ไม่งั้น None)
+    - brand / details จาก "- Brand:" / "- Details:" (แปลงด้วย to_line_text ไม่มีลิงก์) — ไม่บังคับ แสดงบนการ์ดเท่านั้น
     - kind: มีสินค้าครบ >=1 -> products; ไม่งั้นมีบรรทัดลงท้าย ? -> clarify; ไม่งั้น answer
       (heuristic — รอคำตอบ: API ไม่บอก kind เอง และไม่มีสัญญาณ cannot_answer)
     - intro = ข้อความก่อน "## Product List" (ไม่มีรายการ = ทั้งข้อความ) แปลงด้วย to_line_text
@@ -336,25 +350,26 @@ class MarkdownParser:
                 if maybe_cut or _BULLET_RE.match(line):
                     # บรรทัดของก้อนที่อ่านไม่ออก/ถูกตัด เช่น "- Product co" — ไม่ใช่ข้อความให้ลูกค้า
                     continue
+                if not current.has_field_lines:
+                    # บรรทัดใต้หัวก่อนช่องแรก = ชื่อรอง เช่น "LED TV 55” SAMSUNG ..." (วัดจริง 2026-10-26) ไม่ใช่จบก้อน
+                    continue
                 # ข้อความทั่วไปหลังก้อน (เช่น ปิดท้ายรายการ) — ไม่ใช่ส่วนของสินค้า
                 other.append(line)
                 current = None
                 continue
-            key = " ".join(fm.group("key").lower().split())
-            value = fm.group("value")
-            if key in _KEY_LINK:
-                link = _LINK_RE.search(value)
-                if link is not None:  # มี ")" ปิด = ครบ แม้อยู่บรรทัดสุดท้าย
-                    current.fields["link"] = link.group("url")
-                elif not maybe_cut and (bare := _BARE_URL_RE.match(value.strip("<>"))) is not None:
-                    current.fields["link"] = bare.group("url")
-                continue
+            current.has_field_lines = True
             if maybe_cut:
                 continue
+            key = " ".join(fm.group("key").lower().split())
+            value = fm.group("value")
             if key in _KEY_SKU:
                 current.fields["sku"] = _strip_inline(value).strip()
             elif key in _KEY_PRICE:
                 current.fields["price"] = value
+            elif key in _KEY_BRAND:
+                current.fields["brand"] = to_line_text(value, keep_link_urls=False)
+            elif key in _KEY_DETAILS:
+                current.fields["details"] = to_line_text(value, keep_link_urls=False)
         return blocks, "\n".join(other)
 
     @staticmethod
@@ -362,10 +377,17 @@ class MarkdownParser:
         """ก้อนที่ครบ -> Product; ไม่ครบ (ถูกตัด/ขาดช่อง) -> None"""
         sku = block.fields.get("sku", "")
         price = _parse_price(block.fields.get("price", ""))
-        url = _https_url(block.fields.get("link"))
-        if not block.name or not sku or any(c.isspace() for c in sku) or price is None or url is None:
+        if not block.name or not sku or any(c.isspace() for c in sku) or price is None:
             return None
-        return Product(sku=sku, name=block.name, price=price, url=url, image_url=block.image_url)
+        return Product(
+            sku=sku,
+            name=block.name,
+            price=price,
+            url=product_url(sku),
+            image_url=block.image_url,
+            brand=block.fields.get("brand") or None,
+            details=block.fields.get("details") or None,
+        )
 
 
 __all__ = ["PARSE_ERROR_CLASS", "AiParser", "JsonParser", "MarkdownParser", "to_line_text"]

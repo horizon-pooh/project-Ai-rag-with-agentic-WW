@@ -11,7 +11,9 @@ client ของ AI API ภายนอก: ที่เดียวที่ร
  - ลองซ้ำ: timeout/ต่อไม่ได้/429/5xx -> 1 ครั้งถ้าเวลาเหลือพอ (เคารพ retry-after); 4xx อื่น/อ่านไม่ออก -> ไม่ซ้ำ
  - รวมทุกรอบไม่เกิน deadline ที่ส่งเข้ามา
  - error: AiUnavailable (ลองแล้วยังพัง), AiBadResponse (อ่านไม่ออก/4xx)
- - ส่งเฉพาะข้อความ redact แล้ว: แชทย้อนหลัง (redact) + ข้อความปัจจุบัน (redact) — ไม่ส่ง state / flags / รูป
+ - ส่งเฉพาะข้อความ redact แล้ว: แชทย้อนหลัง (redact) + ข้อความปัจจุบัน (redact) — ไม่ส่ง state / flags
+ - รูป: ส่งเฉพาะเมื่อ AiRequest.images ไม่ว่าง (orchestrator ใส่ตาม AI_SEND_IMAGES) — อ่านจาก storage เป็น data URL
+   (รูปไม่ถูก redact จึงปิดไว้ตั้งต้น)
  - รอคำตอบ: gateway รับพร้อมกันได้กี่งาน, รับรูปได้ไหม, บอกส่งต่อได้ไหม, ผลถูกตัดกลางรายการเพราะอะไร
 
 แนวคิดจาก: src/ai/aiClient.js, src/ai/llmClient.js (แบบเก่า)
@@ -21,16 +23,17 @@ client ของ AI API ภายนอก: ที่เดียวที่ร
 from __future__ import annotations
 
 import asyncio
+import base64
 import math
 import time
-from collections.abc import Awaitable, Callable
+from collections.abc import Awaitable, Callable, Sequence
 from typing import Any
 
 import httpx
 import structlog
 
 from app.config import Settings
-from app.pipeline.ports import AiClient
+from app.pipeline.ports import AiClient, Storage
 from app.pipeline.schemas import (
     AiBadResponse,
     AiKind,
@@ -49,6 +52,13 @@ MAX_ATTEMPTS = 2
 MIN_RETRY_BUDGET_S = 1.0
 # path ต่อจาก AI_API_URL (OpenAI-compatible)
 CHAT_COMPLETIONS_PATH = "/chat/completions"
+# รูปใน storage ผ่าน resize_image มาแล้วเป็น JPEG เสมอ
+IMAGE_CONTENT_TYPE = "image/jpeg"
+# ข้อความนำเมื่อลูกค้าส่งรูปโดยไม่พิมพ์อะไร (ข้อความของเราเอง ไม่ใช่ข้อมูลลูกค้า)
+IMAGE_ONLY_PROMPT = (
+    "ลูกค้าส่งรูปสินค้านี้มา ดูว่าเป็นสินค้าอะไร แล้วค้นหาสินค้าที่เหมือนหรือใกล้เคียงที่สุดทันที "
+    "แนะนำเป็นรายการสินค้า (Product List) โดยไม่ต้องถามกลับ"
+)
 # ข้อความที่ StubAiClient ทวนกลับ (กันเกินเพดาน text ของ LINE)
 STUB_ECHO_MAX_CHARS = 500
 STUB_PREFIX = "(โหมดทดสอบ ยังไม่ได้ต่อ AI API) ได้รับข้อความ: "
@@ -96,24 +106,39 @@ def load_system_prompt(settings: Settings) -> str | None:
     return text or None
 
 
-def build_messages(req: AiRequest, system_prompt: str | None = None) -> list[dict[str, str]]:
-    """AiRequest -> messages ของ OpenAI chat (redact แล้วทั้งหมด)
+def build_messages(
+    req: AiRequest,
+    system_prompt: str | None = None,
+    image_urls: Sequence[str] = (),
+) -> list[dict[str, Any]]:
+    """AiRequest -> messages ของ OpenAI chat (ข้อความ redact แล้วทั้งหมด)
 
     - [system (ถ้าตั้ง AI_SYSTEM_PROMPT_FILE)] + แชทย้อนหลัง (in -> user, out -> assistant) + ข้อความปัจจุบัน (user)
     - gateway ไม่คืน state จึงจำบทสนทนาจากแชทย้อนหลังนี้ (วัดจริง: "สีดำ งบไม่เกิน 20000" ต่อจากรอบก่อนได้)
     - ไม่ส่ง state: gateway ไม่มีช่องรับ และ state ของเราไม่ถูกอัปเดตจาก API (state_out = None เสมอ)
     - ไม่ส่ง flags (state_expired / handoff_timed_out / just_resumed) เป็นข้อความ: ไม่รู้ว่าจะไปกวน prompt
       ของ gateway อย่างไร — ข้อความแจ้งลูกค้าเรื่องนี้ orchestrator ส่งเองอยู่แล้ว (prefix_texts)
-    - ไม่ส่งรูป (รอคำตอบ: gateway รับรูปได้ไหม)
+    - image_urls (data URL ของรูปที่ย่อแล้ว; ว่าง = ไม่ส่งรูป ตาม AI_SEND_IMAGES) -> ข้อความปัจจุบันเป็น content
+      แบบ list [text, image_url...] ตาม OpenAI vision (วัดจริงแล้วว่า gateway อ่านรูปได้); ไม่มีข้อความ -> IMAGE_ONLY_PROMPT
     """
-    messages: list[dict[str, str]] = []
+    messages: list[dict[str, Any]] = []
     if system_prompt:
         messages.append({"role": "system", "content": system_prompt})
     for turn in req.recent_messages:
         role = "user" if turn.direction is Direction.IN else "assistant"
         messages.append({"role": role, "content": turn.text_redacted})
-    messages.append({"role": "user", "content": req.text_redacted})
+    if not image_urls:
+        messages.append({"role": "user", "content": req.text_redacted})
+        return messages
+    # รูปล้วนๆ gateway ตอบแค่คำทักทาย (วัดจริง) -> ใส่ข้อความนำบอกว่าต้องทำอะไรกับรูป
+    parts: list[dict[str, Any]] = [{"type": "text", "text": req.text_redacted or IMAGE_ONLY_PROMPT}]
+    parts.extend({"type": "image_url", "image_url": {"url": url}} for url in image_urls)
+    messages.append({"role": "user", "content": parts})
     return messages
+
+
+def to_data_url(data: bytes, content_type: str = IMAGE_CONTENT_TYPE) -> str:
+    return f"data:{content_type};base64,{base64.b64encode(data).decode('ascii')}"
 
 
 class HttpAiClient:
@@ -134,6 +159,7 @@ class HttpAiClient:
         parser: AiParser | None = None,
         sleep: Sleep = asyncio.sleep,
         monotonic: Monotonic = time.monotonic,
+        storage: Storage | None = None,
     ) -> None:
         if not settings.ai_api_url:
             raise ValueError("HttpAiClient ต้องมี AI_API_URL (ไม่มีให้ใช้ make_ai_client -> StubAiClient)")
@@ -149,6 +175,7 @@ class HttpAiClient:
         self._parser: AiParser = parser if parser is not None else make_parser(settings)
         self._sleep = sleep
         self._monotonic = monotonic
+        self._storage = storage
 
     async def aclose(self) -> None:
         """ปิด httpx client ถ้าสร้างเอง (ถ้ารับมาจากข้างนอก ผู้สร้างเป็นคนปิด)"""
@@ -161,13 +188,31 @@ class HttpAiClient:
             headers["Authorization"] = f"Bearer {self._key.get_secret_value()}"
         return headers
 
-    def payload(self, req: AiRequest) -> dict[str, Any]:
+    def payload(self, req: AiRequest, image_urls: Sequence[str] = ()) -> dict[str, Any]:
         """body ของ request (ไม่มี key / token — header ใส่แยก)"""
         return {
             "model": self._model,
-            "messages": build_messages(req, self._system_prompt),
+            "messages": build_messages(req, self._system_prompt, image_urls),
             "temperature": self._temperature,
         }
+
+    async def _load_image_urls(self, req: AiRequest) -> list[str]:
+        """อ่านรูปตาม req.images จาก storage เป็น data URL; รูปที่อ่านไม่ได้ข้าม (log แค่ชนิด error)
+
+        ไม่เหลือรูปเลยและไม่มีข้อความ -> ไม่มีอะไรจะถาม AI -> AiUnavailable (orchestrator ไป fallback)
+        """
+        urls: list[str] = []
+        if req.images and self._storage is None:
+            log.warning("ai_images_skipped", reason="no_storage", count=len(req.images))
+        elif req.images and self._storage is not None:
+            for key in req.images:
+                try:
+                    urls.append(to_data_url(await self._storage.get_image(key)))
+                except Exception as e:
+                    log.warning("ai_image_load_failed", error_class=type(e).__name__)
+        if req.images and not urls and not req.text_redacted:
+            raise AiUnavailable("อ่านรูปที่จะส่ง AI ไม่ได้", error_class="image_unavailable", attempts=0)
+        return urls
 
     async def call(self, req: AiRequest, deadline_s: float) -> AiResult:
         start = self._monotonic()
@@ -207,7 +252,7 @@ class HttpAiClient:
         elapsed_ms: Callable[[], int],
         unavailable: Callable[[str, int], AiUnavailable],
     ) -> AiResult:
-        payload = self.payload(req)
+        payload = self.payload(req, await self._load_image_urls(req))
         headers = self._headers()
         attempt = 0
         while True:
@@ -281,10 +326,10 @@ class StubAiClient:
         return AiResult(kind=AiKind.ANSWER, intro=STUB_PREFIX + text, latency_ms=0, attempts=1)
 
 
-def make_ai_client(settings: Settings) -> AiClient:
+def make_ai_client(settings: Settings, storage: Storage | None = None) -> AiClient:
     """AI_API_URL ตั้งแล้ว -> HttpAiClient; ว่าง -> StubAiClient (log เตือน)"""
     if settings.ai_enabled:
-        return HttpAiClient(settings)
+        return HttpAiClient(settings, storage=storage)
     log.warning("ai_stub_mode", reason="ไม่ได้ตั้ง AI_API_URL — ใช้ StubAiClient")
     return StubAiClient()
 

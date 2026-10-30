@@ -323,6 +323,32 @@ async def test_recent_texts_and_count(repos: Repos, db: Db) -> None:
     assert await repos.messages.count_inbound_since(conv.id, since + timedelta(hours=1)) == 0
 
 
+async def test_recent_texts_exclude_types(repos: Repos, db: Db) -> None:
+    conv = await _conv(repos)
+    ids = [await _insert(repos, f"wx{i}") for i in range(3)]
+    await repos.messages.add_inbound(
+        conversation_id=conv.id, raw_event_id=ids[0], message_type="text", text_redacted="q1"
+    )
+    for i, (purpose, text) in enumerate([("ai_answer", "a1"), ("ai_down", "ขัดข้อง")]):
+        res = await repos.messages.reserve_outbound(
+            conversation_id=conv.id,
+            raw_event_id=ids[i],
+            dedupe_key=f"ox{i}",
+            outbound=_out(purpose),
+            text_redacted=text,
+        )
+        await repos.messages.mark_outbound(res.message_id, OutboundStatus.SENT)
+    await repos.messages.add_inbound(
+        conversation_id=conv.id, raw_event_id=ids[2], message_type="text", text_redacted="q2"
+    )
+    texts = [
+        t.text_redacted
+        for t in await repos.messages.recent_texts_redacted(conv.id, 3, exclude_types=["ai_down"])
+    ]
+    assert texts == ["q1", "a1", "q2"]  # ข้อความที่ถูกตัดไม่กินโควตา limit
+    assert len(await repos.messages.recent_texts_redacted(conv.id, 4)) == 4
+
+
 # --- ai runs / feedback / flags ---
 
 

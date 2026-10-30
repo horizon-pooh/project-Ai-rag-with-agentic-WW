@@ -47,20 +47,24 @@ footer { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid var(--rule
 </head>
 <body>
 <div class="frame">
-<p class="eyebrow">LINE_PROD · DIAGRAMS · ฉบับ 3</p>
+<p class="eyebrow">LINE_PROD · DIAGRAMS · 26 ต.ค. 2026</p>
 <h1>ภาพใหญ่ของ LINE OA AI Bot</h1>
-<p class="lede">ไดอะแกรม 6 ภาพตาม <code>docs/Line_ai_bot.md</code> ฉบับ 3: AI เป็น API ภายนอกที่ค้นและตอบเอง
-ฝั่งเราทำ LINE, state, การเลือกเส้นทาง, ตรวจผล และส่งข้อความ จุดที่ขึ้นกับสเปก AI API ที่ยังไม่รู้ติดป้าย <span class="tbd">รอคำตอบ</span>
-ภาพ "ลูกค้าเห็นอะไรระหว่างรอ" ยังไม่วาด เพราะขึ้นกับความเร็วของ AI API</p>
+<p class="lede">ไดอะแกรม 10 ภาพตามโค้ดใน branch <code>feat/python-impl</code> และ <code>docs/Line_ai_bot.md</code>:
+AI gateway ของบริษัท (OpenAI chat, ตอบเป็น markdown) ค้นและตอบเอง ฝั่งเราทำ LINE, state, การเลือกเส้นทาง, ตรวจผล และส่งข้อความ
+คิวงานอยู่ใน Postgres (procrastinate) ไม่มี Redis แล้ว — เรื่องที่เจ้าของระบบยังไม่ตอบติดป้าย <span class="tbd">รอคำตอบ</span></p>
 <div class="grid">
-<div class="card"><p class="eyebrow">01 · ARCHITECTURE</p><h3><a href="01-system.html">ภาพรวมระบบ</a></h3><p>LINE → Caddy → API → คิว → Worker → AI API และทางกลับผ่าน sendGuard</p></div>
-<div class="card"><p class="eyebrow">02 · FLOWCHART</p><h3><a href="02-message-flow.html">หนึ่งข้อความเดินผ่านอะไรบ้าง</a></h3><p>pipeline 9 ขั้น ทางแยกไปพนักงาน และด่านสุดท้าย sendGuard</p></div>
-<div class="card"><p class="eyebrow">03 · STATE MACHINE</p><h3><a href="03-handoff-states.html">สถานะ bot กับ human</a></h3><p>เข้า human ได้หลายทาง ออกได้ 3 ทางผ่าน end_handoff()</p></div>
-<div class="card"><p class="eyebrow">04 · SEQUENCE</p><h3><a href="04-call-ai.html">เรียก AI API หนึ่งครั้ง</a></h3><p>ลองซ้ำ 1 ครั้ง deadline และ fallback</p></div>
-<div class="card"><p class="eyebrow">05 · SEQUENCE</p><h3><a href="05-fast-path.html">ขอพนักงานระหว่างรอ AI</a></h3><p>ทางด่วนไม่รอล็อก คำตอบที่มาช้าถูกทิ้ง</p></div>
+<div class="card"><p class="eyebrow">08 · ARCHITECTURE · อ่านง่าย</p><h3><a href="08-overview-plain.html">บอทตอบแชท LINE ทำงานยังไง</a></h3><p>สำหรับคนไม่เขียนโค้ด: ทางเดินของหนึ่งข้อความ ① ถึง ⑨ เมื่อไหร่ส่งให้พนักงาน และศัพท์เทคนิคแปลเป็นภาษาคน — เริ่มอ่านที่นี่</p></div>
+<div class="card"><p class="eyebrow">09 · HIGH-LEVEL</p><h3><a href="09-high-level.html">ระบบทั้งหมดในหน้าเดียว</a></h3><p>ช่วงงาน 5 ช่วง (ช่องทาง → รับเข้า → ข้อมูล+คิว → ตัดสินใจ → AI) กับเรื่องที่ครอบทุกส่วน: งานตามเวลา ความปลอดภัย เฝ้าระวัง backup</p></div>
+<div class="card"><p class="eyebrow">10 · DEPLOYMENT · HIGH-LEVEL</p><h3><a href="10-prod-servers.html">ขึ้นใช้งานจริง อะไรอยู่เครื่องไหน</a></h3><p>VM บริษัทเครื่องเดียวกับสิ่งที่ต้องอยู่เครื่องอื่น: AI gateway, เครื่องเก็บ backup, ตัวเฝ้าภายนอก และจุดเสี่ยงของการมีเครื่องเดียว</p></div>
+<div class="card"><p class="eyebrow">01 · ARCHITECTURE</p><h3><a href="01-system.html">ภาพรวมระบบ</a></h3><p>LINE → Caddy → API → คิวใน Postgres → Worker → AI gateway, watchdog เฝ้าคิว และทางกลับผ่าน sendGuard</p></div>
+<div class="card"><p class="eyebrow">02 · FLOWCHART</p><h3><a href="02-message-flow.html">หนึ่งข้อความเดินผ่านอะไรบ้าง</a></h3><p>pipeline ทีละขั้น ทางแยกไปพนักงาน และด่านสุดท้าย sendGuard</p></div>
+<div class="card"><p class="eyebrow">03 · STATE MACHINE</p><h3><a href="03-handoff-states.html">สถานะ bot กับ human</a></h3><p>เข้า human ได้หลายทาง ออกได้ 3 ทางผ่าน end_handoff() แจ้ง call center ตอนนี้แค่ log</p></div>
+<div class="card"><p class="eyebrow">04 · SEQUENCE</p><h3><a href="04-call-ai.html">เรียก AI gateway หนึ่งครั้ง</a></h3><p>ส่งแชทย้อนหลัง 4 ข้อความ ลองซ้ำ 1 ครั้ง deadline และ fallback</p></div>
+<div class="card"><p class="eyebrow">05 · SEQUENCE</p><h3><a href="05-fast-path.html">ขอพนักงานระหว่างรอ AI</a></h3><p>ทางด่วน (BackgroundTask) ไม่รอคิว คำตอบที่มาช้าถูกทิ้ง</p></div>
 <div class="card"><p class="eyebrow">06 · LAYER STACK</p><h3><a href="06-code-layers.html">โครงสร้างโค้ด app/</a></h3><p>ชั้นของโค้ดและกติกาว่าใครเรียกใครได้</p></div>
+<div class="card"><p class="eyebrow">07 · DEPLOYMENT</p><h3><a href="07-deployment.html">อะไรรันอยู่ตรงไหนบนเครื่อง</a></h3><p>service ใน docker compose, พอร์ต, ลำดับเริ่ม และ backup รายคืน</p></div>
 </div>
-<footer>ชุดเดิม (Node.js / Softnix, 21 ต.ค.) ดูได้จาก git history ก่อน commit นี้</footer>
+<footer>ฉบับก่อนหน้า (ฉบับ 3 ที่ยังมี Redis / AI API แบบ JSON และชุด Node.js / Softnix 21 ต.ค.) ดูได้จาก git history</footer>
 </div>
 </body>
 </html>

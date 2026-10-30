@@ -29,9 +29,10 @@
 		reverse_proxy api:8000
 	}
 
+	# /static/no-image.png = รูปแทนบนการ์ดสินค้า (LINE โหลดเอง) app/api/assets.py
 	@public {
 		method GET HEAD
-		path /health /close
+		path /health /close /static/no-image.png
 	}
 	handle @public {
 		reverse_proxy api:8000

@@ -6,11 +6,12 @@
 - `.env.example` — รายชื่อ env ที่ต้องตั้ง / แตะเมื่อเพิ่ม config
 - `pyproject.toml` — dependency และเครื่องมือ Python / แตะเมื่อเพิ่ม package
 - `docker-compose.yml` — service ตาม Stack + migrate (dbmate) + healthcheck/ลำดับเริ่ม (ยังไม่ทดสอบบน Docker จริง) / แตะเมื่อเพิ่ม service
+- `compose.debug.yml` — เปิดพอร์ต Postgres 5432 / MinIO console 9001 ที่ 127.0.0.1 ไว้ดูข้อมูลตอนทดสอบ (ใช้คู่กับ docker-compose.yml) / แตะเมื่ออยากดู service อื่นจากเครื่องตัวเอง
 - `Dockerfile` — image เดียวของ api และ worker (uv sync ตาม uv.lock) / แตะเมื่อเปลี่ยนวิธี build
 - `.dockerignore` — ไฟล์ที่ไม่ใส่ใน image / แตะเมื่อเพิ่มโฟลเดอร์ใหญ่
 - `.python-version` — pin Python 3.12 ให้ uv / แตะเมื่อเปลี่ยนเวอร์ชัน
 - `uv.lock` — lock dependency (สร้างด้วย `uv lock`) / ไม่แก้มือ
-- `Caddyfile` — HTTPS หน้า api เปิดเฉพาะ /webhook /health /close (โดเมนรอคำตอบ) / แตะเมื่อเพิ่ม route สาธารณะ
+- `Caddyfile` — HTTPS หน้า api เปิดเฉพาะ /webhook /health /close /static/no-image.png (โดเมนรอคำตอบ) / แตะเมื่อเพิ่ม route สาธารณะ
 
 ## docs/
 - `docs/Line_ai_bot.md` — แบบหลัก: สถาปัตยกรรม, flow, หลักการ, Stack / อ่านก่อนทำงานทุกครั้ง
@@ -23,7 +24,7 @@
 - `docs/open-questions.md` — แบบเก่า: เรื่องที่ยังไม่รู้
 - `docs/runbook.md` — แบบเก่า: คู่มือเมื่อระบบมีปัญหา (โครง)
 - `docs/softnix-questions.md` — แบบเก่า: คำถามที่ต้องส่ง Softnix
-- `docs/diagrams/` — แผนภาพ HTML 6 ภาพของฉบับ 3 (ระบบ, flow, สถานะ, call_ai, ทางด่วน, ชั้นโค้ด) / เปิด index.html
+- `docs/diagrams/` — แผนภาพ HTML 9 ภาพ (ระบบ, flow, สถานะ, call_ai, ทางด่วน, ชั้นโค้ด, deploy, ภาพรวมอ่านง่าย, high-level) อัปเดต 26 ต.ค. 2026 / เปิด index.html
 
 ## app/
 - `app/main.py` — FastAPI app factory ต่อ router / ไม่มี business logic
@@ -34,6 +35,8 @@
 - `app/api/fast_path.py` — ทางด่วนคำสั่งเปลี่ยนสถานะ ไม่รอล็อกต่อ user (เสนอ)
 - `app/api/close.py` — GET /close?token=: ลิงก์ครั้งเดียวให้พนักงานปิดเคส
 - `app/api/health.py` — GET /health (liveness) และ /health/ready: เช็ค Postgres
+- `app/api/assets.py` — GET /static/no-image.png: รูปแทนบนการ์ดสินค้าที่ไม่มีรูป (LINE โหลดเอง)
+- `app/static/no-image.png` — ไฟล์รูปแทน 600x600 (รูปบ้านสีจาง) / แตะเมื่อเปลี่ยนรูปแทน
 - `app/worker/` — worker ของคิว procrastinate (คิวบน Postgres, D-010): งานจากคิว, งาน periodic
 - `app/worker/app.py` — procrastinate App, งาน process_event + งาน periodic, open_queue, run_worker / แตะเมื่อเพิ่มงานหรือเปลี่ยนรอบเวลา
 - `app/worker/__main__.py` — `python -m app.worker` เริ่ม worker (คำสั่งใน docker-compose.yml)

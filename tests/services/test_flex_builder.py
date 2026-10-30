@@ -10,16 +10,21 @@ from app.pipeline.schemas import (
     LINE_MAX_ALT_TEXT_CHARS,
     MAX_CAROUSEL_BUBBLES,
     Product,
-    parse_postback_data,
 )
 from app.services.flex_builder import (
-    LABEL_DETAIL,
+    COLOR_ACCENT,
+    COLOR_PRICE,
+    COLOR_PRIMARY,
+    DETAILS_MAX_CHARS,
     LABEL_OPEN_PAGE,
     format_price,
+    placeholder_image_url,
     product_bubble,
     product_carousel,
     product_detail_message,
 )
+
+PLACEHOLDER = "https://bot.example/static/no-image.png"
 
 
 def _p(sku: str = "A1", **kw: object) -> Product:
@@ -43,7 +48,15 @@ def test_format_price() -> None:
 
 
 def test_bubble_full() -> None:
-    b = product_bubble(_p(price=Decimal("12990"), image_url="https://img.example/a1.jpg"))
+    b = product_bubble(
+        _p(
+            price=Decimal("12990"),
+            image_url="https://img.example/a1.jpg",
+            brand="HISENSE",
+            details="ระบบ Inverter, รับประกัน 10 ปี",
+        )
+    )
+    open_page = {"type": "uri", "label": LABEL_OPEN_PAGE, "uri": "https://shop.example/A1"}
     assert b["type"] == "bubble"
     assert b["hero"] == {
         "type": "image",
@@ -51,24 +64,73 @@ def test_bubble_full() -> None:
         "size": "full",
         "aspectRatio": "1:1",
         "aspectMode": "cover",
+        "action": open_page,
     }
-    assert _texts(b) == ["ตู้เย็น A1", "฿12,990"]
-    detail, open_page = (c["action"] for c in b["footer"]["contents"])
-    assert detail["type"] == "postback" and detail["label"] == LABEL_DETAIL
-    assert parse_postback_data(detail["data"]) == {"action": "detail", "sku": "A1"}
-    assert open_page == {"type": "uri", "label": LABEL_OPEN_PAGE, "uri": "https://shop.example/A1"}
+    assert _texts(b) == [
+        "HISENSE",
+        "ตู้เย็น A1",
+        "ระบบ Inverter, รับประกัน 10 ปี",
+        "฿12,990",
+        "รหัสสินค้า A1",
+    ]
+    brand, name, _, price, _ = b["body"]["contents"]
+    assert brand["color"] == COLOR_ACCENT
+    assert name["color"] == COLOR_PRIMARY
+    assert price["color"] == COLOR_PRICE
+    assert b["body"]["action"] == open_page
+    # ปุ่มเดียว: เปิดหน้าสินค้า (ไม่มีปุ่ม "ดูรายละเอียด" / postback แล้ว)
+    (button,) = b["footer"]["contents"]
+    assert button["action"] == open_page
+    assert button["color"] == COLOR_PRIMARY
 
 
-def test_bubble_without_image_and_price() -> None:
+def test_bubble_without_optional_fields() -> None:
     b = product_bubble(_p())
     assert "hero" not in b
-    assert _texts(b) == ["ตู้เย็น A1"]
+    assert _texts(b) == ["ตู้เย็น A1", "รหัสสินค้า A1"]
 
 
-def test_sku_with_special_chars_is_urlencoded_in_postback() -> None:
-    b = product_bubble(_p(sku="A&B=1 x"))
-    data = b["footer"]["contents"][0]["action"]["data"]
-    assert parse_postback_data(data) == {"action": "detail", "sku": "A&B=1 x"}
+@pytest.mark.parametrize("blank", ["", "   "])
+def test_blank_brand_and_details_not_shown(blank: str) -> None:
+    # flex ห้าม text ว่าง
+    assert _texts(product_bubble(_p(brand=blank, details=blank))) == ["ตู้เย็น A1", "รหัสสินค้า A1"]
+
+
+def test_no_image_uses_placeholder() -> None:
+    b = product_bubble(_p(), placeholder_image_url=PLACEHOLDER)
+    assert b["hero"]["url"] == PLACEHOLDER
+
+
+def test_own_image_wins_over_placeholder() -> None:
+    b = product_bubble(_p(image_url="https://img.example/a1.jpg"), placeholder_image_url=PLACEHOLDER)
+    assert b["hero"]["url"] == "https://img.example/a1.jpg"
+
+
+def test_long_details_clipped() -> None:
+    details = product_bubble(_p(details="ก" * 500))["body"]["contents"][1]["text"]
+    assert len(details) == DETAILS_MAX_CHARS
+    assert details.endswith("…")
+
+
+def test_carousel_passes_placeholder_to_every_bubble() -> None:
+    msg = product_carousel(
+        [_p("A"), _p("B", image_url="https://img.example/b.jpg")], placeholder_image_url=PLACEHOLDER
+    )
+    urls = [b["hero"]["url"] for b in msg["contents"]["contents"]]
+    assert urls == [PLACEHOLDER, "https://img.example/b.jpg"]
+
+
+@pytest.mark.parametrize(
+    ("base", "expected"),
+    [
+        ("https://bot.example", PLACEHOLDER),
+        ("https://bot.example/", PLACEHOLDER),
+        (None, None),
+        ("", None),
+    ],
+)
+def test_placeholder_image_url(base: str | None, expected: str | None) -> None:
+    assert placeholder_image_url(base) == expected
 
 
 def test_carousel_shape_and_alt_text() -> None:
