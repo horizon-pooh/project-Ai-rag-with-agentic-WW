@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>04 ลำดับการเรียก call_ai</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500;600&family=Noto+Sans+Thai:wght@400;500;600&family=Noto+Serif+Thai:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --paper: #f5f5f5; --paper-2: #ececec; --ink: #1a1a1a; --muted: #6b6b6b; --soft: #80868c;
+  --rule: rgba(26,26,26,0.12); --accent: #e30613; --accent-tint: rgba(227,6,19,0.06); --link: #0066b3;
+  --font-sans: 'Geist', 'Noto Sans Thai', system-ui, sans-serif;
+  --font-serif: 'Instrument Serif', 'Noto Serif Thai', serif;
+  --font-mono: 'Geist Mono', ui-monospace, monospace;
+}
+body { font-family: var(--font-sans); background: var(--paper); color: var(--ink); padding: 2.5rem 16px 3rem; line-height: 1.6; }
+.frame { max-width: 1320px; margin: 0 auto; }
+nav.crumbs { font-family: var(--font-mono); font-size: 0.72rem; letter-spacing: 0.04em; color: var(--muted); margin-bottom: 1.75rem; display: flex; gap: 1.25rem; flex-wrap: wrap; }
+nav.crumbs a { color: var(--link); text-decoration: none; }
+nav.crumbs a:hover { text-decoration: underline; }
+.eyebrow { font-family: var(--font-mono); font-size: 0.66rem; font-weight: 500; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); margin-bottom: 0.5rem; }
+h1 { font-family: var(--font-serif); font-size: clamp(1.6rem, 2.4vw + 0.8rem, 2.2rem); font-weight: 400; letter-spacing: -0.01em; line-height: 1.2; margin-bottom: 0.75rem; }
+.lede { max-width: 76ch; color: var(--muted); font-size: 0.95rem; margin-bottom: 1.75rem; }
+code { font-family: var(--font-mono); font-size: 0.82em; color: var(--ink); background: rgba(26,26,26,0.05); padding: 0 0.3em; border-radius: 3px; }
+.tbd { font-family: var(--font-mono); font-size: 0.7rem; color: var(--accent); border: 1px solid rgba(227,6,19,0.4); border-radius: 3px; padding: 0 0.35em; white-space: nowrap; }
+.diagram-container { width: 100%; overflow-x: auto; margin-bottom: 2rem; }
+.diagram-container svg { width: 100%; display: block; }
+.cards { display: grid; grid-template-columns: 1.15fr 1fr 0.85fr; gap: 1rem; }
+.card { background: #ffffff; border: 1px solid var(--rule); border-radius: 6px; padding: 1.25rem; min-width: 0; }
+.card h3 { font-size: 0.95rem; font-weight: 600; display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.6rem; }
+.card h3 a { color: var(--ink); text-decoration: none; }
+.card h3 a:hover { color: var(--link); }
+.card ul, .card ol { padding-left: 1.1rem; font-size: 0.86rem; }
+.card li { margin-bottom: 0.3rem; }
+.card p { font-size: 0.86rem; color: var(--muted); margin-bottom: 0.4rem; }
+.card table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+.card td, .card th { text-align: left; padding: 0.25rem 0.4rem 0.25rem 0; border-bottom: 1px solid var(--rule); vertical-align: top; }
+.card th { font-weight: 600; font-size: 0.78rem; color: var(--muted); }
+.dot { width: 7px; height: 7px; border-radius: 50%; display: inline-block; flex: none; }
+.dot.ink { background: var(--ink); } .dot.accent { background: var(--accent); } .dot.link { background: var(--link); } .dot.soft { background: var(--soft); }
+footer { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid var(--rule); font-family: var(--font-mono); font-size: 0.68rem; color: var(--muted); letter-spacing: 0.04em; }
+@media (max-width: 860px) { .cards { grid-template-columns: 1fr; } }
+.diagram-container svg { min-width: 1280px; }
+@media print { .diagram-container { overflow-x: visible; } .diagram-container svg { min-width: 0; } }
+</style>
+</head>
+<body>
+<div class="frame">
+<nav class="crumbs"><a href="index.html">← สารบัญ</a> <a href="03-handoff-states.html">‹ ก่อนหน้า</a> <a href="05-fast-path.html">ถัดไป ›</a></nav>
+<p class="eyebrow">04 · SEQUENCE · LINE_PROD · 26 ต.ค. 2026</p>
+<h1>เรียก AI gateway หนึ่งครั้ง</h1>
+<p class="lede">Orchestrator อ่านแชทย้อนหลัง 4 ข้อความ (redact แล้ว) ส่ง loading ให้ลูกค้าเห็น แล้วเรียก <code>ai_client</code> ซึ่งเป็นที่เดียวที่รู้จักรูปแบบ API (OpenAI chat) gateway ไม่จำอะไรข้ามรอบ จึงรู้เรื่องก่อนหน้าจากแชทที่เราส่งไปเท่านั้น ได้ผลทันเวลาก็บันทึก state เช็คสถานะ (sendGuard) แล้วตอบ ลองซ้ำแล้วยังพังก็เข้า fallback</p>
+<div class="diagram-container">
+<svg viewBox="0 0 1280 720" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="call-ai-title call-ai-desc">
+<title id="call-ai-title">ลำดับการเรียก call_ai</title>
+<desc id="call-ai-desc">The orchestrator reads state, shows a loading indicator, asks ai_client which posts to the external AI API with one retry, then either saves state, checks status and replies, or falls back when the API is unavailable.</desc>
+<defs>
+  <marker id="arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#6b6b6b"/></marker>
+  <marker id="arrow-accent" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#e30613"/></marker>
+  <marker id="arrow-link" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#0066b3"/></marker>
+  <marker id="arrow-open" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polyline points="0 0, 8 3, 0 6" fill="none" stroke="#6b6b6b" stroke-width="1.2"/></marker>
+</defs>
+<rect width="100%" height="100%" fill="#f5f5f5"/>
+<line x1="160" y1="88" x2="160" y2="584" stroke="rgba(26,26,26,0.20)" stroke-width="1" stroke-dasharray="3,3"/>
+<line x1="400" y1="88" x2="400" y2="584" stroke="rgba(26,26,26,0.20)" stroke-width="1" stroke-dasharray="3,3"/>
+<line x1="640" y1="88" x2="640" y2="584" stroke="rgba(26,26,26,0.20)" stroke-width="1" stroke-dasharray="3,3"/>
+<line x1="880" y1="88" x2="880" y2="584" stroke="rgba(26,26,26,0.20)" stroke-width="1" stroke-dasharray="3,3"/>
+<line x1="1120" y1="88" x2="1120" y2="584" stroke="rgba(26,26,26,0.20)" stroke-width="1" stroke-dasharray="3,3"/>
+<rect x="136" y="272" width="1008" height="284" rx="4" fill="rgba(26,26,26,0.02)" stroke="rgba(26,26,26,0.22)" stroke-width="1"/><rect x="136" y="272" width="40" height="16" rx="2" fill="#f5f5f5" stroke="rgba(26,26,26,0.22)" stroke-width="1"/><text x="156" y="284" fill="#6b6b6b" font-size="8" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle" letter-spacing="0.12em">ALT</text>
+<text x="184" y="292" fill="#6b6b6b" font-size="8" font-family="'Geist Mono', ui-monospace, monospace" letter-spacing="0.04em">[answered within deadline]</text>
+<line x1="144" y1="460" x2="1136" y2="460" stroke="rgba(26,26,26,0.20)" stroke-width="1" stroke-dasharray="4,3"/>
+<text x="148" y="480" fill="#6b6b6b" font-size="8" font-family="'Geist Mono', ui-monospace, monospace" letter-spacing="0.04em">[timeout x2 · 5xx · 4xx · unreadable]</text>
+<rect x="396" y="104" width="8" height="444" fill="#f5f5f5"/><rect x="396" y="104" width="8" height="444" fill="rgba(26,26,26,0.06)" stroke="#6b6b6b" stroke-width="0.8"/>
+<rect x="636" y="216" width="8" height="296" fill="#f5f5f5"/><rect x="636" y="216" width="8" height="296" fill="rgba(26,26,26,0.06)" stroke="#6b6b6b" stroke-width="0.8"/>
+<rect x="876" y="248" width="8" height="68" fill="#f5f5f5"/><rect x="876" y="248" width="8" height="68" fill="rgba(26,26,26,0.06)" stroke="#6b6b6b" stroke-width="0.8"/>
+<rect x="1116" y="120" width="8" height="36" fill="#f5f5f5"/><rect x="1116" y="120" width="8" height="36" fill="rgba(26,26,26,0.06)" stroke="#6b6b6b" stroke-width="0.8"/>
+<rect x="1116" y="376" width="8" height="36" fill="#f5f5f5"/><rect x="1116" y="376" width="8" height="36" fill="rgba(26,26,26,0.06)" stroke="#6b6b6b" stroke-width="0.8"/>
+<path d="M 404,120 H 1116" fill="none" stroke="#6b6b6b" stroke-width="1.2" marker-end="url(#arrow)"/>
+<rect x="970" y="100" width="60" height="12" rx="2" fill="#f5f5f5"/><text x="1000" y="109" fill="#6b6b6b" font-size="8" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle" letter-spacing="0.06em">READ STATE</text>
+<path d="M 1116,152 H 404" fill="none" stroke="#6b6b6b" stroke-width="1" stroke-dasharray="5,4" marker-end="url(#arrow)"/>
+<rect x="960" y="132" width="80" height="12" rx="2" fill="#f5f5f5"/><text x="1000" y="141" fill="#6b6b6b" font-size="8" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle" letter-spacing="0.06em">CHAT 4 · STATE</text>
+<path d="M 396,184 H 160" fill="none" stroke="#6b6b6b" stroke-width="1" stroke-dasharray="5,4" marker-end="url(#arrow-open)"/>
+<rect x="256" y="164" width="48" height="12" rx="2" fill="#f5f5f5"/><text x="280" y="173" fill="#6b6b6b" font-size="8" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle" letter-spacing="0.06em">LOADING</text>
+<path d="M 404,216 H 636" fill="none" stroke="#6b6b6b" stroke-width="1.2" marker-end="url(#arrow)"/>
+<rect x="476" y="196" width="88" height="12" rx="2" fill="#f5f5f5"/><text x="520" y="205" fill="#6b6b6b" font-size="8" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle" letter-spacing="0.06em">ASK(AIREQUEST)</text>
+<path d="M 644,248 H 876" fill="none" stroke="#0066b3" stroke-width="1.2" marker-end="url(#arrow-link)"/>
+<rect x="720" y="228" width="80" height="12" rx="2" fill="#f5f5f5"/><text x="760" y="237" fill="#6b6b6b" font-size="8" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle" letter-spacing="0.06em">POST · RETRY 1</text>
+<path d="M 876,312 H 644" fill="none" stroke="#0066b3" stroke-width="1" stroke-dasharray="5,4" marker-end="url(#arrow-link)"/>
+<rect x="720" y="292" width="80" height="12" rx="2" fill="#f5f5f5"/><text x="760" y="301" fill="#6b6b6b" font-size="8" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle" letter-spacing="0.06em">200 · MARKDOWN</text>
+<path d="M 636,344 H 404" fill="none" stroke="#6b6b6b" stroke-width="1" stroke-dasharray="5,4" marker-end="url(#arrow)"/>
+<rect x="494" y="324" width="52" height="12" rx="2" fill="#f5f5f5"/><text x="520" y="333" fill="#6b6b6b" font-size="8" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle" letter-spacing="0.06em">AIRESULT</text>
+<path d="M 404,376 H 1116" fill="none" stroke="#6b6b6b" stroke-width="1.2" marker-end="url(#arrow)"/>
+<rect x="962" y="356" width="76" height="12" rx="2" fill="#f5f5f5"/><text x="1000" y="365" fill="#6b6b6b" font-size="8" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle" letter-spacing="0.06em">STATE + STEPS</text>
+<path d="M 404,408 H 1116" fill="none" stroke="#6b6b6b" stroke-width="1.2" marker-end="url(#arrow)"/>
+<rect x="964" y="388" width="72" height="12" rx="2" fill="#f5f5f5"/><text x="1000" y="397" fill="#6b6b6b" font-size="8" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle" letter-spacing="0.06em">STATUS CHECK</text>
+<path d="M 396,440 H 160" fill="none" stroke="#e30613" stroke-width="1.2" marker-end="url(#arrow-accent)"/>
+<rect x="244" y="420" width="72" height="12" rx="2" fill="#f5f5f5"/><text x="280" y="429" fill="#e30613" font-size="8" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle" letter-spacing="0.06em">REPLY / PUSH</text>
+<path d="M 636,504 H 404" fill="none" stroke="#6b6b6b" stroke-width="1" stroke-dasharray="5,4" marker-end="url(#arrow)"/>
+<rect x="480" y="484" width="80" height="12" rx="2" fill="#f5f5f5"/><text x="520" y="493" fill="#6b6b6b" font-size="8" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle" letter-spacing="0.06em">AIUNAVAILABLE</text>
+<path d="M 396,536 H 160" fill="none" stroke="#6b6b6b" stroke-width="1.2" marker-end="url(#arrow)"/>
+<rect x="254" y="516" width="52" height="12" rx="2" fill="#f5f5f5"/><text x="280" y="525" fill="#6b6b6b" font-size="8" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle" letter-spacing="0.06em">FALLBACK</text>
+<rect x="72" y="40" width="176" height="48" rx="6" fill="#f5f5f5"/>
+<rect x="72" y="40" width="176" height="48" rx="6" fill="rgba(107,107,107,0.10)" stroke="#80868c" stroke-width="1"/>
+<text x="160" y="65" fill="#1a1a1a" font-size="12" font-weight="600" font-family="'Geist', 'Noto Sans Thai', system-ui, sans-serif" text-anchor="middle">ลูกค้า · LINE</text>
+<text x="160" y="80" fill="#6b6b6b" font-size="9" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle">Messaging API</text>
+<rect x="312" y="40" width="176" height="48" rx="6" fill="#f5f5f5"/>
+<rect x="312" y="40" width="176" height="48" rx="6" fill="rgba(227,6,19,0.06)" stroke="#e30613" stroke-width="1.2"/>
+<text x="400" y="65" fill="#1a1a1a" font-size="12" font-weight="600" font-family="'Geist', 'Noto Sans Thai', system-ui, sans-serif" text-anchor="middle">Orchestrator</text>
+<text x="400" y="80" fill="#6b6b6b" font-size="9" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle">pipeline</text>
+<rect x="552" y="40" width="176" height="48" rx="6" fill="#f5f5f5"/>
+<rect x="552" y="40" width="176" height="48" rx="6" fill="#ffffff" stroke="#1a1a1a" stroke-width="1"/>
+<text x="640" y="65" fill="#1a1a1a" font-size="12" font-weight="600" font-family="'Geist', 'Noto Sans Thai', system-ui, sans-serif" text-anchor="middle">ai_client</text>
+<text x="640" y="80" fill="#6b6b6b" font-size="9" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle">services/</text>
+<rect x="792" y="40" width="176" height="48" rx="6" fill="#f5f5f5"/>
+<rect x="792" y="40" width="176" height="48" rx="6" fill="rgba(26,26,26,0.03)" stroke="rgba(26,26,26,0.30)" stroke-width="1"/>
+<text x="880" y="65" fill="#1a1a1a" font-size="12" font-weight="600" font-family="'Geist', 'Noto Sans Thai', system-ui, sans-serif" text-anchor="middle">AI gateway</text>
+<text x="880" y="80" fill="#6b6b6b" font-size="9" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle">OpenAI chat</text>
+<rect x="1032" y="40" width="176" height="48" rx="6" fill="#f5f5f5"/>
+<rect x="1032" y="40" width="176" height="48" rx="6" fill="rgba(26,26,26,0.05)" stroke="#6b6b6b" stroke-width="1"/>
+<text x="1120" y="65" fill="#1a1a1a" font-size="12" font-weight="600" font-family="'Geist', 'Noto Sans Thai', system-ui, sans-serif" text-anchor="middle">Postgres</text>
+<text x="1120" y="80" fill="#6b6b6b" font-size="9" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle">repositories/</text>
+<text x="640" y="616" fill="#6b6b6b" font-size="14" font-style="italic" font-family="'Instrument Serif', 'Noto Serif Thai', serif" text-anchor="middle">วัดจริง 2–7 วิ (ทั่วไป) · 22–43 วิ (ค้นสินค้า) — loading 5–60 วิ, replyToken เกิน 50 วิ → push แทน</text>
+<line x1="40" y1="656" x2="1240" y2="656" stroke="rgba(26,26,26,0.10)" stroke-width="0.8"/>
+<text x="40" y="680" fill="#6b6b6b" font-size="8" font-family="'Geist Mono', ui-monospace, monospace" letter-spacing="0.14em">LEGEND</text>
+<line x1="120" y1="677" x2="142" y2="677" stroke="#6b6b6b" stroke-width="1.2" marker-end="url(#arrow)"/>
+<text x="150" y="681" fill="#6b6b6b" font-size="11" font-family="'Geist', 'Noto Sans Thai', system-ui, sans-serif">เรียก</text>
+<line x1="206" y1="677" x2="228" y2="677" stroke="#6b6b6b" stroke-width="1.2" stroke-dasharray="5,4" marker-end="url(#arrow)"/>
+<text x="236" y="681" fill="#6b6b6b" font-size="11" font-family="'Geist', 'Noto Sans Thai', system-ui, sans-serif">ตอบกลับ</text>
+<line x1="304" y1="677" x2="326" y2="677" stroke="#6b6b6b" stroke-width="1.2" stroke-dasharray="5,4" marker-end="url(#arrow-open)"/>
+<text x="334" y="681" fill="#6b6b6b" font-size="11" font-family="'Geist', 'Noto Sans Thai', system-ui, sans-serif">async</text>
+<line x1="398" y1="677" x2="420" y2="677" stroke="#0066b3" stroke-width="1.2" marker-end="url(#arrow-link)"/>
+<text x="428" y="681" fill="#6b6b6b" font-size="11" font-family="'Geist', 'Noto Sans Thai', system-ui, sans-serif">HTTP ภายนอก</text>
+<line x1="528" y1="677" x2="550" y2="677" stroke="#e30613" stroke-width="1.2" marker-end="url(#arrow-accent)"/>
+<text x="558" y="681" fill="#6b6b6b" font-size="11" font-family="'Geist', 'Noto Sans Thai', system-ui, sans-serif">ข้อความถึงลูกค้า</text>
+</svg>
+</div>
+<div class="cards">
+<div class="card"><h3><span class="dot ink"></span>ai_client: กติกาการเรียก</h3><table>
+<tr><th>อาการ</th><th>ทำ</th></tr>
+<tr><td>timeout / ต่อไม่ได้ / 429 / 5xx</td><td>ลองซ้ำ 1 ครั้งถ้าเวลาเหลือ (เคารพ <code>retry-after</code>)</td></tr>
+<tr><td>4xx อื่น / อ่านผลไม่ออก</td><td>ไม่ลองซ้ำ → <code>AiBadResponse</code></td></tr>
+<tr><td>ลองแล้วยังพัง</td><td><code>AiUnavailable</code></td></tr>
+</table>
+<p style="margin-top:.5rem">ทุกรอบรวมกันไม่เกิน <code>TURN_DEADLINE_S</code> (90 วิ) แต่ละครั้งไม่เกิน <code>AI_TIMEOUT_S</code> (60 วิ) และ <code>Semaphore(AI_CONCURRENCY)</code> จำกัดงานพร้อมกัน — ไม่ตั้ง <code>AI_API_URL</code> = <code>StubAiClient</code> ทวนข้อความกลับ</p></div>
+<div class="card"><h3><span class="dot accent"></span>ส่งอะไรไป ได้อะไรกลับ</h3><p><b>ส่งไป</b> (<code>POST /chat/completions</code>): system prompt (ถ้าตั้ง) + แชทย้อนหลัง 4 ข้อความ (ลูกค้า = user, บอท = assistant, การ์ด = ชื่อสินค้า) + ข้อความปัจจุบัน — redact แล้วทั้งหมด ไม่ส่ง state / flags / รูป <span class="tbd">รอคำตอบ</span></p>
+<p><b>ได้กลับ</b>: markdown → <code>MarkdownParser</code>: intro + "## Product List" → products[sku, name, price, brand, details, image_url]; ลิงก์สร้างจากรหัสสินค้าเอง</p>
+<p>kind เดาจากเนื้อหา (มีสินค้า / ลงท้าย ? = clarify / นอกนั้น answer) — ไม่มี <code>escalate_hint</code>, <code>state_out</code> <span class="tbd">รอคำตอบ</span></p></div>
+<div class="card"><h3><span class="dot soft"></span>ระหว่างรอ</h3><ul>
+<li>ไม่ถือ transaction ของ DB ค้าง</li>
+<li>งานของ user เดียวกันรอคิวด้วย <code>lock</code> ของ procrastinate (ไม่มี TTL lock ใน Redis แล้ว)</li>
+<li><code>ai_steps</code> เก็บ latency, attempts, error_class</li>
+<li>คำตอบมักถูกตัดกลางรายการ → ทิ้งก้อนที่ไม่ครบ <span class="tbd">รอคำตอบ</span></li>
+<li>fallback: ข้อความเสี่ยงส่งต่อ ไม่งั้นขอโทษ + ปุ่มคุยกับพนักงาน</li>
+</ul></div>
+</div>
+<footer>แหล่ง: โค้ดใน branch <code>feat/python-impl</code> + docs/Line_ai_bot.md · docs/decisions.md (อัปเดต 26 ต.ค. 2026) · ป้าย <span class="tbd">รอคำตอบ</span> = ยังไม่รู้คำตอบจากเจ้าของระบบ</footer>
+</div>
+</body>
+</html>

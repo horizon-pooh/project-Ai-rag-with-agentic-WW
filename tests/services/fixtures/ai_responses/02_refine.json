@@ -1,0 +1,41 @@
+{
+  "_meta": {
+    "captured": "2026-10-23",
+    "status": 200,
+    "latency_s": 33.4,
+    "request_messages": [
+      {
+        "role": "user",
+        "content": "มีตู้เย็น 2 ประตูไหม"
+      },
+      {
+        "role": "assistant",
+        "content": "สวัสดีค่ะ มีตู้เย็น 2 ประตูให้เลือกหลายรุ่นเลยค่ะ เช่น HISENSE RT549N4TBN 15 คิว ราคา ฿14,999 และ LG GN-X392PMGB 14 คิว ราคา ฿18,990"
+      },
+      {
+        "role": "user",
+        "content": "เอาสีดำ งบไม่เกิน 20000"
+      }
+    ]
+  },
+  "id": "chatcmpl-63f3bc38",
+  "object": "chat.completion",
+  "created": 1792740623,
+  "model": "gemma4-31b",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "## Product List\n\n### 1. ตู้เย็น 2 ประตู ELECTROLUX ETM4302C-B 15.2 คิว สีดำ\n- Brand: ELECTROLUX\n- Price: ฿15,990.00\n- Details: ความจุ 15.2 คิว, ระบบ INVERTER และระบบกระจายความเย็น DUAL FAN COOLING\n- Product code: 1266175\n- Product link: [View product details](https://www.homepro.co.th/p/1266175)\n\n### 2. ตู้เย็น 2 ประตู ELECTROLUX ETM5002C-B 17.8 คิว สีดำ\n- Brand: ELECTROLUX\n- Price: ฿18,990.00\n- Details: ความจุ 17.8 คิว, ระบบ INVERTER และระบบกระจายความเย็น DUAL FAN COOLING\n- Product code: 1266157\n- Product link: [View product details](https://www.homepro.co.th/p/1266157)\n\n### 3. ตู้เย็น 2 ประตู ELECTROLUX ETM3400L-B 12 คิว สีดำ\n- Brand: ELECTROLUX\n- Price: ฿12,490.00\n- Details: ความจุ 12 คิว, ระบบ INVERTER และมีจอแสดงผลแบบดิจิตอล\n- Product code: 1266167\n- Product link: [View product details](https://www.homepro.co.th/p/1266167)\n\n### 4. ตู้เย็น 2 ประตู BEKO RCNT415I50VHFK 14 คิว สีดำ\n- Brand: BEKO\n- Price: ฿18,990.00\n- Details: ความจุ 14 คิว, ระบบ INVERTER และช่องแช่แข็งอยู่ด้านล่าง\n- Product code: 1216191\n- Product link: [View product details](https://www.homepro.co.th/p/1216191)\n\n### 5",
+        "tool_calls": null
+      },
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 0,
+    "completion_tokens": 0,
+    "total_tokens": 0
+  }
+}

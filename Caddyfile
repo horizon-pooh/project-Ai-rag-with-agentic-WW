@@ -1,0 +1,44 @@
+# HTTPS หน้า api (service caddy ใน docker-compose.yml) — โครงเท่านั้น ยังไม่ได้ทดสอบ
+# โดเมนจริง: รอคำตอบ — ตั้งเป็น DOMAIN ใน .env; โดเมนต้องชี้มาที่เครื่องนี้ และเปิดพอร์ต 80/443
+# ไม่งั้นขอใบรับรอง Let's Encrypt ไม่ได้
+# ไม่เปิด access log: /close?token= จะไปโผล่ใน log
+{$DOMAIN} {
+	# เปิดเฉพาะ route สาธารณะที่ app มี (app/api/) ที่เหลือ 404
+	@webhook {
+		method POST
+		path /webhook
+	}
+	handle @webhook {
+		# body ของ LINE webhook เล็ก กันคนยิงไฟล์ใหญ่
+		request_body {
+			max_size 1MB
+		}
+		reverse_proxy api:8000
+	}
+
+	# ฟอร์มยืนยันปิดเคส (GET /close แสดงหน้ายืนยันเท่านั้น ปิดจริงด้วย POST)
+	@close_post {
+		method POST
+		path /close
+	}
+	handle @close_post {
+		# ฟอร์มมีแค่ token
+		request_body {
+			max_size 4KB
+		}
+		reverse_proxy api:8000
+	}
+
+	# /static/no-image.png = รูปแทนบนการ์ดสินค้า (LINE โหลดเอง) app/api/assets.py
+	@public {
+		method GET HEAD
+		path /health /close /static/no-image.png
+	}
+	handle @public {
+		reverse_proxy api:8000
+	}
+
+	handle {
+		respond 404
+	}
+}
