@@ -1,0 +1,8 @@
+.venv
+.git
+src
+dev
+test
+deploy
+node_modules
+.env

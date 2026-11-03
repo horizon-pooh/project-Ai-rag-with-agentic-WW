@@ -1,0 +1,41 @@
+{
+  "_meta": {
+    "captured": "2026-10-23",
+    "status": 200,
+    "latency_s": 27.8,
+    "request_messages": [
+      {
+        "role": "user",
+        "content": "มีตู้เย็น 2 ประตูไหม"
+      },
+      {
+        "role": "assistant",
+        "content": "สวัสดีค่ะ มีตู้เย็น 2 ประตูให้เลือกหลายรุ่นเลยค่ะ เช่น HISENSE RT549N4TBN 15 คิว ราคา ฿14,999 และ LG GN-X392PMGB 14 คิว ราคา ฿18,990"
+      },
+      {
+        "role": "user",
+        "content": "ทีวี 55 นิ้ว มีรุ่นไหนบ้าง"
+      }
+    ]
+  },
+  "id": "chatcmpl-8930c79f",
+  "object": "chat.completion",
+  "created": 1792740673,
+  "model": "gemma4-31b",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "## Product List\n\n### 1. แอลอีดีทีวี 55นิ้ว FLAT LG 55UJ630T.ATM\n- Brand: LG\n- Price: ฿25,990.00\n- Details: ความละเอียดหน้าจอ 4K (2160P), มาพร้อม Magic Remote\n- Product code: 1084087\n- Product link: [View product details](https://www.homepro.co.th/p/1084087)\n\n### 2. ทีวีแอลอีดี 55 นิ้ว SAMSUNG (4K, LED, TIZEN) UA55UE800HKXXT\n- Brand: SAMSUNG\n- Price: ฿15,490.00\n- Details: ความละเอียดหน้าจอ 4K, ระบบปฏิบัติการ TIZEN\n- Product code: 1319426\n- Product link: [View product details](https://www.homepro.co.th/p/1319426)\n\n### 3. ทีวีแอลอีดี 55 นิ้ว XIAOMI (4K, LED, GOOGLE TV) A 55 2026\n- Brand: XIAOMI\n- Price: ฿14,990.00\n- Details: ความละเอียดหน้าจอ 4K, ระบบปฏิบัติการ Google TV\n- Product code: 1297952\n- Product link: [View product details](https://www.homepro.co.th/p/1297952)\n\n### 4. ทีวีแอลอีดี 55 นิ้ว TOSHIBA (4K, LED, GOOGLE TV) 55C350NP\n- Brand: TOSHIBA\n- Price: ฿16,999.00\n- Details: ความละเอียดหน้าจอ 4K, ระบบปฏิบัติการ Google TV\n- Product code: 1260654\n- Product link: [View product details](https://www.homepro.co.th/p/1260654)\n\n### 5. ทีวีแอลอีดี 55 นิ้ว HAIER (4K, LED, GOOGLE TV) H55K8",
+        "tool_calls": null
+      },
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 0,
+    "completion_tokens": 0,
+    "total_tokens": 0
+  }
+}

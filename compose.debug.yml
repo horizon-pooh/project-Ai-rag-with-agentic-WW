@@ -1,0 +1,17 @@
+# เปิดดูข้อมูลจากเครื่องตัวเอง (DBeaver / pgAdmin / MinIO console) — ใช้ตอนทดสอบเท่านั้น
+# ยังไม่ได้ทดสอบบน Docker จริง (เครื่อง dev ไม่มี docker)
+# วิธีใช้: docs/test-deploy.md ข้อ 5.2
+#   docker compose -f docker-compose.yml -f compose.debug.yml up -d postgres minio
+# ผูกกับ 127.0.0.1 เท่านั้น: เข้าได้จากเครื่องนี้ (หรือผ่าน ssh -L) ห้ามเปลี่ยนเป็น 0.0.0.0 — ข้อมูลลูกค้าอยู่ในนี้
+# เลิกดู: docker compose up -d postgres minio (ไม่มีไฟล์นี้ = ปิดพอร์ตกลับ)
+
+services:
+  postgres:
+    ports:
+      - "127.0.0.1:5432:5432"
+
+  minio:
+    # console ไม่ระบุพอร์ตจะสุ่ม -> ตั้งตายตัวที่ 9001
+    command: server /data --console-address ":9001"
+    ports:
+      - "127.0.0.1:9001:9001"

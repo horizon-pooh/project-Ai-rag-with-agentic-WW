@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>02 หนึ่งข้อความใน pipeline</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500;600&family=Noto+Sans+Thai:wght@400;500;600&family=Noto+Serif+Thai:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --paper: #f5f5f5; --paper-2: #ececec; --ink: #1a1a1a; --muted: #6b6b6b; --soft: #80868c;
+  --rule: rgba(26,26,26,0.12); --accent: #e30613; --accent-tint: rgba(227,6,19,0.06); --link: #0066b3;
+  --font-sans: 'Geist', 'Noto Sans Thai', system-ui, sans-serif;
+  --font-serif: 'Instrument Serif', 'Noto Serif Thai', serif;
+  --font-mono: 'Geist Mono', ui-monospace, monospace;
+}
+body { font-family: var(--font-sans); background: var(--paper); color: var(--ink); padding: 2.5rem 16px 3rem; line-height: 1.6; }
+.frame { max-width: 1320px; margin: 0 auto; }
+nav.crumbs { font-family: var(--font-mono); font-size: 0.72rem; letter-spacing: 0.04em; color: var(--muted); margin-bottom: 1.75rem; display: flex; gap: 1.25rem; flex-wrap: wrap; }
+nav.crumbs a { color: var(--link); text-decoration: none; }
+nav.crumbs a:hover { text-decoration: underline; }
+.eyebrow { font-family: var(--font-mono); font-size: 0.66rem; font-weight: 500; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); margin-bottom: 0.5rem; }
+h1 { font-family: var(--font-serif); font-size: clamp(1.6rem, 2.4vw + 0.8rem, 2.2rem); font-weight: 400; letter-spacing: -0.01em; line-height: 1.2; margin-bottom: 0.75rem; }
+.lede { max-width: 76ch; color: var(--muted); font-size: 0.95rem; margin-bottom: 1.75rem; }
+code { font-family: var(--font-mono); font-size: 0.82em; color: var(--ink); background: rgba(26,26,26,0.05); padding: 0 0.3em; border-radius: 3px; }
+.tbd { font-family: var(--font-mono); font-size: 0.7rem; color: var(--accent); border: 1px solid rgba(227,6,19,0.4); border-radius: 3px; padding: 0 0.35em; white-space: nowrap; }
+.diagram-container { width: 100%; overflow-x: auto; margin-bottom: 2rem; }
+.diagram-container svg { width: 100%; display: block; }
+.cards { display: grid; grid-template-columns: 1.15fr 1fr 0.85fr; gap: 1rem; }
+.card { background: #ffffff; border: 1px solid var(--rule); border-radius: 6px; padding: 1.25rem; min-width: 0; }
+.card h3 { font-size: 0.95rem; font-weight: 600; display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.6rem; }
+.card h3 a { color: var(--ink); text-decoration: none; }
+.card h3 a:hover { color: var(--link); }
+.card ul, .card ol { padding-left: 1.1rem; font-size: 0.86rem; }
+.card li { margin-bottom: 0.3rem; }
+.card p { font-size: 0.86rem; color: var(--muted); margin-bottom: 0.4rem; }
+.card table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+.card td, .card th { text-align: left; padding: 0.25rem 0.4rem 0.25rem 0; border-bottom: 1px solid var(--rule); vertical-align: top; }
+.card th { font-weight: 600; font-size: 0.78rem; color: var(--muted); }
+.dot { width: 7px; height: 7px; border-radius: 50%; display: inline-block; flex: none; }
+.dot.ink { background: var(--ink); } .dot.accent { background: var(--accent); } .dot.link { background: var(--link); } .dot.soft { background: var(--soft); }
+footer { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid var(--rule); font-family: var(--font-mono); font-size: 0.68rem; color: var(--muted); letter-spacing: 0.04em; }
+@media (max-width: 860px) { .cards { grid-template-columns: 1fr; } }
+.diagram-container svg { min-width: 1280px; }
+@media print { .diagram-container { overflow-x: visible; } .diagram-container svg { min-width: 0; } }
+</style>
+</head>
+<body>
+<div class="frame">
+<nav class="crumbs"><a href="index.html">← สารบัญ</a> <a href="01-system.html">‹ ก่อนหน้า</a> <a href="03-handoff-states.html">ถัดไป ›</a></nav>
+<p class="eyebrow">02 · FLOWCHART · LINE_PROD · 26 ต.ค. 2026</p>
+<h1>หนึ่งข้อความเดินผ่านอะไรบ้าง</h1>
+<p class="lede">ทุกข้อความผ่านด่านตามลำดับเดียวกัน กฎในโค้ดตัดสินก่อน AI ทุกครั้ง AI ถูกเรียกเฉพาะเมื่อจำเป็น และไม่ว่าทางไหนก็ต้องจบที่ <b>sendGuard</b> ก่อนถึงลูกค้า</p>
+<div class="diagram-container">
+<svg viewBox="0 0 1280 920" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="message-flow-title message-flow-desc">
+<title id="message-flow-title">หนึ่งข้อความใน pipeline</title>
+<desc id="message-flow-desc">Each event passes handoff_check and code rules before the AI gateway call, then validation and a final sendGuard check that decides between replying, staying silent, or handing off to staff.</desc>
+<defs>
+  <marker id="arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#6b6b6b"/></marker>
+  <marker id="arrow-accent" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#e30613"/></marker>
+  <marker id="arrow-link" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#0066b3"/></marker>
+  <marker id="arrow-open" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polyline points="0 0, 8 3, 0 6" fill="none" stroke="#6b6b6b" stroke-width="1.2"/></marker>
+</defs>
+<rect width="100%" height="100%" fill="#f5f5f5"/>
+<path d="M 560,80 V 120" fill="none" stroke="#6b6b6b" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M 560,200 V 248" fill="none" stroke="#6b6b6b" stroke-width="1.2" marker-end="url(#arrow)"/>
+<rect x="568" y="218" width="52" height="12" rx="2" fill="#f5f5f5"/><text x="594" y="227" fill="#6b6b6b" font-size="8" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle" letter-spacing="0.06em">CONTINUE</text>
+<path d="M 464,160 H 220 Q 212,160 212,168 V 668" fill="none" stroke="#6b6b6b" stroke-width="1.2" marker-end="url(#arrow)"/>
+<rect x="318" y="140" width="44" height="12" rx="2" fill="#f5f5f5"/><text x="340" y="149" fill="#6b6b6b" font-size="8" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle" letter-spacing="0.06em">SILENT</text>
+<path d="M 656,160 H 852 Q 860,160 860,168 V 268" fill="none" stroke="#6b6b6b" stroke-width="1.2" marker-end="url(#arrow)"/>
+<rect x="716" y="140" width="80" height="12" rx="2" fill="#f5f5f5"/><text x="756" y="149" fill="#6b6b6b" font-size="8" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle" letter-spacing="0.06em">TALK_TO_STAFF</text>
+<path d="M 560,328 V 376" fill="none" stroke="#6b6b6b" stroke-width="1.2" marker-end="url(#arrow)"/>
+<rect x="568" y="346" width="52" height="12" rx="2" fill="#f5f5f5"/><text x="594" y="355" fill="#6b6b6b" font-size="8" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle" letter-spacing="0.06em">NEEDS AI</text>
+<path d="M 656,288 H 760" fill="none" stroke="#6b6b6b" stroke-width="1.2" marker-end="url(#arrow)"/>
+<rect x="678" y="268" width="60" height="12" rx="2" fill="#f5f5f5"/><text x="708" y="277" fill="#6b6b6b" font-size="8" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle" letter-spacing="0.06em">RULE MATCH</text>
+<path d="M 464,288 H 388 Q 380,288 380,296 V 596 Q 380,604 388,604 H 556" fill="none" stroke="#6b6b6b" stroke-width="1.2"/>
+<rect x="388" y="442" width="80" height="12" rx="2" fill="#f5f5f5"/><text x="428" y="451" fill="#6b6b6b" font-size="8" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle" letter-spacing="0.06em">FAQ · POSTBACK</text>
+<path d="M 560,440 V 480" fill="none" stroke="#6b6b6b" stroke-width="1.2" marker-end="url(#arrow)"/>
+<rect x="568" y="454" width="52" height="12" rx="2" fill="#f5f5f5"/><text x="594" y="463" fill="#6b6b6b" font-size="8" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle" letter-spacing="0.06em">AIRESULT</text>
+<path d="M 664,408 H 892 Q 900,408 900,400 V 308" fill="none" stroke="#6b6b6b" stroke-width="1.2" marker-end="url(#arrow)"/>
+<rect x="754" y="388" width="52" height="12" rx="2" fill="#f5f5f5"/><text x="780" y="397" fill="#6b6b6b" font-size="8" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle" letter-spacing="0.06em">AI ERROR</text>
+<path d="M 560,560 V 648" fill="none" stroke="#6b6b6b" stroke-width="1.2" marker-end="url(#arrow)"/>
+<rect x="568" y="574" width="32" height="12" rx="2" fill="#f5f5f5"/><text x="584" y="583" fill="#6b6b6b" font-size="8" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle" letter-spacing="0.06em">PASS</text>
+<path d="M 560,728 V 776" fill="none" stroke="#e30613" stroke-width="1.2" marker-end="url(#arrow-accent)"/>
+<rect x="568" y="746" width="28" height="12" rx="2" fill="#f5f5f5"/><text x="582" y="755" fill="#e30613" font-size="8" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle" letter-spacing="0.06em">BOT</text>
+<path d="M 464,688 H 312" fill="none" stroke="#6b6b6b" stroke-width="1.2" marker-end="url(#arrow)"/>
+<rect x="352" y="668" width="72" height="12" rx="2" fill="#f5f5f5"/><text x="388" y="677" fill="#6b6b6b" font-size="8" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle" letter-spacing="0.06em">HUMAN · KILL</text>
+<circle cx="560" cy="604" r="4" fill="#1a1a1a"/>
+<rect x="456" y="40" width="208" height="40" rx="20" fill="#f5f5f5"/><rect x="456" y="40" width="208" height="40" rx="20" fill="#ffffff" stroke="#1a1a1a" stroke-width="1"/><text x="560" y="64" fill="#1a1a1a" font-size="12" font-weight="600" font-family="'Geist', 'Noto Sans Thai', system-ui, sans-serif" text-anchor="middle">รับ event + prepare</text>
+<polygon points="560,120 656,160 560,200 464,160" fill="#f5f5f5"/><polygon points="560,120 656,160 560,200 464,160" fill="#ffffff" stroke="#1a1a1a" stroke-width="1"/><text x="560" y="159" fill="#1a1a1a" font-size="12" font-weight="600" font-family="'Geist', 'Noto Sans Thai', system-ui, sans-serif" text-anchor="middle">ไปต่อหา AI?</text><text x="560" y="174" fill="#6b6b6b" font-size="9" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle">handoff_check</text>
+<polygon points="560,248 656,288 560,328 464,288" fill="#f5f5f5"/><polygon points="560,248 656,288 560,328 464,288" fill="#ffffff" stroke="#1a1a1a" stroke-width="1"/><text x="560" y="287" fill="#1a1a1a" font-size="12" font-weight="600" font-family="'Geist', 'Noto Sans Thai', system-ui, sans-serif" text-anchor="middle">ต้องใช้ AI?</text><text x="560" y="302" fill="#6b6b6b" font-size="9" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle">rules</text>
+<rect x="456" y="376" width="208" height="64" rx="6" fill="#f5f5f5"/>
+<rect x="456" y="376" width="208" height="64" rx="6" fill="#ffffff" stroke="#1a1a1a" stroke-width="1"/>
+<rect x="464" y="382" width="28" height="12" rx="2" fill="transparent" stroke="#1a1a1a" stroke-opacity="0.45" stroke-width="0.8"/><text x="478" y="391" fill="rgba(26,26,26,0.70)" font-size="7" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle" letter-spacing="0.08em">STEP</text>
+<text x="560" y="413" fill="#1a1a1a" font-size="12" font-weight="600" font-family="'Geist', 'Noto Sans Thai', system-ui, sans-serif" text-anchor="middle">เรียก AI gateway</text>
+<text x="560" y="428" fill="#6b6b6b" font-size="9" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle">call_ai → update_state</text>
+<polygon points="560,480 656,520 560,560 464,520" fill="#f5f5f5"/><polygon points="560,480 656,520 560,560 464,520" fill="#ffffff" stroke="#1a1a1a" stroke-width="1"/><text x="560" y="519" fill="#1a1a1a" font-size="12" font-weight="600" font-family="'Geist', 'Noto Sans Thai', system-ui, sans-serif" text-anchor="middle">ข้อมูลถูกไหม?</text><text x="560" y="534" fill="#6b6b6b" font-size="9" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle">validate</text>
+<polygon points="560,648 656,688 560,728 464,688" fill="#f5f5f5"/><polygon points="560,648 656,688 560,728 464,688" fill="rgba(227,6,19,0.06)" stroke="#e30613" stroke-width="1.2"/><text x="560" y="687" fill="#1a1a1a" font-size="12" font-weight="600" font-family="'Geist', 'Noto Sans Thai', system-ui, sans-serif" text-anchor="middle">ยังเป็น bot?</text><text x="560" y="702" fill="#6b6b6b" font-size="9" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle">sendGuard</text>
+<rect x="456" y="776" width="208" height="40" rx="20" fill="#f5f5f5"/><rect x="456" y="776" width="208" height="40" rx="20" fill="#ffffff" stroke="#1a1a1a" stroke-width="1"/><text x="560" y="800" fill="#1a1a1a" font-size="12" font-weight="600" font-family="'Geist', 'Noto Sans Thai', system-ui, sans-serif" text-anchor="middle">ตอบลูกค้า (reply / push)</text>
+<rect x="760" y="268" width="200" height="40" rx="20" fill="#f5f5f5"/><rect x="760" y="268" width="200" height="40" rx="20" fill="rgba(26,26,26,0.03)" stroke="rgba(26,26,26,0.30)" stroke-width="1"/><text x="860" y="292" fill="#1a1a1a" font-size="12" font-weight="600" font-family="'Geist', 'Noto Sans Thai', system-ui, sans-serif" text-anchor="middle">ส่งต่อพนักงาน</text>
+<rect x="112" y="668" width="200" height="40" rx="20" fill="#f5f5f5"/><rect x="112" y="668" width="200" height="40" rx="20" fill="rgba(26,26,26,0.03)" stroke="rgba(26,26,26,0.30)" stroke-width="1"/><text x="212" y="692" fill="#1a1a1a" font-size="12" font-weight="600" font-family="'Geist', 'Noto Sans Thai', system-ui, sans-serif" text-anchor="middle">ไม่ตอบ (บันทึกไว้)</text>
+<text x="704" y="64" fill="#6b6b6b" font-size="14" font-style="italic" font-family="'Instrument Serif', 'Noto Serif Thai', serif" text-anchor="start">handoff_check คืน RESUMED / ALREADY_BOT</text>
+<text x="704" y="82" fill="#6b6b6b" font-size="14" font-style="italic" font-family="'Instrument Serif', 'Noto Serif Thai', serif" text-anchor="start">→ ตอบสั้นๆ ผ่าน sendGuard แล้วจบรอบ</text>
+<text x="688" y="452" fill="#6b6b6b" font-size="14" font-style="italic" font-family="'Instrument Serif', 'Noto Serif Thai', serif" text-anchor="start">ถามกลับเกิน 2 ครั้งติดกัน → ส่งต่อพนักงาน</text>
+<text x="688" y="470" fill="#6b6b6b" font-size="14" font-style="italic" font-family="'Instrument Serif', 'Noto Serif Thai', serif" text-anchor="start">AI ไม่บอกว่าควรส่งต่อเอง (รอคำตอบ)</text>
+<text x="688" y="516" fill="#6b6b6b" font-size="14" font-style="italic" font-family="'Instrument Serif', 'Noto Serif Thai', serif" text-anchor="start">validate ไม่ผ่าน → ถามกลับ 1 ครั้ง</text>
+<text x="688" y="534" fill="#6b6b6b" font-size="14" font-style="italic" font-family="'Instrument Serif', 'Noto Serif Thai', serif" text-anchor="start">ไม่ผ่านซ้ำ → ส่งต่อพนักงาน</text>
+<line x1="40" y1="856" x2="1240" y2="856" stroke="rgba(26,26,26,0.10)" stroke-width="0.8"/>
+<text x="40" y="880" fill="#6b6b6b" font-size="8" font-family="'Geist Mono', ui-monospace, monospace" letter-spacing="0.14em">LEGEND</text>
+<rect x="120" y="870" width="22" height="14" rx="7" fill="#ffffff" stroke="#1a1a1a" stroke-width="1"/>
+<text x="150" y="881" fill="#6b6b6b" font-size="11" font-family="'Geist', 'Noto Sans Thai', system-ui, sans-serif">เริ่ม / จบ</text>
+<rect x="226" y="870" width="20" height="14" rx="3" fill="#ffffff" stroke="#1a1a1a" stroke-width="1"/>
+<text x="256" y="881" fill="#6b6b6b" font-size="11" font-family="'Geist', 'Noto Sans Thai', system-ui, sans-serif">ขั้นทำงาน</text>
+<polygon points="342,869 352,877 342,885 332,877" fill="#ffffff" stroke="#1a1a1a" stroke-width="1"/>
+<text x="362" y="881" fill="#6b6b6b" font-size="11" font-family="'Geist', 'Noto Sans Thai', system-ui, sans-serif">จุดตัดสิน</text>
+<rect x="430" y="870" width="20" height="14" rx="3" fill="rgba(227,6,19,0.06)" stroke="#e30613" stroke-width="1"/>
+<text x="460" y="881" fill="#6b6b6b" font-size="11" font-family="'Geist', 'Noto Sans Thai', system-ui, sans-serif">ด่านสุดท้าย</text>
+<line x1="544" y1="877" x2="566" y2="877" stroke="#6b6b6b" stroke-width="1.2" marker-end="url(#arrow)"/>
+<text x="574" y="881" fill="#6b6b6b" font-size="11" font-family="'Geist', 'Noto Sans Thai', system-ui, sans-serif">ทางไป</text>
+<line x1="638" y1="877" x2="660" y2="877" stroke="#e30613" stroke-width="1.2" marker-end="url(#arrow-accent)"/>
+<text x="668" y="881" fill="#6b6b6b" font-size="11" font-family="'Geist', 'Noto Sans Thai', system-ui, sans-serif">ทางหลัก</text>
+</svg>
+</div>
+<div class="cards">
+<div class="card"><h3><span class="dot ink"></span>ลำดับขั้นจริงในโค้ด</h3><table>
+<tr><th>#</th><th>ขั้น</th><th>ไฟล์</th></tr>
+<tr><td>1–2</td><td>webhook → คิว procrastinate (lock ต่อ user)</td><td><code>api/webhook</code>, <code>worker/tasks</code></td></tr>
+<tr><td>3</td><td>prepare: user, conversation, redact, รูป, แชทย้อนหลัง 4, consent</td><td><code>steps/prepare</code></td></tr>
+<tr><td>4</td><td>handoff_check</td><td><code>steps/handoff_check</code></td></tr>
+<tr><td>5</td><td>rules: ร้องเรียน/ขอคน, FAQ, Vendor 1, ถี่ผิดปกติ, postback</td><td><code>steps/rules</code></td></tr>
+<tr><td>6–7</td><td>call_ai → update_state</td><td><code>steps/call_ai</code>, <code>update_state</code></td></tr>
+<tr><td>8</td><td>validate: SKU/ราคา/ลิงก์, ลบลิงก์แปลกปลอม, สร้างการ์ด</td><td><code>steps/validate</code></td></tr>
+<tr><td>9</td><td>send (sendGuard)</td><td><code>steps/send</code></td></tr>
+</table></div>
+<div class="card"><h3><span class="dot accent"></span>sendGuard ทำไมเป็นด่านสุดท้าย</h3><ul>
+<li>อ่านสถานะ<b>ล่าสุด</b>จาก Postgres ก่อนส่งทุกครั้ง เพราะระหว่างรอ AI (2–43 วิ) ลูกค้าอาจกดขอพนักงาน ครบ 6 ชม. หรือพนักงานกด /close</li>
+<li><code>human</code> หรือ kill switch เปิด → ทิ้งคำตอบ + log เหตุผล</li>
+<li>บันทึกสถานะขาออก<b>ก่อน</b>ส่ง กันส่งซ้ำตอน retry; push ใช้ <code>X-Line-Retry-Key</code></li>
+<li>replyToken เกิน 50 วิ → ใช้ push แทน (นับโควตาข้อความของ OA)</li>
+</ul></div>
+<div class="card"><h3><span class="dot soft"></span>ทางแยกที่ไปหาพนักงาน / ไม่ตอบ</h3><ul>
+<li><b>TALK_TO_STAFF</b>: ลูกค้ากดปุ่มหรือพิมพ์ขอเอง</li>
+<li><b>RULE MATCH</b>: ร้องเรียน / เคลม / ขอคน ไม่เรียก AI (จับแบบ substring "ไม่ต้องคุยกับพนักงาน" ก็ส่งต่อ)</li>
+<li><b>AI ERROR</b>: ลองซ้ำแล้วยังล่ม → ข้อความเสี่ยงส่งต่อ ไม่งั้นขอโทษ + ปุ่มคุยกับพนักงาน</li>
+<li>ถามกลับเกิน <code>CLARIFY_MAX</code>, validate ไม่ผ่านซ้ำ → ส่งต่อ</li>
+<li><b>ไม่ตอบ</b>: สถานะ human, keyword Vendor 1, ส่งถี่เกิน (ตอบเตือนครั้งเดียว)</li>
+</ul></div>
+</div>
+<footer>แหล่ง: โค้ดใน branch <code>feat/python-impl</code> + docs/Line_ai_bot.md · docs/decisions.md (อัปเดต 26 ต.ค. 2026) · ป้าย <span class="tbd">รอคำตอบ</span> = ยังไม่รู้คำตอบจากเจ้าของระบบ</footer>
+</div>
+</body>
+</html>

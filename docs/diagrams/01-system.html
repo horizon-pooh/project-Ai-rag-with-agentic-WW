@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>01 line_prod — ภาพรวมระบบ</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500;600&family=Noto+Sans+Thai:wght@400;500;600&family=Noto+Serif+Thai:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --paper: #f5f5f5; --paper-2: #ececec; --ink: #1a1a1a; --muted: #6b6b6b; --soft: #80868c;
+  --rule: rgba(26,26,26,0.12); --accent: #e30613; --accent-tint: rgba(227,6,19,0.06); --link: #0066b3;
+  --font-sans: 'Geist', 'Noto Sans Thai', system-ui, sans-serif;
+  --font-serif: 'Instrument Serif', 'Noto Serif Thai', serif;
+  --font-mono: 'Geist Mono', ui-monospace, monospace;
+}
+body { font-family: var(--font-sans); background: var(--paper); color: var(--ink); padding: 2.5rem 16px 3rem; line-height: 1.6; }
+.frame { max-width: 1320px; margin: 0 auto; }
+nav.crumbs { font-family: var(--font-mono); font-size: 0.72rem; letter-spacing: 0.04em; color: var(--muted); margin-bottom: 1.75rem; display: flex; gap: 1.25rem; flex-wrap: wrap; }
+nav.crumbs a { color: var(--link); text-decoration: none; }
+nav.crumbs a:hover { text-decoration: underline; }
+.eyebrow { font-family: var(--font-mono); font-size: 0.66rem; font-weight: 500; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); margin-bottom: 0.5rem; }
+h1 { font-family: var(--font-serif); font-size: clamp(1.6rem, 2.4vw + 0.8rem, 2.2rem); font-weight: 400; letter-spacing: -0.01em; line-height: 1.2; margin-bottom: 0.75rem; }
+.lede { max-width: 76ch; color: var(--muted); font-size: 0.95rem; margin-bottom: 1.75rem; }
+code { font-family: var(--font-mono); font-size: 0.82em; color: var(--ink); background: rgba(26,26,26,0.05); padding: 0 0.3em; border-radius: 3px; }
+.tbd { font-family: var(--font-mono); font-size: 0.7rem; color: var(--accent); border: 1px solid rgba(227,6,19,0.4); border-radius: 3px; padding: 0 0.35em; white-space: nowrap; }
+.diagram-container { width: 100%; overflow-x: auto; margin-bottom: 2rem; }
+.diagram-container svg { width: 100%; display: block; }
+.cards { display: grid; grid-template-columns: 1.15fr 1fr 0.85fr; gap: 1rem; }
+.card { background: #ffffff; border: 1px solid var(--rule); border-radius: 6px; padding: 1.25rem; min-width: 0; }
+.card h3 { font-size: 0.95rem; font-weight: 600; display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.6rem; }
+.card h3 a { color: var(--ink); text-decoration: none; }
+.card h3 a:hover { color: var(--link); }
+.card ul, .card ol { padding-left: 1.1rem; font-size: 0.86rem; }
+.card li { margin-bottom: 0.3rem; }
+.card p { font-size: 0.86rem; color: var(--muted); margin-bottom: 0.4rem; }
+.card table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+.card td, .card th { text-align: left; padding: 0.25rem 0.4rem 0.25rem 0; border-bottom: 1px solid var(--rule); vertical-align: top; }
+.card th { font-weight: 600; font-size: 0.78rem; color: var(--muted); }
+.dot { width: 7px; height: 7px; border-radius: 50%; display: inline-block; flex: none; }
+.dot.ink { background: var(--ink); } .dot.accent { background: var(--accent); } .dot.link { background: var(--link); } .dot.soft { background: var(--soft); }
+footer { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid var(--rule); font-family: var(--font-mono); font-size: 0.68rem; color: var(--muted); letter-spacing: 0.04em; }
+@media (max-width: 860px) { .cards { grid-template-columns: 1fr; } }
+.diagram-container svg { min-width: 1280px; }
+@media print { .diagram-container { overflow-x: visible; } .diagram-container svg { min-width: 0; } }
+</style>
+</head>
+<body>
+<div class="frame">
+<nav class="crumbs"><a href="index.html">← สารบัญ</a> <a href="02-message-flow.html">ถัดไป ›</a></nav>
+<p class="eyebrow">01 · ARCHITECTURE · LINE_PROD · 26 ต.ค. 2026</p>
+<h1>ภาพรวมระบบบน server บริษัท</h1>
+<p class="lede">ระบบเราอยู่ระหว่าง LINE กับ AI gateway บนเครื่องเดียว (Docker Compose) <b>Postgres เก็บทุกอย่าง</b> รวมถึงคิวงาน และ <b>Worker</b> เป็นตัวตัดสินทุกอย่าง AI gateway ค้นสินค้าและตอบเอง เราส่งแชทย้อนหลังที่ redact แล้วเข้าไป แล้วตรวจผลก่อนส่งให้ลูกค้า</p>
+<div class="diagram-container">
+<svg viewBox="0 0 1280 720" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="system-title system-desc">
+<title id="system-title">line_prod — ภาพรวมระบบ</title>
+<desc id="system-desc">LINE webhooks pass through Caddy to the API, which stores raw events and queue jobs in Postgres; the Worker runs the pipeline, calls the external AI gateway, and replies through sendGuard while a watchdog monitors the queue.</desc>
+<defs>
+  <marker id="arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#6b6b6b"/></marker>
+  <marker id="arrow-accent" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#e30613"/></marker>
+  <marker id="arrow-link" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#0066b3"/></marker>
+  <marker id="arrow-open" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polyline points="0 0, 8 3, 0 6" fill="none" stroke="#6b6b6b" stroke-width="1.2"/></marker>
+</defs>
+<rect width="100%" height="100%" fill="#f5f5f5"/>
+<rect x="40" y="88" width="200" height="552" rx="8" fill="rgba(26,26,26,0.02)" stroke="rgba(26,26,26,0.14)" stroke-width="0.8"/><rect x="52" y="92" width="128" height="12" rx="2" fill="#f5f5f5"/><text x="116" y="101" fill="rgba(26,26,26,0.50)" font-size="7" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle" letter-spacing="0.14em">LINE · CUSTOMER SIDE</text>
+<rect x="280" y="88" width="720" height="552" rx="8" fill="rgba(26,26,26,0.02)" stroke="rgba(26,26,26,0.14)" stroke-width="0.8"/><rect x="292" y="92" width="188" height="12" rx="2" fill="#f5f5f5"/><text x="386" y="101" fill="rgba(26,26,26,0.50)" font-size="7" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle" letter-spacing="0.14em">COMPANY SERVER · DOCKER COMPOSE</text>
+<rect x="1040" y="88" width="200" height="552" rx="8" fill="rgba(26,26,26,0.02)" stroke="rgba(26,26,26,0.14)" stroke-width="0.8" stroke-dasharray="5,4"/><rect x="1052" y="92" width="76" height="12" rx="2" fill="#f5f5f5"/><text x="1090" y="101" fill="rgba(26,26,26,0.50)" font-size="7" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle" letter-spacing="0.14em">EXTERNAL AI</text>
+<path d="M 216,168 H 312" fill="none" stroke="#0066b3" stroke-width="1.2" marker-end="url(#arrow-link)"/>
+<rect x="240" y="148" width="44" height="12" rx="2" fill="#f5f5f5"/><text x="262" y="157" fill="#6b6b6b" font-size="8" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle" letter-spacing="0.06em">WEBHOOK</text>
+<path d="M 440,168 H 496" fill="none" stroke="#6b6b6b" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M 672,168 H 736" fill="none" stroke="#6b6b6b" stroke-width="1.2" marker-end="url(#arrow)"/>
+<rect x="678" y="148" width="56" height="12" rx="2" fill="#f5f5f5"/><text x="706" y="157" fill="#6b6b6b" font-size="8" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle" letter-spacing="0.06em">RAW · JOB</text>
+<path d="M 800,200 V 304" fill="none" stroke="#6b6b6b" stroke-width="1.2" marker-end="url(#arrow)"/>
+<rect x="808" y="236" width="60" height="12" rx="2" fill="#f5f5f5"/><text x="838" y="245" fill="#6b6b6b" font-size="8" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle" letter-spacing="0.06em">JOB · LOCK</text>
+<path d="M 920,304 V 200" fill="none" stroke="#6b6b6b" stroke-width="1.2" marker-end="url(#arrow)"/>
+<rect x="836" y="262" width="76" height="12" rx="2" fill="#f5f5f5"/><text x="874" y="271" fill="#6b6b6b" font-size="8" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle" letter-spacing="0.06em">STATE · TRACE</text>
+<path d="M 908,400 V 480" fill="none" stroke="#6b6b6b" stroke-width="1.2" marker-end="url(#arrow)"/>
+<rect x="916" y="434" width="40" height="12" rx="2" fill="#f5f5f5"/><text x="936" y="443" fill="#6b6b6b" font-size="8" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle" letter-spacing="0.06em">IMAGES</text>
+<path d="M 968,336 H 1064" fill="none" stroke="#0066b3" stroke-width="1.2" marker-end="url(#arrow-link)"/>
+<rect x="992" y="316" width="44" height="12" rx="2" fill="#f5f5f5"/><text x="1014" y="325" fill="#6b6b6b" font-size="8" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle" letter-spacing="0.06em">CALL_AI</text>
+<path d="M 1064,368 H 968" fill="none" stroke="#0066b3" stroke-width="1" stroke-dasharray="5,4" marker-end="url(#arrow-link)"/>
+<rect x="988" y="376" width="48" height="12" rx="2" fill="#f5f5f5"/><text x="1012" y="385" fill="#6b6b6b" font-size="8" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle" letter-spacing="0.06em">MARKDOWN</text>
+<path d="M 704,336 H 264 Q 256,336 256,328 V 208 Q 256,200 248,200 H 216" fill="none" stroke="#e30613" stroke-width="1.2" marker-end="url(#arrow-accent)"/>
+<rect x="444" y="316" width="72" height="12" rx="2" fill="#f5f5f5"/><text x="480" y="325" fill="#e30613" font-size="8" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle" letter-spacing="0.06em">REPLY / PUSH</text>
+<path d="M 704,368 H 280 Q 272,368 272,376 V 488 Q 272,496 264,496 H 216" fill="none" stroke="#6b6b6b" stroke-width="1" stroke-dasharray="5,4" marker-end="url(#arrow-open)"/>
+<rect x="452" y="376" width="72" height="12" rx="2" fill="#f5f5f5"/><text x="488" y="385" fill="#6b6b6b" font-size="8" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle" letter-spacing="0.06em">NOTIFY · LOG</text>
+<path d="M 216,528 H 368 Q 376,528 376,520 V 376 a 8,8 0 0,0 0,-16 V 344 a 8,8 0 0,0 0,-16 V 200" fill="none" stroke="#6b6b6b" stroke-width="1" stroke-dasharray="5,4" marker-end="url(#arrow)"/>
+<rect x="384" y="442" width="40" height="12" rx="2" fill="#f5f5f5"/><text x="404" y="451" fill="#6b6b6b" font-size="8" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle" letter-spacing="0.06em">/CLOSE</text>
+<path d="M 640,480 V 376 a 8,8 0 0,0 0,-16 V 344 a 8,8 0 0,0 0,-16 V 232 Q 640,224 648,224 H 744 Q 752,224 752,216 V 200" fill="none" stroke="#6b6b6b" stroke-width="1" stroke-dasharray="5,4" marker-end="url(#arrow-open)"/>
+<rect x="648" y="420" width="40" height="12" rx="2" fill="#f5f5f5"/><text x="668" y="429" fill="#6b6b6b" font-size="8" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle" letter-spacing="0.06em">HEALTH</text>
+<rect x="64" y="136" width="152" height="80" rx="6" fill="#f5f5f5"/>
+<rect x="64" y="136" width="152" height="80" rx="6" fill="rgba(107,107,107,0.10)" stroke="#80868c" stroke-width="1"/>
+<rect x="72" y="142" width="32" height="12" rx="2" fill="transparent" stroke="#80868c" stroke-opacity="0.45" stroke-width="0.8"/><text x="88" y="151" fill="#80868c" font-size="7" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle" letter-spacing="0.08em">LINE</text>
+<text x="140" y="181" fill="#1a1a1a" font-size="12" font-weight="600" font-family="'Geist', 'Noto Sans Thai', system-ui, sans-serif" text-anchor="middle">LINE OA</text>
+<text x="140" y="196" fill="#6b6b6b" font-size="9" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle">Messaging API</text>
+<rect x="64" y="480" width="152" height="64" rx="6" fill="#f5f5f5"/>
+<rect x="64" y="480" width="152" height="64" rx="6" fill="rgba(26,26,26,0.03)" stroke="rgba(26,26,26,0.30)" stroke-width="1"/>
+<rect x="72" y="486" width="36" height="12" rx="2" fill="transparent" stroke="rgba(26,26,26,0.30)" stroke-opacity="0.45" stroke-width="0.8"/><text x="90" y="495" fill="rgba(26,26,26,0.55)" font-size="7" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle" letter-spacing="0.08em">HUMAN</text>
+<text x="140" y="517" fill="#1a1a1a" font-size="12" font-weight="600" font-family="'Geist', 'Noto Sans Thai', system-ui, sans-serif" text-anchor="middle">Call center</text>
+<text x="140" y="532" fill="#6b6b6b" font-size="9" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle">OA Manager · /close</text>
+<rect x="312" y="136" width="128" height="64" rx="6" fill="#f5f5f5"/>
+<rect x="312" y="136" width="128" height="64" rx="6" fill="#ffffff" stroke="#1a1a1a" stroke-width="1"/>
+<rect x="320" y="142" width="32" height="12" rx="2" fill="transparent" stroke="#1a1a1a" stroke-opacity="0.45" stroke-width="0.8"/><text x="336" y="151" fill="rgba(26,26,26,0.70)" font-size="7" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle" letter-spacing="0.08em">EDGE</text>
+<text x="376" y="173" fill="#1a1a1a" font-size="12" font-weight="600" font-family="'Geist', 'Noto Sans Thai', system-ui, sans-serif" text-anchor="middle">Caddy</text>
+<text x="376" y="188" fill="#6b6b6b" font-size="9" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle">HTTPS :443</text>
+<rect x="496" y="136" width="176" height="64" rx="6" fill="#f5f5f5"/>
+<rect x="496" y="136" width="176" height="64" rx="6" fill="#ffffff" stroke="#1a1a1a" stroke-width="1"/>
+<rect x="504" y="142" width="24" height="12" rx="2" fill="transparent" stroke="#1a1a1a" stroke-opacity="0.45" stroke-width="0.8"/><text x="516" y="151" fill="rgba(26,26,26,0.70)" font-size="7" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle" letter-spacing="0.08em">API</text>
+<text x="584" y="173" fill="#1a1a1a" font-size="12" font-weight="600" font-family="'Geist', 'Noto Sans Thai', system-ui, sans-serif" text-anchor="middle">API · FastAPI</text>
+<text x="584" y="188" fill="#6b6b6b" font-size="9" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle">webhook · fast_path · close</text>
+<rect x="736" y="136" width="232" height="64" rx="6" fill="#f5f5f5"/>
+<rect x="736" y="136" width="232" height="64" rx="6" fill="rgba(26,26,26,0.05)" stroke="#6b6b6b" stroke-width="1"/>
+<rect x="744" y="142" width="20" height="12" rx="2" fill="transparent" stroke="#6b6b6b" stroke-opacity="0.45" stroke-width="0.8"/><text x="754" y="151" fill="#6b6b6b" font-size="7" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle" letter-spacing="0.08em">DB</text>
+<text x="852" y="173" fill="#1a1a1a" font-size="12" font-weight="600" font-family="'Geist', 'Noto Sans Thai', system-ui, sans-serif" text-anchor="middle">Postgres 16</text>
+<text x="852" y="188" fill="#6b6b6b" font-size="9" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle">ข้อมูล · คิว procrastinate</text>
+<rect x="704" y="304" width="264" height="96" rx="6" fill="#f5f5f5"/>
+<rect x="704" y="304" width="264" height="96" rx="6" fill="rgba(227,6,19,0.06)" stroke="#e30613" stroke-width="1.2"/>
+<rect x="712" y="310" width="40" height="12" rx="2" fill="transparent" stroke="#e30613" stroke-opacity="0.45" stroke-width="0.8"/><text x="732" y="319" fill="rgba(227,6,19,0.85)" font-size="7" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle" letter-spacing="0.08em">WORKER</text>
+<text x="836" y="357" fill="#1a1a1a" font-size="12" font-weight="600" font-family="'Geist', 'Noto Sans Thai', system-ui, sans-serif" text-anchor="middle">Worker · pipeline</text>
+<text x="836" y="372" fill="#6b6b6b" font-size="9" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle">rules → call_ai → sendGuard</text>
+<rect x="496" y="480" width="176" height="64" rx="6" fill="#f5f5f5"/>
+<rect x="496" y="480" width="176" height="64" rx="6" fill="#ffffff" stroke="#1a1a1a" stroke-width="1"/>
+<rect x="504" y="486" width="24" height="12" rx="2" fill="transparent" stroke="#1a1a1a" stroke-opacity="0.45" stroke-width="0.8"/><text x="516" y="495" fill="rgba(26,26,26,0.70)" font-size="7" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle" letter-spacing="0.08em">OPS</text>
+<text x="584" y="517" fill="#1a1a1a" font-size="12" font-weight="600" font-family="'Geist', 'Noto Sans Thai', system-ui, sans-serif" text-anchor="middle">watchdog</text>
+<text x="584" y="532" fill="#6b6b6b" font-size="9" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle">ทุก 1 นาที → แจ้งผู้ดูแล</text>
+<rect x="848" y="480" width="120" height="64" rx="6" fill="#f5f5f5"/>
+<rect x="848" y="480" width="120" height="64" rx="6" fill="rgba(26,26,26,0.05)" stroke="#6b6b6b" stroke-width="1"/>
+<rect x="856" y="486" width="20" height="12" rx="2" fill="transparent" stroke="#6b6b6b" stroke-opacity="0.45" stroke-width="0.8"/><text x="866" y="495" fill="#6b6b6b" font-size="7" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle" letter-spacing="0.08em">S3</text>
+<text x="908" y="517" fill="#1a1a1a" font-size="12" font-weight="600" font-family="'Geist', 'Noto Sans Thai', system-ui, sans-serif" text-anchor="middle">MinIO</text>
+<text x="908" y="532" fill="#6b6b6b" font-size="9" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle">รูป 30 วัน</text>
+<rect x="1064" y="320" width="152" height="64" rx="6" fill="#f5f5f5"/>
+<rect x="1064" y="320" width="152" height="64" rx="6" fill="rgba(26,26,26,0.03)" stroke="rgba(26,26,26,0.30)" stroke-width="1"/>
+<rect x="1072" y="326" width="24" height="12" rx="2" fill="transparent" stroke="rgba(26,26,26,0.30)" stroke-opacity="0.45" stroke-width="0.8"/><text x="1084" y="335" fill="rgba(26,26,26,0.55)" font-size="7" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle" letter-spacing="0.08em">EXT</text>
+<text x="1140" y="357" fill="#1a1a1a" font-size="12" font-weight="600" font-family="'Geist', 'Noto Sans Thai', system-ui, sans-serif" text-anchor="middle">AI gateway</text>
+<text x="1140" y="372" fill="#6b6b6b" font-size="9" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle">OpenAI chat</text>
+<text x="1140" y="408" fill="#6b6b6b" font-size="11" font-family="'Geist', 'Noto Sans Thai', system-ui, sans-serif" text-anchor="middle">ค้นสินค้าเอง · 2–43 วิ</text>
+<text x="1140" y="426" fill="#6b6b6b" font-size="11" font-family="'Geist', 'Noto Sans Thai', system-ui, sans-serif" text-anchor="middle">รอคำตอบ: รูป · งานพร้อมกัน</text>
+<text x="584" y="568" fill="#6b6b6b" font-size="11" font-family="'Geist', 'Noto Sans Thai', system-ui, sans-serif" text-anchor="middle">log · Sentry · อีเมล (รอ SMTP)</text>
+<line x1="40" y1="656" x2="1240" y2="656" stroke="rgba(26,26,26,0.10)" stroke-width="0.8"/>
+<text x="40" y="680" fill="#6b6b6b" font-size="8" font-family="'Geist Mono', ui-monospace, monospace" letter-spacing="0.14em">LEGEND</text>
+<rect x="120" y="670" width="20" height="14" rx="3" fill="rgba(227,6,19,0.06)" stroke="#e30613" stroke-width="1"/>
+<text x="150" y="681" fill="#6b6b6b" font-size="11" font-family="'Geist', 'Noto Sans Thai', system-ui, sans-serif">จุดตัดสินใจ</text>
+<rect x="254" y="670" width="20" height="14" rx="3" fill="#ffffff" stroke="#1a1a1a" stroke-width="1"/>
+<text x="284" y="681" fill="#6b6b6b" font-size="11" font-family="'Geist', 'Noto Sans Thai', system-ui, sans-serif">บริการของเรา</text>
+<rect x="394" y="670" width="20" height="14" rx="3" fill="rgba(26,26,26,0.05)" stroke="#6b6b6b" stroke-width="1"/>
+<text x="424" y="681" fill="#6b6b6b" font-size="11" font-family="'Geist', 'Noto Sans Thai', system-ui, sans-serif">ที่เก็บข้อมูล</text>
+<rect x="541" y="670" width="20" height="14" rx="3" fill="rgba(26,26,26,0.03)" stroke="rgba(26,26,26,0.30)" stroke-width="1"/>
+<text x="571" y="681" fill="#6b6b6b" font-size="11" font-family="'Geist', 'Noto Sans Thai', system-ui, sans-serif">ภายนอก / คน</text>
+<line x1="675" y1="677" x2="697" y2="677" stroke="#0066b3" stroke-width="1.2" marker-end="url(#arrow-link)"/>
+<text x="705" y="681" fill="#6b6b6b" font-size="11" font-family="'Geist', 'Noto Sans Thai', system-ui, sans-serif">HTTP / LINE</text>
+<line x1="809" y1="677" x2="831" y2="677" stroke="#e30613" stroke-width="1.2" marker-end="url(#arrow-accent)"/>
+<text x="839" y="681" fill="#6b6b6b" font-size="11" font-family="'Geist', 'Noto Sans Thai', system-ui, sans-serif">ข้อความถึงลูกค้า</text>
+<line x1="975" y1="677" x2="997" y2="677" stroke="#6b6b6b" stroke-width="1.2" stroke-dasharray="5,4" marker-end="url(#arrow-open)"/>
+<text x="1005" y="681" fill="#6b6b6b" font-size="11" font-family="'Geist', 'Noto Sans Thai', system-ui, sans-serif">async / เฝ้าดู</text>
+<line x1="1128" y1="677" x2="1150" y2="677" stroke="#6b6b6b" stroke-width="1.2" stroke-dasharray="5,4" marker-end="url(#arrow)"/>
+<text x="1158" y="681" fill="#6b6b6b" font-size="11" font-family="'Geist', 'Noto Sans Thai', system-ui, sans-serif">ลิงก์</text>
+</svg>
+</div>
+<div class="cards">
+<div class="card"><h3><span class="dot ink"></span>ทางเดินของหนึ่งข้อความ</h3><ol>
+<li>LINE ยิง <code>POST /webhook</code> ผ่าน Caddy (HTTPS)</li>
+<li>API ตรวจ signature แล้ว<b>บันทึก raw event ลง Postgres</b> เก็บ replyToken แยกในตาราง <code>reply_tokens</code> (50 วิ) ใส่งานลงคิว แล้วตอบ 200</li>
+<li>คิวคือ <b>procrastinate บน Postgres ตัวเดียวกัน</b> ไม่มี Redis แล้ว (D-010) งานของ user เดียวกันรันทีละงานด้วย <code>lock</code></li>
+<li>Worker รัน pipeline (ดูภาพ 02) เรียก AI gateway พร้อมแชทย้อนหลัง 4 ข้อความ ได้คำตอบเป็น markdown</li>
+<li>ส่งเข้า LINE ผ่าน sendGuard เท่านั้น (reply ถ้า token ยังใช้ได้ ไม่งั้น push)</li>
+</ol></div>
+<div class="card"><h3><span class="dot accent"></span>จุดที่ต้องจำ</h3><ul>
+<li><b>Worker</b> เป็นที่เดียวที่ตัดสินใจ ข้อความถึงลูกค้าทุกข้อความผ่าน sendGuard</li>
+<li><b>fast_path</b> ใน API: "คุยกับพนักงาน" / "คุยกับ AI" เปลี่ยนสถานะทันที ไม่รอคิว (ภาพ 05)</li>
+<li><b>watchdog</b>: service แยก เฝ้าว่า worker ยังอยู่ คิวเดิน DB ต่อได้ — ไม่งั้นแจ้งผู้ดูแล (D-012)</li>
+<li><b>kill switch</b>: sendGuard อ่านก่อนส่งทุกครั้ง เปิดแล้วระบบไม่ตอบอะไร</li>
+<li>API ยังเสิร์ฟ <code>/static/no-image.png</code> = รูปแทนบนการ์ดสินค้า (D-013)</li>
+</ul></div>
+<div class="card"><h3><span class="dot soft"></span>ยังไม่รู้</h3><ul>
+<li>แจ้ง call center ผ่านช่องทางไหน — ตอนนี้แค่ log <span class="tbd">รอคำตอบ</span></li>
+<li>AI gateway รับรูปได้ไหม รับพร้อมกันได้กี่งาน <span class="tbd">รอคำตอบ</span></li>
+<li>SMTP / ผู้รับอีเมลแจ้งเตือนของ watchdog <span class="tbd">รอคำตอบ</span></li>
+<li>ยังไม่เคยรันบน Docker จริง (เครื่อง dev ไม่มี Docker)</li>
+</ul></div>
+</div>
+<footer>แหล่ง: โค้ดใน branch <code>feat/python-impl</code> + docs/Line_ai_bot.md · docs/decisions.md (อัปเดต 26 ต.ค. 2026) · ป้าย <span class="tbd">รอคำตอบ</span> = ยังไม่รู้คำตอบจากเจ้าของระบบ</footer>
+</div>
+</body>
+</html>

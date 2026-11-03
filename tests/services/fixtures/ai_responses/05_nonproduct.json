@@ -1,0 +1,33 @@
+{
+  "_meta": {
+    "captured": "2026-10-23",
+    "status": 200,
+    "latency_s": 2.6,
+    "request_messages": [
+      {
+        "role": "user",
+        "content": "ร้านเปิดกี่โมง"
+      }
+    ]
+  },
+  "id": "chatcmpl-76110ef5",
+  "object": "chat.completion",
+  "created": 1792740669,
+  "model": "gemma4-31b",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "โดยปกติแล้ว โฮมโปร (HomePro) ทุกสาขาจะเปิดให้บริการตั้งแต่เวลา 09:00 น. ถึง 21:00 น. ครับ\n\nอย่างไรก็ตาม เพื่อความแน่นอน ผมแนะนำให้คุณลูกค้าตรวจสอบเวลาเปิด-ปิด ของสาขาที่ต้องการเดินทางไปอีกครั้งผ่านทางเว็บไซต์หรือแอปพลิเคชันของ HomePro เนื่องจากบางสาขาอาจมีการปรับเปลี่ยนเวลาตามความเหมาะสมของพื้นที่ครับ",
+        "tool_calls": null
+      },
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 0,
+    "completion_tokens": 0,
+    "total_tokens": 0
+  }
+}

@@ -1,0 +1,219 @@
+"""app/config.py
+
+อ่าน env ทั้งหมดที่จุดเดียว ครั้งเดียวตอนเริ่ม ขาดค่าบังคับเมื่อไหร่หยุดทันที (fail fast)
+
+รายละเอียด:
+ - ใช้ pydantic-settings อ่านจาก .env (รายการตัวแปรดู .env.example)
+ - บังคับ: LINE_CHANNEL_SECRET, LINE_CHANNEL_ACCESS_TOKEN, DATABASE_URL (ไม่มี Redis แล้ว — คิวอยู่ Postgres, D-010)
+ - ห้ามข้ามการตรวจ signature ไม่ว่าโหมดไหน
+ - AI_TIMEOUT_S=60, TURN_DEADLINE_S=90 ตั้งจากความเร็วที่วัดจริง (D-011); AI_CONCURRENCY ยังรอคำตอบ
+ - STATE_TTL_HOURS=2, HANDOFF_TTL_HOURS=6
+ - token / key อยู่ที่นี่ที่เดียว ห้ามส่งเข้า AI API ห้ามลง log
+
+แนวคิดจาก: src/config/index.js (แบบเก่า)
+สถานะ: มีโค้ดแล้ว (Settings + get_settings) — ค่าที่ติด (เสนอ) ยังไม่ได้ยืนยัน
+"""
+
+from __future__ import annotations
+
+import re
+from datetime import time, timedelta
+from functools import lru_cache
+from pathlib import Path
+from typing import Literal
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
+
+from pydantic import Field, SecretStr, field_validator
+from pydantic_settings import BaseSettings, SettingsConfigDict
+
+_HOURS_RE = re.compile(r"^([01]\d|2[0-3]):([0-5]\d)-([01]\d|2[0-3]):([0-5]\d)$")
+_LOG_LEVELS = {"DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"}
+
+
+class Settings(BaseSettings):
+    """ค่าตั้งทั้งหมดของระบบ ชื่อฟิลด์ = ชื่อ env ตัวเล็ก (เช่น LINE_CHANNEL_SECRET -> line_channel_secret)
+
+    - env ที่เป็นค่าว่าง (เช่น `AI_TIMEOUT_S=` ใน .env.example) ถือว่าไม่ได้ตั้ง -> ใช้ค่าตั้งต้น
+      ค่าบังคับที่ว่าง = ขาด -> ValidationError ตอนเริ่ม
+    - secret เป็น SecretStr: repr/log เห็นเป็น ********** ต้องเรียก .get_secret_value() เอง
+    """
+
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        env_ignore_empty=True,
+        extra="ignore",
+        case_sensitive=False,
+    )
+
+    # --- LINE (บังคับ) ---
+    line_channel_secret: SecretStr
+    line_channel_access_token: SecretStr
+
+    # --- ที่เก็บข้อมูล (บังคับ) — URL อาจมีรหัสผ่าน จึงเป็น SecretStr ---
+    database_url: SecretStr
+
+    # --- AI API ภายนอก (gateway แบบ OpenAI ที่ค้นสินค้าเอง — วัดจริง 2026-10-23, docs/decisions.md D-011) ---
+    # ฐานของ API เช่น https://host/v1 (client ต่อ /chat/completions เอง); ว่าง -> AI client แบบ stub
+    ai_api_url: str | None = None
+    ai_api_key: SecretStr | None = None
+    # ชื่อ model ที่ GET {AI_API_URL}/models คืน
+    ai_model: str = Field(default="gemma4-31b", min_length=1)
+    ai_temperature: float = Field(default=0.2, ge=0, le=2)
+    # markdown = รูปแบบที่วัดได้จริง (MarkdownParser); json = สัญญาเสนอเดิมของเรา (JsonParser)
+    ai_response_format: Literal["markdown", "json"] = "markdown"
+    # (ไม่บังคับ) ไฟล์ system prompt ที่ใส่นำหน้า messages — ว่าง = ไม่ส่ง (gateway มี prompt ของตัวเอง)
+    ai_system_prompt_file: Path | None = None
+    # ส่งรูปที่ลูกค้าส่งมา (ย่อแล้ว ตัด EXIF) ให้ AI อ่านเป็น data URL แบบ OpenAI vision — รอคำตอบ: gateway/model รับรูปได้ไหม
+    # รูปไม่ถูก redact (อาจมีบัตร/หน้าคน) จึงปิดไว้ก่อน เปิดเมื่อยืนยันว่ารับได้และรับเรื่อง PDPA แล้ว
+    ai_send_images: bool = False
+    # วัดจริง: คำถามทั่วไป 2-7 วิ, ค้นสินค้า 22-43 วิ ต่อหนึ่งครั้ง -> 60 วิ เผื่อครั้งที่ช้า
+    ai_timeout_s: float = Field(default=60, gt=0)
+    # (เสนอ) ยังไม่รู้ว่า gateway รับพร้อมกันได้กี่งาน — รอคำตอบ
+    ai_concurrency: int = Field(default=4, ge=1)
+    # เพดานเวลารวมต่อข้อความ รวมทุกรอบที่ลองซ้ำ: หนึ่งครั้งอาจถึง ~45 วิ -> 90 วิ ให้ลองซ้ำได้หนึ่งครั้ง
+    # ถ้าครั้งแรกพังเร็ว (ต่อไม่ได้/5xx) — ครั้งแรกที่ timeout เต็ม 60 วิ ครั้งที่สองได้แค่ 30 วิที่เหลือ
+    turn_deadline_s: float = Field(default=90, gt=0)
+
+    # --- MinIO ---
+    minio_endpoint: str = "minio:9000"
+    minio_access_key: SecretStr | None = None
+    minio_secret_key: SecretStr | None = None
+    # (เสนอ)
+    minio_bucket: str = "line-images"
+    # (เสนอ) ใน docker compose คุยกันด้วย http
+    minio_secure: bool = False
+
+    # --- state / ส่งต่อพนักงาน ---
+    state_ttl_hours: float = Field(default=2, gt=0)
+    # นับจาก handoff_started_at
+    handoff_ttl_hours: float = Field(default=6, gt=0)
+    # (เสนอ) อายุ replyToken ที่เราเชื่อ (LINE ~1 นาที ต้องเช็คเอกสาร) — ค้นสินค้า 22-43 วิ ส่วนใหญ่ยัง reply ทัน
+    # ช้ากว่านี้ send ใช้ push เอง (กินโควตา push)
+    reply_token_ttl_s: int = Field(default=50, gt=0)
+    # (เสนอ) clarify ติดกันครบเท่านี้แล้วยัง clarify -> ส่งต่อ
+    clarify_max: int = Field(default=2, ge=1)
+    # (เสนอ) ข้อความต่อนาทีต่อ user เกินนี้ = ถี่ผิดปกติ
+    rate_limit_per_min: int = Field(default=10, ge=1)
+    # อายุลิงก์ /close
+    close_token_ttl_hours: float = Field(default=24, gt=0)
+    # ใช้สร้างลิงก์ /close เช่น https://bot.example.com (ไม่มี / ท้าย)
+    public_base_url: str | None = None
+
+    # --- retention (docs/Line_ai_bot.md หัวข้อ 8) — raw 90 วันอยู่ใน worker/cron.py ---
+    # (เสนอ) รูปเก็บสั้นกว่าข้อความ
+    image_retention_days: int = Field(default=30, ge=1)
+    # ข้อความและ trace เกินนี้ -> anonymize
+    trace_retention_months: int = Field(default=12, ge=1)
+
+    # --- แจ้ง call center (ช่องทางยังไม่ได้เลือก) ---
+    callcenter_notify_channel: str | None = None
+    callcenter_notify_target: str | None = None
+    # เวลาทำการ "HH:MM-HH:MM" ตาม timezone (ว่าง = ไม่รู้เวลาทำการ)
+    callcenter_hours: str | None = None
+    timezone: str = "Asia/Bangkok"
+
+    # --- ทางหลบ (OR กับ ops_flags ใน DB) ---
+    kill_switch: bool = False
+
+    # --- log และแจ้งเตือน ---
+    log_level: str = "INFO"
+    sentry_dsn: SecretStr | None = None
+
+    # --- watchdog (D-012): แจ้งคนเมื่อ worker ตายทั้งหมด / คิวไม่เดิน — service แยก `python -m app.worker.watchdog` ---
+    # ช่องทาง: ว่าง/log = log + Sentry; email = log + Sentry + อีเมลผ่าน SMTP (รอคำตอบ: SMTP ของบริษัท)
+    alert_channel: str | None = None
+    # ผู้รับ คั่นด้วย , (เช่น dev@x.co,lead@x.co)
+    alert_email_to: str | None = None
+    alert_email_from: str | None = None
+    smtp_host: str | None = None
+    smtp_port: int = Field(default=587, ge=1, le=65535)
+    smtp_user: str | None = None
+    smtp_password: SecretStr | None = None
+    smtp_starttls: bool = True
+    # ตรวจทุกเท่านี้ (วินาที)
+    watchdog_interval_s: float = Field(default=60, gt=0)
+    # ปัญหาต้องอยู่ต่อเนื่องนานเท่านี้ก่อนแจ้ง (deploy / restart worker ปกติมีช่วงไม่มี worker สั้นๆ)
+    watchdog_grace_s: float = Field(default=180, ge=0)
+    # heartbeat ล่าสุดของ worker เก่ากว่านี้ = ตายทั้งหมด (procrastinate ส่ง heartbeat ทุก 10 วิ)
+    watchdog_heartbeat_stale_s: float = Field(default=120, gt=0)
+    # raw event pending เก่ากว่านี้ = คิวไม่เดิน (requeue_pending ใส่คิวซ้ำที่ 2 นาทีอยู่แล้ว)
+    watchdog_pending_stale_s: float = Field(default=600, gt=0)
+    # ปัญหายังไม่หาย -> แจ้งซ้ำทุกเท่านี้
+    watchdog_repeat_s: float = Field(default=3600, gt=0)
+
+    # --- ไฟล์กฎ ---
+    rules_dir: Path = Path("prompts/rules")
+
+    @field_validator("public_base_url", "ai_api_url")
+    @classmethod
+    def _strip_trailing_slash(cls, v: str | None) -> str | None:
+        return v.rstrip("/") if v else v
+
+    @field_validator("callcenter_hours")
+    @classmethod
+    def _check_hours(cls, v: str | None) -> str | None:
+        if v is None:
+            return v
+        v = v.strip()
+        if not _HOURS_RE.match(v):
+            raise ValueError("CALLCENTER_HOURS ต้องเป็นรูป HH:MM-HH:MM เช่น 09:00-18:00")
+        return v
+
+    @field_validator("timezone")
+    @classmethod
+    def _check_timezone(cls, v: str) -> str:
+        try:
+            ZoneInfo(v)
+        except (ZoneInfoNotFoundError, ValueError) as e:
+            raise ValueError(f"TIMEZONE ไม่รู้จัก: {v}") from e
+        return v
+
+    @field_validator("log_level")
+    @classmethod
+    def _check_log_level(cls, v: str) -> str:
+        v = v.strip().upper()
+        if v not in _LOG_LEVELS:
+            raise ValueError(f"LOG_LEVEL ต้องเป็นหนึ่งใน {sorted(_LOG_LEVELS)}")
+        return v
+
+    # --- ค่าที่แปลงแล้ว (ใช้แทนตัวเลขดิบ) ---
+
+    @property
+    def state_ttl(self) -> timedelta:
+        return timedelta(hours=self.state_ttl_hours)
+
+    @property
+    def handoff_ttl(self) -> timedelta:
+        return timedelta(hours=self.handoff_ttl_hours)
+
+    @property
+    def close_token_ttl(self) -> timedelta:
+        return timedelta(hours=self.close_token_ttl_hours)
+
+    @property
+    def image_retention(self) -> timedelta:
+        return timedelta(days=self.image_retention_days)
+
+    @property
+    def tz(self) -> ZoneInfo:
+        return ZoneInfo(self.timezone)
+
+    @property
+    def ai_enabled(self) -> bool:
+        """False เมื่อไม่ได้ตั้ง AI_API_URL -> ใช้ AI client แบบ stub"""
+        return bool(self.ai_api_url)
+
+    @property
+    def callcenter_hours_range(self) -> tuple[time, time] | None:
+        """(เริ่ม, เลิก) ของเวลาทำการ ตาม timezone; None ถ้าไม่ได้ตั้ง"""
+        if not self.callcenter_hours:
+            return None
+        start, end = self.callcenter_hours.split("-")
+        return time.fromisoformat(start), time.fromisoformat(end)
+
+
+@lru_cache(maxsize=1)
+def get_settings() -> Settings:
+    """Settings ตัวเดียวของ process (อ่าน env ครั้งแรกครั้งเดียว) เทสต์ล้างด้วย get_settings.cache_clear()"""
+    return Settings()  # type: ignore[call-arg]  # ค่าบังคับมาจาก env

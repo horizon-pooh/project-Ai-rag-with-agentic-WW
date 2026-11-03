@@ -1,0 +1,48 @@
+# config จริงของแบบใหม่ (Python) — ดู docs/Line_ai_bot.md หัวข้อ Stack และ docs/PLAN.md
+[project]
+name = "line-prod"
+version = "0.0.0"
+description = "LINE OA chatbot ตอบคำถามสินค้าและส่งต่อพนักงาน"
+requires-python = ">=3.12"
+# ไม่ใช้ line-bot-sdk: เรียก LINE ด้วย httpx ดู docs/PLAN.md
+dependencies = [
+    "fastapi",
+    "uvicorn[standard]",
+    "psycopg[binary,pool]",    # ตัดสินแล้วใน docs/PLAN.md
+    # คิวบน Postgres แทน arq+Redis (docs/decisions.md D-010) — pin ตรงตัว: schema ของมันอยู่ใน
+    # migrations/20261024000000_procrastinate_schema.sql อัปเกรด = แก้ pin + เพิ่ม migration ของเวอร์ชันใหม่
+    "procrastinate==3.10.0",
+    "pydantic",
+    "pydantic-settings",
+    "httpx",
+    "minio",
+    "structlog",
+    "sentry-sdk",
+    "pillow",                  # ย่อรูป
+]
+
+[dependency-groups]
+dev = [
+    "pytest",
+    "pytest-asyncio",
+    "respx",
+    "ruff",
+]
+
+[tool.uv]
+package = false
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+extend-exclude = ["src", "dev", "test", "deploy"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "ASYNC"]
+# docstring/ข้อความไทยยาว: ความกว้างไทยนับไม่ตรง ให้ ruff format คุมความยาวโค้ดแทน
+ignore = ["E501"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+pythonpath = ["."]

@@ -1,0 +1,13 @@
+# ตัวอย่างสังเคราะห์ ไม่ใช่แชทจริง
+# "สินค้าชำรุด" และ "เคลม" อยู่ใน prompts/rules/escalate.txt -> ส่งต่อทันทีด้วยกฎ ไม่เรียก AI
+# (ไม่มี ai ในรอบนี้ -> ตัวรันจะ fail ถ้า AI ถูกเรียก)
+id = "synthetic-003"
+source = "synthetic"
+description = "สินค้าชำรุด อยากเคลม -> ส่งต่อด้วยกฎ ไม่เรียก AI"
+expected_path = "handoff"
+
+[[turns]]
+text = "สินค้าชำรุด อยากเคลม"
+route = "rule_escalate"
+expect_status = "human"
+expect_sent = ["sent"]
